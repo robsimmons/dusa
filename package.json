@@ -1,6 +1,5 @@
 {
   "scripts": {
-    "start-server": "node server.js",
     "start": "snowpack dev",
     "build": "snowpack build",
     "test": "jest",
@@ -9,7 +8,7 @@
     "prepare": "snowpack"
   },
   "engines": {
-    "node": "12"
+    "node": "12.13"
   },
   "webDependencies": {},
   "devDependencies": {},
@@ -24,8 +23,6 @@
     "@testing-library/react": "^10.0.6",
     "autoprefixer": "^9.8.0",
     "classnames": "^2.2.6",
-    "fastify": "^2.14.1",
-    "fastify-static": "^2.0.0",
     "fs-extra": "^9.0.0",
     "http-proxy-middleware": "^1.0.4",
     "jest": "^26.0.1",
@@ -37,6 +34,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "snowpack": "^2.2.2",
-    "tailwindcss": "^1.4.6"
+    "tailwindcss": "^1.4.6",
+    "mini-css-extract-plugin": "^0.9.0"
   }
 }
