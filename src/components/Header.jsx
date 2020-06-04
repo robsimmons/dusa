@@ -9,7 +9,7 @@ const Header = ({ roleList, filterRole, toggleFilterRole }) => (
 					<h1 className="inline text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-wide leading-snug">
 						Title
 					</h1>
-					<h2 className="text-xl font-bold">A subtitle 👋🏼</h2>
+					<h2 className="text-xl font-bold">A subtitle.</h2>
 				</div>
 			</div>
 			<div className="pl-4 pb-8">
