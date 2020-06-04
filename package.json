@@ -6,7 +6,7 @@
 		"format": "prettier --write 'src/**/*.{js,jsx}'",
 		"lint": "prettier --check 'src/**/*.{js,jsx}'",
 		"prepare": "snowpack",
-		"deploy": "npm run build && dotenv cross-var firebase deploy --token '%FIREBASE_TOKEN%'"
+		"deploy": "npm run test && npm run build && dotenv cross-var firebase deploy --token '%FIREBASE_TOKEN%'"
 	},
 	"engines": {
 		"node": "12"
