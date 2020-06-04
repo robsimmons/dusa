@@ -8,7 +8,7 @@
     "prepare": "snowpack"
   },
   "engines": {
-    "node": "12.13"
+    "node": "10"
   },
   "webDependencies": {},
   "devDependencies": {},
