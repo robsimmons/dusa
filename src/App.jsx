@@ -5,20 +5,8 @@ import Icon from './components/Icon';
 import './styles.css';
 import { initialData } from './data/airtable.js';
 
-const roles = [
-	{
-		name: 'Media & Marketing',
-		id: 1,
-		background: '#5A78FF',
-		header: '#9BE7D8',
-	},
-	{
-		name: 'Engineering',
-		id: 2,
-		background: '#9BE7D8',
-		header: '#5A78FF',
-	},
-];
+const backgroundColor = '#9BE7D8';
+const headerColor = '#5A78FF';
 
 export default function Home() {
 	const [data, setData] = useState([]);
@@ -47,24 +35,18 @@ export default function Home() {
 					/>
 				</a>
 			</div>
-			<Header roleList={roles} />
-			{roles.map((role) => {
-				const list = data.filter((d) => d.role === role.name);
-
-				return (
+			<Header />
 					<section
-						id={role.id}
-						key={role.id}
-						style={{ backgroundColor: role.background }}
+						style={{ backgroundColor }}
 						className={`py-4 px-4 md:py-12 md:px-12`}
 					>
 						<div className="container mx-auto pl-6 flex">
 							<div className="w-full pb-6">
 								<h2
 									className={`font-extrabold p-0 m-0 text-2xl md:text-3xl`}
-									style={{ color: role.header }}
+									style={{ color: headerColor }}
 								>
-									{role.name}
+									My Friends
 								</h2>
 							</div>
 							<div className="flex justify-end">
@@ -74,13 +56,11 @@ export default function Home() {
 							</div>
 						</div>
 						<div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 container mx-auto">
-							{list.map((record) => (
+							{data.map((record) => (
 								<Card key={record.name} record={record} />
 							))}
 						</div>
 					</section>
-				);
-			})}
 			<footer className="bg-gray-200 text-center m-4">
 				<a href="https://glitch.com">
 					<img
