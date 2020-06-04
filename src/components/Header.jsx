@@ -14,15 +14,23 @@ const Header = ({ roleList, filterRole, toggleFilterRole }) => (
 			</div>
 			<div className="pl-4 pb-8">
 				<strong>Welcome to my prototype.</strong> This is an prototype of:
-        <ul className="list-disc ml-6">
-          <li>React with hot module reloading</li>
-          <li>PostCSS</li>
-          <li>Snowpack</li>
-          <li>Tailwind CSS</li>
-          <li>API Fetching (airtable-api.glitch.me: <strong>not in this project</strong>)</li>
-          <li>Production bundle & deployment (right now goes to firebase, but as an example of the kind of workflow we could build, was easier than sending to s3)</li>
-        </ul>
-        <p>This is the <strong>development server</strong>, which runs all of the above. Once you run <strong>npm run deploy</strong> it will bundle it all up, and deploy it to firebase.</p>
+				<ul className="list-disc ml-6">
+					<li>React with hot module reloading</li>
+					<li>PostCSS</li>
+					<li>Snowpack</li>
+					<li>Tailwind CSS</li>
+					<li>
+						API Fetching (airtable-api.glitch.me: <strong>not in this project</strong>)
+					</li>
+					<li>
+						Production bundle & deployment (right now goes to firebase, but as an example of the kind of
+						workflow we could build, was easier than sending to s3)
+					</li>
+				</ul>
+				<p>
+					This is the <strong>development server</strong>, which runs all of the above. Once you run{' '}
+					<strong>npm run deploy</strong> it will bundle it all up, and deploy it to firebase.
+				</p>
 			</div>
 		</div>
 	</div>

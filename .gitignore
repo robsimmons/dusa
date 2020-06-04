@@ -1,6 +1,0 @@
-node_modules
-web_modules
-.env
-.firebase
-.firebaserc
-build

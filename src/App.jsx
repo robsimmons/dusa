@@ -36,31 +36,25 @@ export default function Home() {
 				</a>
 			</div>
 			<Header />
-					<section
-						style={{ backgroundColor }}
-						className={`py-4 px-4 md:py-12 md:px-12`}
-					>
-						<div className="container mx-auto pl-6 flex">
-							<div className="w-full pb-6">
-								<h2
-									className={`font-extrabold p-0 m-0 text-2xl md:text-3xl`}
-									style={{ color: headerColor }}
-								>
-									My Friends
-								</h2>
-							</div>
-							<div className="flex justify-end">
-								<a className="cursor-pointer" href={`#home`}>
-									<Icon name="up" />
-								</a>
-							</div>
-						</div>
-						<div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 container mx-auto">
-							{data.map((record) => (
-								<Card key={record.name} record={record} />
-							))}
-						</div>
-					</section>
+			<section style={{ backgroundColor }} className={`py-4 px-4 md:py-12 md:px-12`}>
+				<div className="container mx-auto pl-6 flex">
+					<div className="w-full pb-6">
+						<h2 className={`font-extrabold p-0 m-0 text-2xl md:text-3xl`} style={{ color: headerColor }}>
+							My Friends
+						</h2>
+					</div>
+					<div className="flex justify-end">
+						<a className="cursor-pointer" href={`#home`}>
+							<Icon name="up" />
+						</a>
+					</div>
+				</div>
+				<div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 container mx-auto">
+					{data.map((record) => (
+						<Card key={record.name} record={record} />
+					))}
+				</div>
+			</section>
 			<footer className="bg-gray-200 text-center m-4">
 				<a href="https://glitch.com">
 					<img
