@@ -10,7 +10,9 @@
       "^\\.env$",
       "^backend/"
     ],
-    "exclude": []
+    "exclude": [
+      "^src/"
+    ]
   },
   "noSavedEvents": true
 }
