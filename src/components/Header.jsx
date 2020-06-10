@@ -7,9 +7,9 @@ const Header = ({ roleList, filterRole, toggleFilterRole }) => (
 			<div className="md:border-r-2 justify-center" style={{ borderColor: '#5A78FF' }}>
 				<div className="pl-4 pr-8">
 					<h1 className="inline text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-wide leading-snug">
-						Example Prototype
+						React Prototype
 					</h1>
-					<h2 className="text-xl font-bold">Cool, a subheader!</h2>
+					<h2 className="text-xl font-bold">A subheader, cool</h2>
 				</div>
 			</div>
 			<div className="pl-4 pb-8">

@@ -4,11 +4,12 @@
 const exec = require('@actions/exec');
 const fs = require('fs-extra')
 
+
 async function buildAndDist() {
   console.log("🎉 Building assets")
   await exec.exec('npm run build')
-  console.log("🚚 Moving to dist")
-  await fs.copySync('./build', './dist')
+  console.log("🔥 Deploying static code")
+  await exec.exec('firebase deploy');
 }
 
 buildAndDist();
