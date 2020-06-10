@@ -1,0 +1,304 @@
+{
+  "{\"filename\":\"/rbd/pnpm-volume/d8ad54cd-9b31-4ebc-aea5-f8db5270c0ac/node_modules/.registry.npmjs.org/cross-var/1.1.0/node_modules/cross-var/src/index.js\",\"env\":{},\"retainLines\":false,\"highlightCode\":true,\"suppressDeprecationMessages\":false,\"presets\":[],\"plugins\":[[[],null],[[],null],[[],null],[[],null],[[],null],[[],null],[[],null],[[],null],[[],null],[[],null],[[],null],[[],null],[[],{\"loose\":false,\"spec\":false}],[[],null],[[],null],[[],{\"spec\":false}],[[],null],[[],{\"loose\":false}],[[],null],[[],null],[[],null],[[],{\"loose\":false}],[[],{\"loose\":false}],[[],null],[[],null],[[],null],[[],{\"loose\":false}],[[],null],[[],{\"loose\":false}],[[],null],[[],null],[[],{\"loose\":false}],[[],{\"async\":false,\"asyncGenerators\":false}]],\"ignore\":[],\"code\":true,\"metadata\":true,\"ast\":true,\"comments\":true,\"compact\":\"auto\",\"minified\":false,\"sourceRoot\":\"/rbd/pnpm-volume/d8ad54cd-9b31-4ebc-aea5-f8db5270c0ac/node_modules/.registry.npmjs.org/cross-var/1.1.0/node_modules/cross-var/src\",\"babelrc\":true,\"sourceType\":\"module\",\"moduleIds\":false,\"passPerPreset\":false,\"parserOpts\":false,\"generatorOpts\":false}:6.26.3": {
+    "metadata": {
+      "usedHelpers": [
+        "slicedToArray",
+        "interopRequireDefault"
+      ],
+      "marked": [],
+      "modules": {
+        "imports": [
+          {
+            "source": "cross-spawn",
+            "imported": [
+              "default"
+            ],
+            "specifiers": [
+              {
+                "kind": "named",
+                "imported": "default",
+                "local": "spawn"
+              }
+            ]
+          },
+          {
+            "source": "os",
+            "imported": [
+              "default"
+            ],
+            "specifiers": [
+              {
+                "kind": "named",
+                "imported": "default",
+                "local": "os"
+              }
+            ]
+          },
+          {
+            "source": "child_process",
+            "imported": [
+              "exec"
+            ],
+            "specifiers": [
+              {
+                "kind": "named",
+                "imported": "exec",
+                "local": "exec"
+              }
+            ]
+          },
+          {
+            "source": "exit",
+            "imported": [
+              "default"
+            ],
+            "specifiers": [
+              {
+                "kind": "named",
+                "imported": "default",
+                "local": "exit"
+              }
+            ]
+          }
+        ],
+        "exports": {
+          "exported": [],
+          "specifiers": []
+        }
+      }
+    },
+    "options": {
+      "filename": "/rbd/pnpm-volume/d8ad54cd-9b31-4ebc-aea5-f8db5270c0ac/node_modules/.registry.npmjs.org/cross-var/1.1.0/node_modules/cross-var/src/index.js",
+      "filenameRelative": "/rbd/pnpm-volume/d8ad54cd-9b31-4ebc-aea5-f8db5270c0ac/node_modules/.registry.npmjs.org/cross-var/1.1.0/node_modules/cross-var/src/index.js",
+      "env": {},
+      "retainLines": false,
+      "highlightCode": true,
+      "suppressDeprecationMessages": false,
+      "presets": [],
+      "plugins": [
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          {
+            "loose": false,
+            "spec": false
+          }
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          {
+            "spec": false
+          }
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          {
+            "loose": false
+          }
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          {
+            "loose": false
+          }
+        ],
+        [
+          [],
+          {
+            "loose": false
+          }
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          {
+            "loose": false
+          }
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          {
+            "loose": false
+          }
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          null
+        ],
+        [
+          [],
+          {
+            "loose": false
+          }
+        ],
+        [
+          [],
+          {
+            "async": false,
+            "asyncGenerators": false
+          }
+        ]
+      ],
+      "ignore": [],
+      "code": true,
+      "metadata": true,
+      "ast": false,
+      "comments": true,
+      "compact": "auto",
+      "minified": false,
+      "sourceMaps": "both",
+      "sourceMapTarget": "index.js",
+      "sourceFileName": "index.js",
+      "sourceRoot": "/rbd/pnpm-volume/d8ad54cd-9b31-4ebc-aea5-f8db5270c0ac/node_modules/.registry.npmjs.org/cross-var/1.1.0/node_modules/cross-var/src",
+      "babelrc": false,
+      "sourceType": "module",
+      "moduleRoot": "/rbd/pnpm-volume/d8ad54cd-9b31-4ebc-aea5-f8db5270c0ac/node_modules/.registry.npmjs.org/cross-var/1.1.0/node_modules/cross-var/src",
+      "moduleIds": false,
+      "passPerPreset": false,
+      "parserOpts": false,
+      "generatorOpts": false,
+      "basename": "index"
+    },
+    "ignored": false,
+    "code": "#!/usr/bin/env node --harmony\n\"use strict\";\n\nvar _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i[\"return\"]) _i[\"return\"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError(\"Invalid attempt to destructure non-iterable instance\"); } }; }();\n\nvar _crossSpawn = require(\"cross-spawn\");\n\nvar _crossSpawn2 = _interopRequireDefault(_crossSpawn);\n\nvar _os = require(\"os\");\n\nvar _os2 = _interopRequireDefault(_os);\n\nvar _child_process = require(\"child_process\");\n\nvar _exit = require(\"exit\");\n\nvar _exit2 = _interopRequireDefault(_exit);\n\nfunction _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }\n\nfunction normalize(args, isWindows) {\n    return args.map(function (arg) {\n        Object.keys(process.env).sort(function (x, y) {\n            return x.length < y.length;\n        }) // sort by descending length to prevent partial replacement\n        .forEach(function (key) {\n            var regex = new RegExp(\"\\\\$\" + key + \"|%\" + key + \"%\", \"ig\");\n            arg = arg.replace(regex, process.env[key]);\n        });\n        return arg;\n    });\n}\n\nvar args = process.argv.slice(2);\nif (args.length === 1) {\n    var _normalize = normalize(args),\n        _normalize2 = _slicedToArray(_normalize, 1),\n        command = _normalize2[0];\n\n    var proc = (0, _child_process.exec)(command, function (error, stdout, stderr) {\n        if (error) {\n            console.error(\"exec error: \" + error);\n            return;\n        }\n        process.stdout.write(stdout);\n        process.stderr.write(stderr);\n        (0, _exit2.default)(proc.code);\n    });\n} else {\n    args = normalize(args);\n    var _command = args.shift();\n    var _proc = _crossSpawn2.default.sync(_command, args, { stdio: \"inherit\" });\n    (0, _exit2.default)(_proc.status);\n}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImluZGV4LmpzIl0sIm5hbWVzIjpbIm5vcm1hbGl6ZSIsImFyZ3MiLCJpc1dpbmRvd3MiLCJtYXAiLCJPYmplY3QiLCJrZXlzIiwicHJvY2VzcyIsImVudiIsInNvcnQiLCJ4IiwieSIsImxlbmd0aCIsImZvckVhY2giLCJyZWdleCIsIlJlZ0V4cCIsImtleSIsImFyZyIsInJlcGxhY2UiLCJhcmd2Iiwic2xpY2UiLCJjb21tYW5kIiwicHJvYyIsImVycm9yIiwic3Rkb3V0Iiwic3RkZXJyIiwiY29uc29sZSIsIndyaXRlIiwiY29kZSIsInNoaWZ0Iiwic3Bhd24iLCJzeW5jIiwic3RkaW8iLCJzdGF0dXMiXSwibWFwcGluZ3MiOiI7Ozs7QUFFQTs7OztBQUNBOzs7O0FBQ0E7O0FBQ0E7Ozs7OztBQUVBLFNBQVNBLFNBQVQsQ0FBb0JDLElBQXBCLEVBQTBCQyxTQUExQixFQUFzQztBQUNsQyxXQUFPRCxLQUFLRSxHQUFMLENBQVUsZUFBTztBQUNwQkMsZUFBT0MsSUFBUCxDQUFhQyxRQUFRQyxHQUFyQixFQUNLQyxJQURMLENBQ1csVUFBRUMsQ0FBRixFQUFLQyxDQUFMO0FBQUEsbUJBQVlELEVBQUVFLE1BQUYsR0FBV0QsRUFBRUMsTUFBekI7QUFBQSxTQURYLEVBQzZDO0FBRDdDLFNBRUtDLE9BRkwsQ0FFYyxlQUFPO0FBQ2IsZ0JBQU1DLFFBQVEsSUFBSUMsTUFBSixTQUFtQkMsR0FBbkIsVUFBNkJBLEdBQTdCLFFBQXNDLElBQXRDLENBQWQ7QUFDQUMsa0JBQU1BLElBQUlDLE9BQUosQ0FBYUosS0FBYixFQUFvQlAsUUFBUUMsR0FBUixDQUFhUSxHQUFiLENBQXBCLENBQU47QUFDSCxTQUxMO0FBTUEsZUFBT0MsR0FBUDtBQUNILEtBUk0sQ0FBUDtBQVNIOztBQUVELElBQUlmLE9BQU9LLFFBQVFZLElBQVIsQ0FBYUMsS0FBYixDQUFvQixDQUFwQixDQUFYO0FBQ0EsSUFBS2xCLEtBQUtVLE1BQUwsS0FBZ0IsQ0FBckIsRUFBeUI7QUFBQSxxQkFDRFgsVUFBV0MsSUFBWCxDQURDO0FBQUE7QUFBQSxRQUNibUIsT0FEYTs7QUFFckIsUUFBTUMsT0FBTyx5QkFBTUQsT0FBTixFQUFlLFVBQUVFLEtBQUYsRUFBU0MsTUFBVCxFQUFpQkMsTUFBakIsRUFBNkI7QUFDckQsWUFBS0YsS0FBTCxFQUFhO0FBQ1RHLG9CQUFRSCxLQUFSLGtCQUErQkEsS0FBL0I7QUFDQTtBQUNIO0FBQ0RoQixnQkFBUWlCLE1BQVIsQ0FBZUcsS0FBZixDQUFzQkgsTUFBdEI7QUFDQWpCLGdCQUFRa0IsTUFBUixDQUFlRSxLQUFmLENBQXNCRixNQUF0QjtBQUNBLDRCQUFLSCxLQUFLTSxJQUFWO0FBQ0gsS0FSWSxDQUFiO0FBU0gsQ0FYRCxNQVdPO0FBQ0gxQixXQUFPRCxVQUFXQyxJQUFYLENBQVA7QUFDQSxRQUFNbUIsV0FBVW5CLEtBQUsyQixLQUFMLEVBQWhCO0FBQ0EsUUFBTVAsUUFBT1EscUJBQU1DLElBQU4sQ0FBWVYsUUFBWixFQUFxQm5CLElBQXJCLEVBQTJCLEVBQUU4QixPQUFPLFNBQVQsRUFBM0IsQ0FBYjtBQUNBLHdCQUFLVixNQUFLVyxNQUFWO0FBQ0giLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiL3JiZC9wbnBtLXZvbHVtZS9kOGFkNTRjZC05YjMxLTRlYmMtYWVhNS1mOGRiNTI3MGMwYWMvbm9kZV9tb2R1bGVzLy5yZWdpc3RyeS5ucG1qcy5vcmcvY3Jvc3MtdmFyLzEuMS4wL25vZGVfbW9kdWxlcy9jcm9zcy12YXIvc3JjIiwic291cmNlc0NvbnRlbnQiOlsiXG5cbmltcG9ydCBzcGF3biBmcm9tIFwiY3Jvc3Mtc3Bhd25cIjtcbmltcG9ydCBvcyBmcm9tIFwib3NcIjtcbmltcG9ydCB7IGV4ZWMgfSBmcm9tIFwiY2hpbGRfcHJvY2Vzc1wiO1xuaW1wb3J0IGV4aXQgZnJvbSAnZXhpdCc7XG5cbmZ1bmN0aW9uIG5vcm1hbGl6ZSggYXJncywgaXNXaW5kb3dzICkge1xuICAgIHJldHVybiBhcmdzLm1hcCggYXJnID0+IHtcbiAgICAgICAgT2JqZWN0LmtleXMoIHByb2Nlc3MuZW52IClcbiAgICAgICAgICAgIC5zb3J0KCAoIHgsIHkgKSA9PiB4Lmxlbmd0aCA8IHkubGVuZ3RoICkgLy8gc29ydCBieSBkZXNjZW5kaW5nIGxlbmd0aCB0byBwcmV2ZW50IHBhcnRpYWwgcmVwbGFjZW1lbnRcbiAgICAgICAgICAgIC5mb3JFYWNoKCBrZXkgPT4ge1xuICAgICAgICAgICAgICAgIGNvbnN0IHJlZ2V4ID0gbmV3IFJlZ0V4cCggYFxcXFwkJHsga2V5IH18JSR7IGtleSB9JWAsIFwiaWdcIiApO1xuICAgICAgICAgICAgICAgIGFyZyA9IGFyZy5yZXBsYWNlKCByZWdleCwgcHJvY2Vzcy5lbnZbIGtleSBdICk7XG4gICAgICAgICAgICB9ICk7XG4gICAgICAgIHJldHVybiBhcmc7XG4gICAgfSApXG59XG5cbmxldCBhcmdzID0gcHJvY2Vzcy5hcmd2LnNsaWNlKCAyICk7XG5pZiAoIGFyZ3MubGVuZ3RoID09PSAxICkge1xuICAgIGNvbnN0IFsgY29tbWFuZCBdID0gbm9ybWFsaXplKCBhcmdzICk7XG4gICAgY29uc3QgcHJvYyA9IGV4ZWMoIGNvbW1hbmQsICggZXJyb3IsIHN0ZG91dCwgc3RkZXJyICkgPT4ge1xuICAgICAgICBpZiAoIGVycm9yICkge1xuICAgICAgICAgICAgY29uc29sZS5lcnJvciggYGV4ZWMgZXJyb3I6ICR7IGVycm9yIH1gICk7XG4gICAgICAgICAgICByZXR1cm47XG4gICAgICAgIH1cbiAgICAgICAgcHJvY2Vzcy5zdGRvdXQud3JpdGUoIHN0ZG91dCApO1xuICAgICAgICBwcm9jZXNzLnN0ZGVyci53cml0ZSggc3RkZXJyICk7XG4gICAgICAgIGV4aXQocHJvYy5jb2RlKTtcbiAgICB9KTtcbn0gZWxzZSB7XG4gICAgYXJncyA9IG5vcm1hbGl6ZSggYXJncyApO1xuICAgIGNvbnN0IGNvbW1hbmQgPSBhcmdzLnNoaWZ0KCk7XG4gICAgY29uc3QgcHJvYyA9IHNwYXduLnN5bmMoIGNvbW1hbmQsIGFyZ3MsIHsgc3RkaW86IFwiaW5oZXJpdFwiIH0gKTtcbiAgICBleGl0KHByb2Muc3RhdHVzKTtcbn1cbiJdfQ==",
+    "ast": null,
+    "map": {
+      "version": 3,
+      "sources": [
+        "index.js"
+      ],
+      "names": [
+        "normalize",
+        "args",
+        "isWindows",
+        "map",
+        "Object",
+        "keys",
+        "process",
+        "env",
+        "sort",
+        "x",
+        "y",
+        "length",
+        "forEach",
+        "regex",
+        "RegExp",
+        "key",
+        "arg",
+        "replace",
+        "argv",
+        "slice",
+        "command",
+        "proc",
+        "error",
+        "stdout",
+        "stderr",
+        "console",
+        "write",
+        "code",
+        "shift",
+        "spawn",
+        "sync",
+        "stdio",
+        "status"
+      ],
+      "mappings": ";;;;AAEA;;;;AACA;;;;AACA;;AACA;;;;;;AAEA,SAASA,SAAT,CAAoBC,IAApB,EAA0BC,SAA1B,EAAsC;AAClC,WAAOD,KAAKE,GAAL,CAAU,eAAO;AACpBC,eAAOC,IAAP,CAAaC,QAAQC,GAArB,EACKC,IADL,CACW,UAAEC,CAAF,EAAKC,CAAL;AAAA,mBAAYD,EAAEE,MAAF,GAAWD,EAAEC,MAAzB;AAAA,SADX,EAC6C;AAD7C,SAEKC,OAFL,CAEc,eAAO;AACb,gBAAMC,QAAQ,IAAIC,MAAJ,SAAmBC,GAAnB,UAA6BA,GAA7B,QAAsC,IAAtC,CAAd;AACAC,kBAAMA,IAAIC,OAAJ,CAAaJ,KAAb,EAAoBP,QAAQC,GAAR,CAAaQ,GAAb,CAApB,CAAN;AACH,SALL;AAMA,eAAOC,GAAP;AACH,KARM,CAAP;AASH;;AAED,IAAIf,OAAOK,QAAQY,IAAR,CAAaC,KAAb,CAAoB,CAApB,CAAX;AACA,IAAKlB,KAAKU,MAAL,KAAgB,CAArB,EAAyB;AAAA,qBACDX,UAAWC,IAAX,CADC;AAAA;AAAA,QACbmB,OADa;;AAErB,QAAMC,OAAO,yBAAMD,OAAN,EAAe,UAAEE,KAAF,EAASC,MAAT,EAAiBC,MAAjB,EAA6B;AACrD,YAAKF,KAAL,EAAa;AACTG,oBAAQH,KAAR,kBAA+BA,KAA/B;AACA;AACH;AACDhB,gBAAQiB,MAAR,CAAeG,KAAf,CAAsBH,MAAtB;AACAjB,gBAAQkB,MAAR,CAAeE,KAAf,CAAsBF,MAAtB;AACA,4BAAKH,KAAKM,IAAV;AACH,KARY,CAAb;AASH,CAXD,MAWO;AACH1B,WAAOD,UAAWC,IAAX,CAAP;AACA,QAAMmB,WAAUnB,KAAK2B,KAAL,EAAhB;AACA,QAAMP,QAAOQ,qBAAMC,IAAN,CAAYV,QAAZ,EAAqBnB,IAArB,EAA2B,EAAE8B,OAAO,SAAT,EAA3B,CAAb;AACA,wBAAKV,MAAKW,MAAV;AACH",
+      "file": "index.js",
+      "sourceRoot": "/rbd/pnpm-volume/d8ad54cd-9b31-4ebc-aea5-f8db5270c0ac/node_modules/.registry.npmjs.org/cross-var/1.1.0/node_modules/cross-var/src",
+      "sourcesContent": [
+        "\n\nimport spawn from \"cross-spawn\";\nimport os from \"os\";\nimport { exec } from \"child_process\";\nimport exit from 'exit';\n\nfunction normalize( args, isWindows ) {\n    return args.map( arg => {\n        Object.keys( process.env )\n            .sort( ( x, y ) => x.length < y.length ) // sort by descending length to prevent partial replacement\n            .forEach( key => {\n                const regex = new RegExp( `\\\\$${ key }|%${ key }%`, \"ig\" );\n                arg = arg.replace( regex, process.env[ key ] );\n            } );\n        return arg;\n    } )\n}\n\nlet args = process.argv.slice( 2 );\nif ( args.length === 1 ) {\n    const [ command ] = normalize( args );\n    const proc = exec( command, ( error, stdout, stderr ) => {\n        if ( error ) {\n            console.error( `exec error: ${ error }` );\n            return;\n        }\n        process.stdout.write( stdout );\n        process.stderr.write( stderr );\n        exit(proc.code);\n    });\n} else {\n    args = normalize( args );\n    const command = args.shift();\n    const proc = spawn.sync( command, args, { stdio: \"inherit\" } );\n    exit(proc.status);\n}\n"
+      ]
+    },
+    "mtime": 1591296496410
+  }
+}
