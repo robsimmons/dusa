@@ -299,6 +299,6 @@
         "\n\nimport spawn from \"cross-spawn\";\nimport os from \"os\";\nimport { exec } from \"child_process\";\nimport exit from 'exit';\n\nfunction normalize( args, isWindows ) {\n    return args.map( arg => {\n        Object.keys( process.env )\n            .sort( ( x, y ) => x.length < y.length ) // sort by descending length to prevent partial replacement\n            .forEach( key => {\n                const regex = new RegExp( `\\\\$${ key }|%${ key }%`, \"ig\" );\n                arg = arg.replace( regex, process.env[ key ] );\n            } );\n        return arg;\n    } )\n}\n\nlet args = process.argv.slice( 2 );\nif ( args.length === 1 ) {\n    const [ command ] = normalize( args );\n    const proc = exec( command, ( error, stdout, stderr ) => {\n        if ( error ) {\n            console.error( `exec error: ${ error }` );\n            return;\n        }\n        process.stdout.write( stdout );\n        process.stderr.write( stderr );\n        exit(proc.code);\n    });\n} else {\n    args = normalize( args );\n    const command = args.shift();\n    const proc = spawn.sync( command, args, { stdio: \"inherit\" } );\n    exit(proc.status);\n}\n"
       ]
     },
-    "mtime": 1591296496410
+    "mtime": 1591988408971
   }
 }
