@@ -1,41 +1,41 @@
 {
-	"scripts": {
+  "scripts": {
     "start": "",
-		"dev": "snowpack dev",
-		"build": "snowpack build",
-		"test": "jest",
-		"format": "prettier --write 'src/**/*.{js,jsx}'",
-		"lint": "prettier --check 'src/**/*.{js,jsx}'",
-		"deploy": "npm run test && npm run format && npm run lint && npm run build && dotenv cross-var firebase deploy --token '%FIREBASE_TOKEN%'"
-	},
-	"engines": {
-		"node": "12"
-	},
-	"webDependencies": {},
-	"devDependencies": {},
-	"dependencies": {
-		"@actions/exec": "^1.0.4",
-		"@fullhuman/postcss-purgecss": "^2.2.0",
-		"@snowpack/app-scripts-react": "^1.1.4",
-		"@snowpack/plugin-parcel": "^1.0.0",
-		"@snowpack/plugin-react-refresh": "^1.0.0",
-		"@snowpack/plugin-webpack": "^1.1.0",
-		"@testing-library/jest-dom": "^5.9.0",
-		"@testing-library/react": "^10.2.0",
-		"autoprefixer": "^9.8.0",
-		"classnames": "^2.2.6",
-		"firebase-tools": "^8.4.1",
-		"fs-extra": "^9.0.1",
-		"jest": "^26.0.1",
-		"parcel": "^1.12.4",
-		"postcss-cli": "^7.1.1",
-		"postcss-import": "^12.0.1",
-		"prettier": "^2.0.5",
-		"react": "^16.13.1",
-		"react-dom": "^16.13.1",
-		"snowpack": "^2.2.4",
-		"tailwindcss": "^1.4.6",
-		"cross-var": "^1.1.0",
-		"dotenv-cli": "^3.1.0"
-	}
+    "dev": "snowpack dev",
+    "build": "snowpack build",
+    "test": "jest",
+    "format": "prettier --write 'src/**/*.{js,jsx}'",
+    "lint": "prettier --check 'src/**/*.{js,jsx}'",
+    "deploy": "npm run test && npm run format && npm run lint && npm run build && dotenv cross-var firebase deploy --token '%FIREBASE_TOKEN%'"
+  },
+  "engines": {
+    "node": "12"
+  },
+  "webDependencies": {},
+  "devDependencies": {},
+  "dependencies": {
+    "@actions/exec": "^1.0.4",
+    "@fullhuman/postcss-purgecss": "^2.3.0",
+    "@snowpack/app-scripts-react": "^1.2.0",
+    "@snowpack/plugin-parcel": "^1.2.0",
+    "@snowpack/plugin-react-refresh": "^1.1.5",
+    "@snowpack/plugin-webpack": "^1.2.0",
+    "@testing-library/jest-dom": "^5.10.0",
+    "@testing-library/react": "^10.2.1",
+    "autoprefixer": "^9.8.0",
+    "classnames": "^2.2.6",
+    "firebase-tools": "^8.4.3",
+    "fs-extra": "^9.0.1",
+    "jest": "^26.0.1",
+    "parcel": "^1.12.4",
+    "postcss-cli": "^7.1.1",
+    "postcss-import": "^12.0.1",
+    "prettier": "^2.0.5",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "snowpack": "^2.5.2",
+    "tailwindcss": "^1.4.6",
+    "cross-var": "^1.1.0",
+    "dotenv-cli": "^3.1.0"
+  }
 }
