@@ -10,7 +10,7 @@ const Header = ({ roleList, filterRole, toggleFilterRole }) => (
       >
         <div className="pl-4 pr-8">
           <h1 className="inline text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-wide leading-snug">
-            React Prototype!!!
+            React Prototype!!!!
           </h1>
           <h2 className="text-xl font-bold">A subheader, cool</h2>
         </div>
