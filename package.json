@@ -16,23 +16,23 @@
   "dependencies": {
     "@actions/exec": "^1.0.4",
     "@fullhuman/postcss-purgecss": "^2.3.0",
-    "@snowpack/app-scripts-react": "^1.9.0",
-    "@snowpack/plugin-parcel": "^2.0.2",
-    "@snowpack/plugin-react-refresh": "^2.0.3",
-    "@snowpack/plugin-webpack": "^2.0.4",
-    "@testing-library/jest-dom": "^5.11.3",
+    "@snowpack/app-scripts-react": "^1.10.0",
+    "@snowpack/plugin-react-refresh": "^2.1.0",
+    "@snowpack/plugin-webpack": "^2.0.5",
+    "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^10.4.8",
     "autoprefixer": "^9.8.6",
     "classnames": "^2.2.6",
     "firebase-tools": "^8.6.0",
     "fs-extra": "^9.0.1",
-    "jest": "^26.4.0",
+    "jest": "^26.4.2",
     "parcel": "^1.12.4",
-    "prettier": "^2.0.5",
+    "prettier": "^2.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "snowpack": "^2.8.0",
+    "snowpack": "^2.9.2",
     "cross-var": "^1.1.0",
-    "dotenv-cli": "^3.2.0"
+    "dotenv-cli": "^3.2.0",
+    "styled-components": "^5.1.1"
   }
 }
