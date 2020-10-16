@@ -9,7 +9,7 @@ export default function Home() {
     <>
     <div className="wrapper">
       <div className="content">
-        <span className="title">Hello react?!</span>
+        <span className="title">Hello react!</span>
       </div>
       <img src={illustration} className="illustration" />
     </div>
