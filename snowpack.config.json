@@ -1,5 +1,10 @@
 {
-	"extends": "@snowpack/app-scripts-react",
-	"scripts": {
-	}
+  "extends": "@snowpack/app-scripts-react",
+  "scripts": {},
+  "exclude": [
+    "**/node_modules/**/*",
+    "**/__tests__/*",
+    "**/*.@(spec|test).@(js|mjs)",
+    "**/*.@(spec|test).@(js|mjs)"
+  ]
 }
