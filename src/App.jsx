@@ -10,8 +10,9 @@ export default function Home() {
     <div className="wrapper">
       <div className="content">
         <span className="title">Hello react!</span>
+        <p>Hey this is an example and we can just keep typing </p>
+        <img src={illustration} className="illustration" />
       </div>
-      <img src={illustration} className="illustration" />
     </div>
     <div className="navigation">
       <div>
