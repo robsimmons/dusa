@@ -3,10 +3,7 @@
     "start": "",
     "dev": "snowpack dev",
     "build": "snowpack build",
-    "test": "jest",
-    "format": "prettier --write 'src/**/*.{js,jsx}'",
-    "lint": "prettier --check 'src/**/*.{js,jsx}'",
-    "deploy": "npm run test && npm run format && npm run lint && npm run build && dotenv cross-var firebase deploy --token '%FIREBASE_TOKEN%'"
+    "test": "jest"
   },
   "engines": {
     "node": "12"
@@ -14,25 +11,16 @@
   "webDependencies": {},
   "devDependencies": {},
   "dependencies": {
-    "@actions/exec": "^1.0.4",
-    "@fullhuman/postcss-purgecss": "^2.3.0",
-    "@snowpack/app-scripts-react": "^1.10.0",
-    "@snowpack/plugin-react-refresh": "^2.1.0",
-    "@snowpack/plugin-webpack": "^2.0.5",
+    "@snowpack/app-scripts-react": "^1.12.3",
+    "@snowpack/plugin-react-refresh": "^2.3.2",
+    "@snowpack/plugin-webpack": "^2.0.16",
     "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^10.4.8",
-    "autoprefixer": "^9.8.6",
+    "@testing-library/react": "^11.0.4",
+    "autoprefixer": "^10.0.0",
     "classnames": "^2.2.6",
-    "firebase-tools": "^8.6.0",
-    "fs-extra": "^9.0.1",
-    "jest": "^26.4.2",
-    "parcel": "^1.12.4",
-    "prettier": "^2.1.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "snowpack": "^2.9.2",
-    "cross-var": "^1.1.0",
-    "dotenv-cli": "^3.2.0",
-    "styled-components": "^5.1.1"
+    "jest": "^26.5.2",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "snowpack": "^2.14.0"
   }
 }
