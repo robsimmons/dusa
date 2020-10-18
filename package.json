@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "",
+    "start": "snowpack dev",
     "dev": "snowpack dev",
     "build": "snowpack build",
     "test": "jest"
@@ -21,6 +21,7 @@
     "jest": "^26.5.2",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "snowpack": "^2.14.0"
+    "snowpack": "^2.14.0",
+    "pm2": "^4.4.1"
   }
 }
