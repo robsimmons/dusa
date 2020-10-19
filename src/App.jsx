@@ -11,6 +11,7 @@ export default function Home() {
       <div className="content">
         <span className="title">Hello react!</span>
         <p>Hey this is an example and we can just keep typing and it will update 🎉 </p>
+        <p>My name is Keith and this is my website</p>
         <img src={illustration} className="illustration" />
       </div>
     </div>
