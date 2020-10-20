@@ -4,14 +4,14 @@ import './styles.css'
 import illustration from './illustration.svg';
 
 
+const hellos = ['Hello React', 'Bonjour React']
+
 export default function Home() {
   return (
     <>
     <div className="wrapper">
       <div className="content">
-        <span className="title">Hello react!</span>
-        <p>Hey this is an example and we can just keep typing and it will update 🎉 </p>
-        <p>My name is Keith and this is my website</p>
+        <span className="title">Hello {hellos[0]}!</span>
         <img src={illustration} className="illustration" />
       </div>
     </div>
