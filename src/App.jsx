@@ -11,7 +11,7 @@ export default function Home() {
     <>
     <div className="wrapper">
       <div className="content">
-        <span className="title">Hello {hellos[0]}!</span>
+        <span className="title">{hellos && hellos[0]}!</span>
         <img src={illustration} className="illustration" />
       </div>
     </div>
