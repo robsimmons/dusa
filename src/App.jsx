@@ -7,7 +7,7 @@ import "./styles.css";
 import illustration from "./illustration.svg";
 
 // Our language strings
-const hellos = ["Hello React", "Bonjour React"];
+const hellos = ["Hello React", "Bonjour React", "Hola React"];
 
 
 export default function Home() {
@@ -27,6 +27,7 @@ export default function Home() {
             onClick={handleChangeHello}
             alt="Browser screen showing"
           />
+          <span>Pssst: Click the illustration to change the Hello World language!</span>
         </div>
       </div>
       <div className="navigation">
