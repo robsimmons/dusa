@@ -1,7 +1,7 @@
 /* Our default values set for mobile */
 :root {
-  --color-bg: #69F7BE;
-  --color-text-main: #373fff;
+  --color-bg: #FFFFA0;
+  --color-text-main: #2800FF;
   --wrapper-height: 87vh;
   --image-max-width: 300px;
   --image-margin: 1rem;

@@ -7,13 +7,17 @@ import "./styles.css";
 import illustration from "./illustration.svg";
 
 // Our language strings
-const hellos = ["Hello React", "Bonjour React", "Hola React"];
+const strings = ["Hello React", "Bonjour React", "Hola React"];
 
+// Utility function to choose a random value from the language array
+function randomLanguage() {
+   return strings[Math.floor(Math.random() * strings.length)];
+}
 
 export default function Home() {
-  const [hello, setHello] = useState(hellos[0]);
+  const [hello, setHello] = useState(strings[0]);
   const handleChangeHello = () => {
-    const newHello = hellos[1];
+    const newHello = randomLanguage();
     setHello(newHello);
   };
   return (
@@ -27,7 +31,7 @@ export default function Home() {
             onClick={handleChangeHello}
             alt="Browser screen showing"
           />
-          <span>Pssst: Click the illustration to change the Hello World language!</span>
+          <span>Pssst: Click the illustration to change the Hello World language?</span>
         </div>
       </div>
       <div className="navigation">
