@@ -113,4 +113,5 @@ body {
   max-width: 100%;
   max-height: var(--image-max-width);
   margin-top: var(--image-margin);
+  cursor: pointer;
 }

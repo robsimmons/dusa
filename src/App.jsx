@@ -11,7 +11,7 @@ const strings = ["Hello React", "Bonjour React", "Hola React"];
 
 // Utility function to choose a random value from the language array
 function randomLanguage() {
-   return strings[Math.floor(Math.random() * strings.length)];
+  return strings[Math.floor(Math.random() * strings.length)];
 }
 
 export default function Home() {
@@ -25,13 +25,18 @@ export default function Home() {
       <div className="wrapper">
         <div className="content">
           <span className="title">{hello}!</span>
-          <img
-            src={illustration}
-            className="illustration"
-            onClick={handleChangeHello}
-            alt="Browser screen showing"
-          />
-          <span>Pssst: Click the illustration to change the Hello World language?</span>
+            <img
+              src={illustration}
+              className="illustration"
+              onClick={handleChangeHello}
+              alt="React logo click to update"
+            />
+          <button className='btn--remix' onClick={handleChangeHello}>
+            Change Language
+          </button>
+          <span>
+          
+          </span>
         </div>
       </div>
       <div className="navigation">
