@@ -32,7 +32,7 @@ export default function Home() {
               alt="Illustration click to change language"
             />
           <button className='btn--remix' onClick={handleChangeHello}>
-            Change Language
+            Pssst, click me to change the language
           </button>
         </div>
       </div>
