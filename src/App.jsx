@@ -29,14 +29,11 @@ export default function Home() {
               src={illustration}
               className="illustration"
               onClick={handleChangeHello}
-              alt="React logo click to update"
+              alt="Illustration click to change language"
             />
           <button className='btn--remix' onClick={handleChangeHello}>
             Change Language
           </button>
-          <span>
-          
-          </span>
         </div>
       </div>
       <div className="navigation">
