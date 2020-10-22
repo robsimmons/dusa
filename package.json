@@ -2,8 +2,7 @@
   "scripts": {
     "start": "snowpack dev",
     "dev": "snowpack dev",
-    "build": "snowpack build",
-    "test": "jest"
+    "build": "snowpack build"
   },
   "engines": {
     "node": "12"
@@ -14,9 +13,6 @@
     "@snowpack/app-scripts-react": "^1.12.4",
     "@snowpack/plugin-react-refresh": "^2.3.3",
     "@snowpack/plugin-webpack": "^2.0.16",
-    "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^11.0.4",
-    "jest": "^26.6.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "snowpack": "^2.15.1"
