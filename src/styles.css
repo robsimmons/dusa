@@ -101,7 +101,7 @@ body {
 }
 
 .btn--remix:hover {
-  border: 5px solid black;
+  background-color: #D0FFF1;
 }
 
 .btn--remix img {
