@@ -7,7 +7,7 @@ import "./styles.css";
 import illustration from "./illustration.svg";
 
 // Our language strings
-const strings = ["Hello React", "Bonjour React", "Hola React"];
+const strings = ["Hello React", "Bonjour React", "Hola React", "안녕 React"];
 
 // Utility function to choose a random value from the language array
 function randomLanguage() {
@@ -31,13 +31,13 @@ export default function Home() {
               onClick={handleChangeHello}
               alt="Illustration click to change language"
             />
-          <button className='btn--remix' onClick={handleChangeHello}>
-            Pssst, click me to change the language
-          </button>
         </div>
       </div>
       <div className="navigation">
         <div>
+          <button className="btn--remix" onClick={handleChangeHello}>
+            Pssst, click me
+          </button>
           <button className="btn--remix">
             <img src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576" />
             Remix on Glitch
