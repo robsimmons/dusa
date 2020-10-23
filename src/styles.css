@@ -77,8 +77,8 @@ body {
 
 /* Navigation grid */
 .navigation {
-  display: grid;
-  place-items: end;
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Our remix on glitch button + grid for other actions */

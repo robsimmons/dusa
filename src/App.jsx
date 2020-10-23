@@ -25,25 +25,23 @@ export default function Home() {
       <div className="wrapper">
         <div className="content">
           <span className="title">{hello}!</span>
-            <img
-              src={illustration}
-              className="illustration"
-              onClick={handleChangeHello}
-              alt="Illustration click to change language"
-            />
+          <img
+            src={illustration}
+            className="illustration"
+            onClick={handleChangeHello}
+            alt="Illustration click to change language"
+          />
         </div>
       </div>
-      <div className="navigation">
-        <div>
-          <button className="btn--remix" onClick={handleChangeHello}>
-            Pssst, click me
-          </button>
-          <button className="btn--remix">
-            <img src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576" />
-            Remix on Glitch
-          </button>
-        </div>
-      </div>
+      <nav className="navigation">
+        <button className="btn--remix" onClick={handleChangeHello}>
+          Pssst, click me
+        </button>
+        <button className="btn--remix">
+          <img src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576" />
+          Remix on Glitch
+        </button>
+      </nav>
     </>
   );
 }
