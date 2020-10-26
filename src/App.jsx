@@ -7,7 +7,7 @@ import "./styles.css";
 import illustration from "./illustration.svg";
 
 // Our language strings
-const strings = ["Hello React", "Bonjour React", "Hola React", "안녕 React"];
+const strings = ["Hello React", "Bonjour React", "Hola React", "안녕 React", "Hej React"];
 
 // Utility function to choose a random value from the language array
 function randomLanguage() {
