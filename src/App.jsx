@@ -17,7 +17,9 @@ function randomLanguage() {
 export default function Home() {
   const [hello, setHello] = useState(strings[0]);
   const handleChangeHello = () => {
+    // Choose a new Hello from our languages
     const newHello = randomLanguage();
+    // And set it in our components state
     setHello(newHello);
   };
   return (
