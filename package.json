@@ -11,10 +11,10 @@
   "devDependencies": {},
   "dependencies": {
     "@snowpack/app-scripts-react": "^1.12.6",
-    "@snowpack/plugin-react-refresh": "^2.3.5",
+    "@snowpack/plugin-react-refresh": "^2.3.7",
     "@snowpack/plugin-webpack": "^2.1.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "snowpack": "^2.16.1"
+    "snowpack": "^2.17.0"
   }
 }

@@ -1,10 +1,10 @@
 dependencies:
   '@snowpack/app-scripts-react': 1.12.6
-  '@snowpack/plugin-react-refresh': 2.3.5
+  '@snowpack/plugin-react-refresh': 2.3.7
   '@snowpack/plugin-webpack': 2.1.0
   react: 17.0.1
   react-dom: 17.0.1
-  snowpack: 2.16.1
+  snowpack: 2.17.1
 packages:
   /@babel/code-frame/7.10.4:
     dependencies:
@@ -1495,9 +1495,9 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-Uv6h1sT+0DrblvIrolFtbvM1FgWm+/sy4B3pvLp67Zys+thcukzS5ekn7HsZFGpWP4Q3fYJCljbWQE/XivMRLw==
-  /@rollup/plugin-alias/3.1.1/rollup@2.33.1:
+  /@rollup/plugin-alias/3.1.1/rollup@2.33.3:
     dependencies:
-      rollup: 2.33.1
+      rollup: 2.33.3
       slash: 3.0.0
     dev: false
     engines:
@@ -1507,80 +1507,80 @@ packages:
       rollup: ^1.20.0||^2.0.0
     resolution:
       integrity: sha512-hNcQY4bpBUIvxekd26DBPgF7BT4mKVNDF5tBG4Zi+3IgwLxGYRY0itHs9D0oLVwXM5pvJDWJlBQro+au8WaUWw==
-  /@rollup/plugin-commonjs/15.1.0/rollup@2.33.1:
+  /@rollup/plugin-commonjs/16.0.0/rollup@2.33.3:
     dependencies:
-      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.1
+      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.3
       commondir: 1.0.1
       estree-walker: 2.0.1
       glob: 7.1.6
       is-reference: 1.2.1
       magic-string: 0.25.7
-      resolve: 1.18.1
-      rollup: 2.33.1
+      resolve: 1.19.0
+      rollup: 2.33.3
     dev: false
     engines:
       node: '>= 8.0.0'
-    id: registry.npmjs.org/@rollup/plugin-commonjs/15.1.0
+    id: registry.npmjs.org/@rollup/plugin-commonjs/16.0.0
     peerDependencies:
-      rollup: ^2.22.0
+      rollup: ^2.30.0
     resolution:
-      integrity: sha512-xCQqz4z/o0h2syQ7d9LskIMvBSH4PX5PjYdpSSvgS+pQik3WahkQVNWg3D8XJeYjZoVWnIUQYDghuEMRGrmQYQ==
-  /@rollup/plugin-inject/4.0.2/rollup@2.33.1:
+      integrity: sha512-LuNyypCP3msCGVQJ7ki8PqYdpjfEkE/xtFa5DqlF+7IBD0JsfMZ87C58heSwIMint58sAUZbt3ITqOmdQv/dXw==
+  /@rollup/plugin-inject/4.0.2/rollup@2.33.3:
     dependencies:
-      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.1
+      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.3
       estree-walker: 1.0.1
       magic-string: 0.25.7
-      rollup: 2.33.1
+      rollup: 2.33.3
     dev: false
     id: registry.npmjs.org/@rollup/plugin-inject/4.0.2
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-TSLMA8waJ7Dmgmoc8JfPnwUwVZgLjjIAM6MqeIFqPO2ODK36JqE0Cf2F54UTgCUuW8da93Mvoj75a6KAVWgylw==
-  /@rollup/plugin-json/4.1.0/rollup@2.33.1:
+  /@rollup/plugin-json/4.1.0/rollup@2.33.3:
     dependencies:
-      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.1
-      rollup: 2.33.1
+      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.3
+      rollup: 2.33.3
     dev: false
     id: registry.npmjs.org/@rollup/plugin-json/4.1.0
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==
-  /@rollup/plugin-node-resolve/9.0.0/rollup@2.33.1:
+  /@rollup/plugin-node-resolve/10.0.0/rollup@2.33.3:
     dependencies:
-      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.1
+      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.3
       '@types/resolve': 1.17.1
       builtin-modules: 3.1.0
       deepmerge: 4.2.2
       is-module: 1.0.0
-      resolve: 1.18.1
-      rollup: 2.33.1
+      resolve: 1.19.0
+      rollup: 2.33.3
     dev: false
     engines:
       node: '>= 10.0.0'
-    id: registry.npmjs.org/@rollup/plugin-node-resolve/9.0.0
+    id: registry.npmjs.org/@rollup/plugin-node-resolve/10.0.0
     peerDependencies:
       rollup: ^1.20.0||^2.0.0
     resolution:
-      integrity: sha512-gPz+utFHLRrd41WMP13Jq5mqqzHL3OXrfj3/MkSyB6UBIcuNt9j60GCbarzMzdf1VHFpOxfQh/ez7wyadLMqkg==
-  /@rollup/plugin-replace/2.3.4/rollup@2.33.1:
+      integrity: sha512-sNijGta8fqzwA1VwUEtTvWCx2E7qC70NMsDh4ZG13byAXYigBNZMxALhKUSycBks5gupJdq0lFrKumFrRZ8H3A==
+  /@rollup/plugin-replace/2.3.4/rollup@2.33.3:
     dependencies:
-      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.1
+      '@rollup/pluginutils': /@rollup/pluginutils/3.1.0/rollup@2.33.3
       magic-string: 0.25.7
-      rollup: 2.33.1
+      rollup: 2.33.3
     dev: false
     id: registry.npmjs.org/@rollup/plugin-replace/2.3.4
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-waBhMzyAtjCL1GwZes2jaE9MjuQ/DQF2BatH3fRivUF3z0JBFrU0U6iBNC/4WR+2rLKhaAhPWDNPYp4mI6RqdQ==
-  /@rollup/pluginutils/3.1.0/rollup@2.33.1:
+  /@rollup/pluginutils/3.1.0/rollup@2.33.3:
     dependencies:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
       picomatch: 2.2.2
-      rollup: 2.33.1
+      rollup: 2.33.3
     dev: false
     engines:
       node: '>= 8.0.0'
@@ -1636,6 +1636,17 @@ packages:
       react-dom: '>=16.10.0'
     resolution:
       integrity: sha512-1cglFeENhcROLs+safQqPgVbz3Vj7Kwxqae2G0wLuUkpXM1id/fuRdXXHAAGq7aDzkBmlAhR1Wm0GnU5LceMdw==
+  /@snowpack/plugin-react-refresh/2.3.7:
+    dependencies:
+      '@babel/core': 7.12.3
+      '@babel/plugin-syntax-class-properties': /@babel/plugin-syntax-class-properties/7.12.1/@babel!core@7.12.3
+      react-refresh: 0.9.0
+    dev: false
+    peerDependencies:
+      react: '>=16.10.0'
+      react-dom: '>=16.10.0'
+    resolution:
+      integrity: sha512-LltkmwZKRz4fHj1rfaaT0MC19F3k4FWs/U3eim4xbxqbsK4K/PHCMJU1RmiLxM7UcFbqi7LreQGZSCSXPoaNgQ==
   /@snowpack/plugin-run-script/2.2.0:
     dependencies:
       execa: 4.1.0
@@ -1737,6 +1748,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-6QlRuqsQ/Ox/aJEQWBEJG7A9+u7oSYl3mem/K8IzxXG/kAGbV1YPD9Bg9Zw3vyxC/YP+zONKwy8hGkSt1jxFMw==
+  /@types/node/14.14.9:
+    dev: false
+    resolution:
+      integrity: sha512-JsoLXFppG62tWTklIoO4knA+oDTYsmqWxHRvd4lpmfQRNhX6osheUOWETP2jMoV/2bEHuMra8Pp3Dmo/stBFcw==
   /@types/parse-json/4.0.0:
     dev: false
     resolution:
@@ -1747,7 +1762,7 @@ packages:
       integrity: sha512-1HcDas8SEj4z1Wc696tH56G8OlRaH/sqZOynNNB+HF0WOeXPaxTtbYzJY2oEfiUxjSKjhCKr+MvR7dCHcEelug==
   /@types/resolve/1.17.1:
     dependencies:
-      '@types/node': 14.14.6
+      '@types/node': 14.14.9
     dev: false
     resolution:
       integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==
@@ -2703,10 +2718,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-Kkht5ye6ZGmwv40uUDZztayT2ThLQGfnj/T71N/XzeZeo3nf8foyW7zGTsPYkEya3m5f3cAypH+qe7YOrM1U2Q==
-  /cjs-module-lexer/0.4.3:
+  /cjs-module-lexer/0.5.2:
     dev: false
     resolution:
-      integrity: sha512-5RLK0Qfs0PNDpEyBXIr3bIT1Muw3ojSlvpw6dAmkUcO0+uTrsBn7GuEIgx40u+OzbCBLDta7nvmud85P4EmTsQ==
+      integrity: sha512-GlXp/i+x/WJP5X/qBAfo8ygo97ePkYSTL9um1TZ7nMG9JlFXZADyMhHQ7DFc0xk4G8oCagEKxQaHHD1wd+ZEyA==
   /class-utils/0.3.6:
     dependencies:
       arr-union: 3.1.0
@@ -3210,12 +3225,6 @@ packages:
       node: '>=6.0'
     resolution:
       integrity: sha512-IX2ncY78vDTjZMFUdmsvIRFY2Cf4FnD0wRs+nQwJU8Lu99/tPFdb0VybiiMTPe3I6rQmwsqQqRBvxU+bZ/I8sg==
-  /decamelize/1.2.0:
-    dev: false
-    engines:
-      node: '>=0.10.0'
-    resolution:
-      integrity: sha1-9lNNFRSCabIDUue+4m9QH5oZEpA=
   /decimal.js/10.2.1:
     dev: false
     resolution:
@@ -3477,12 +3486,12 @@ packages:
       node: '>= 0.4'
     resolution:
       integrity: sha512-QCOllgZJtaUo9miYBcLChTUaHNjJF3PYs1VidD7AwiEj1kYxKeQTctLAezAOH5ZKRH0g2IgPn6KwB4IT8iRpvA==
-  /esbuild/0.7.22:
+  /esbuild/0.8.11:
     dev: false
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-B43SYg8LGWYTCv9Gs0RnuLNwjzpuWOoCaZHTWEDEf5AfrnuDMerPVMdCEu7xOdhFvQ+UqfP2MGU9lxEy0JzccA==
+      integrity: sha512-PTBeZ71qh7/Dm/57Sd10VG9TMKQAUbM9W6WD59ZYV62dDA/2a1xybzWqR3X7zbtxyqtFfY1PhYtg85QV0mrXNg==
   /escalade/3.1.1:
     dev: false
     engines:
@@ -3509,26 +3518,26 @@ packages:
       source-map: 0.6.1
     resolution:
       integrity: sha512-qFcX0XJkdg+PB3xjZZG/wKSuT1PnQWx57+TVSjIMmILd2yC/6ByYElPwJnslDsuWuSAp4AwJGumarAAmJch5Kw==
-  /esinstall/0.3.6:
+  /esinstall/0.3.7:
     dependencies:
-      '@rollup/plugin-alias': /@rollup/plugin-alias/3.1.1/rollup@2.33.1
-      '@rollup/plugin-commonjs': /@rollup/plugin-commonjs/15.1.0/rollup@2.33.1
-      '@rollup/plugin-inject': /@rollup/plugin-inject/4.0.2/rollup@2.33.1
-      '@rollup/plugin-json': /@rollup/plugin-json/4.1.0/rollup@2.33.1
-      '@rollup/plugin-node-resolve': /@rollup/plugin-node-resolve/9.0.0/rollup@2.33.1
-      '@rollup/plugin-replace': /@rollup/plugin-replace/2.3.4/rollup@2.33.1
-      cjs-module-lexer: 0.4.3
+      '@rollup/plugin-alias': /@rollup/plugin-alias/3.1.1/rollup@2.33.3
+      '@rollup/plugin-commonjs': /@rollup/plugin-commonjs/16.0.0/rollup@2.33.3
+      '@rollup/plugin-inject': /@rollup/plugin-inject/4.0.2/rollup@2.33.3
+      '@rollup/plugin-json': /@rollup/plugin-json/4.1.0/rollup@2.33.3
+      '@rollup/plugin-node-resolve': /@rollup/plugin-node-resolve/10.0.0/rollup@2.33.3
+      '@rollup/plugin-replace': /@rollup/plugin-replace/2.3.4/rollup@2.33.3
+      cjs-module-lexer: 0.5.2
       es-module-lexer: 0.3.26
       is-builtin-module: 3.0.0
       kleur: 4.1.3
       mkdirp: 1.0.4
       rimraf: 3.0.2
-      rollup: 2.33.1
+      rollup: 2.33.3
       rollup-plugin-node-polyfills: 0.2.1
       validate-npm-package-name: 3.0.0
     dev: false
     resolution:
-      integrity: sha512-tmtJ0fNXv0C3t37zRuR/WUEVyKsTLvxcWPPe5OlT3QhJiWo7du/HXVUMOX4DTn6ob6jf6zSb0KQJFpHUhBCyHQ==
+      integrity: sha512-IslJdHov4TQPSNwHK4WCIkQwxaYrDDW2u6iZxiGbNVzFPyeEEVs2BXDmd1ZXVE4+bP/eCvvbvYH9f59gafgn5A==
   /eslint-scope/4.0.3:
     dependencies:
       esrecurse: 4.3.0
@@ -4524,6 +4533,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og==
+  /is-plain-object/5.0.0:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-VRSzKkbMm5jMDoKLbltAkFQ5Qr7VDiTFGXxYFXXowVj387GeGNOCsOH6Msy00SGZ3Fp84b1Naa1psqgcCIEP5Q==
   /is-potential-custom-element-name/1.0.0:
     dev: false
     resolution:
@@ -6321,6 +6336,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-X8jZHc7nCMjaCqoU+V2I0cOhNW+QMBwSUkeXnTi8IPe6zaRWfn60ZzvFDZqWPfmSJfjub7dDW1SP0jaHWLu/hg==
+  /react-refresh/0.9.0:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==
   /react/17.0.1:
     dependencies:
       loose-envify: 1.4.0
@@ -6537,6 +6558,13 @@ packages:
     dev: false
     resolution:
       integrity: sha512-lDfCPaMKfOJXjy0dPayzPdF1phampNWr3qFCjAu+rw/qbQmr5jWH5xN2hwh9QKfw9E5v4hwV7A+jrCmL8yjjqA==
+  /resolve/1.19.0:
+    dependencies:
+      is-core-module: 2.1.0
+      path-parse: 1.0.6
+    dev: false
+    resolution:
+      integrity: sha512-rArEXAgsBG4UgRGcynxWIWKFvh/XZCcS8UJdHhwy91zwAvCZIbcs+vAbflgBnNjYMs/i/i+/Ux6IZhML1yPvxg==
   /ret/0.1.15:
     dev: false
     engines:
@@ -6593,7 +6621,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==
-  /rollup/2.33.1:
+  /rollup/2.33.3:
     dev: false
     engines:
       node: '>=10.0.0'
@@ -6601,7 +6629,7 @@ packages:
     optionalDependencies:
       fsevents: 2.1.3
     resolution:
-      integrity: sha512-uY4O/IoL9oNW8MMcbA5hcOaz6tZTMIh7qJHx/tzIJm+n1wLoY38BLn6fuy7DhR57oNFLMbDQtDeJoFURt5933w==
+      integrity: sha512-RpayhPTe4Gu/uFGCmk7Gp5Z9Qic2VsqZ040G+KZZvsZYdcuWaJg678JeDJJvJeEQXminu24a2au+y92CUWVd+w==
   /rsvp/4.8.5:
     dev: false
     engines:
@@ -6832,7 +6860,7 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-FtyOnWN/wCHTVXOMwvSv26d+ko5vWlIDD6zoUJ7LW8vh+ZBC8QdljveRP+crNrtBwioEUWy/4dMtbBjA4ioNlg==
-  /snowpack/2.16.1:
+  /snowpack/2.17.1:
     dependencies:
       '@snowpack/plugin-build-script': 2.0.11
       '@snowpack/plugin-run-script': 2.2.0
@@ -6845,8 +6873,8 @@ packages:
       deepmerge: 4.2.2
       detect-port: 1.3.0
       es-module-lexer: 0.3.26
-      esbuild: 0.7.22
-      esinstall: 0.3.6
+      esbuild: 0.8.11
+      esinstall: 0.3.7
       etag: 1.8.1
       execa: 4.1.0
       find-cache-dir: 3.3.1
@@ -6854,6 +6882,7 @@ packages:
       glob: 7.1.6
       http-proxy: 1.18.1
       httpie: 1.1.2
+      is-plain-object: 5.0.0
       isbinaryfile: 4.0.6
       jsonschema: 1.2.11
       kleur: 4.1.3
@@ -6869,14 +6898,14 @@ packages:
       strip-ansi: 6.0.0
       strip-comments: 2.0.1
       validate-npm-package-name: 3.0.0
-      ws: 7.3.1
-      yargs-parser: 18.1.3
+      ws: 7.4.0
+      yargs-parser: 20.2.4
     dev: false
     engines:
       node: '>=10.19.0'
     hasBin: true
     resolution:
-      integrity: sha512-BvvNxCISztDWKnn5umlXdzAzAXUwpV1Bs7/80s37CoxWDhWyX4SUOv8uZ9a1K6Gb1cBR9V4nwO0nUuYN6lxSIg==
+      integrity: sha512-FCeIESACrCQTGTZW6rbSfe1RgOFMBRPk7I5Wn//3IRl+cLBoZ1THWMdthqbv/xiv0qlK3rHoXTBqrakf7LPAZQ==
   /source-list-map/2.0.1:
     dev: false
     resolution:
@@ -7726,6 +7755,15 @@ packages:
       utf-8-validate: ^5.0.2
     resolution:
       integrity: sha512-D3RuNkynyHmEJIpD2qrgVkc9DQ23OrN/moAwZX4L8DfvszsJxpjQuUq3LMx6HoYji9fbIOBY18XWBsAux1ZZUA==
+  /ws/7.4.0:
+    dev: false
+    engines:
+      node: '>=8.3.0'
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    resolution:
+      integrity: sha512-kyFwXuV/5ymf+IXhS6f0+eAFvydbaBW3zjpT6hUdAh/hbVjTIB5EHBGi0bPoCLSK2wcuz3BrEkB9LrYv1Nm4NQ==
   /xml-name-validator/3.0.0:
     dev: false
     resolution:
@@ -7758,22 +7796,19 @@ packages:
       node: '>= 6'
     resolution:
       integrity: sha512-yr2icI4glYaNG+KWONODapy2/jDdMSDnrONSjblABjD9B4Z5LgiircSt8m8sRZFNi08kG9Sm0uSHtEmP3zaEGg==
-  /yargs-parser/18.1.3:
-    dependencies:
-      camelcase: 5.3.1
-      decamelize: 1.2.0
+  /yargs-parser/20.2.4:
     dev: false
     engines:
-      node: '>=6'
+      node: '>=10'
     resolution:
-      integrity: sha512-o50j0JeToy/4K6OZcaQmW6lyXXKhq7csREXcDwk2omFPJEwUNOVtJKvmDr9EI1fAJZUyZcRF7kxGBWmRXudrCQ==
+      integrity: sha512-WOkpgNhPTlE73h4VFAFsOnomJVaovO8VqLDzy5saChRBFQFBoMYirowyW+Q9HB4HFF4Z7VZTiG3iSzJJA29yRA==
 registry: 'https://registry.npmjs.org/'
 shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
 specifiers:
   '@snowpack/app-scripts-react': ^1.12.6
-  '@snowpack/plugin-react-refresh': ^2.3.5
+  '@snowpack/plugin-react-refresh': ^2.3.7
   '@snowpack/plugin-webpack': ^2.1.0
   react: ^17.0.1
   react-dom: ^17.0.1
-  snowpack: ^2.16.1
+  snowpack: ^2.17.0

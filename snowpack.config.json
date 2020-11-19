@@ -1,6 +1,7 @@
 {
   "extends": "@snowpack/app-scripts-react",
   "scripts": {},
+  "plugins": ["@snowpack/plugin-webpack"],
   "exclude": [
     "**/node_modules/**/*",
     "**/__tests__/*",
