@@ -16,6 +16,6 @@
   "dependencies": {
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "snowpack": "^2.17.0"
+    "snowpack": "^3.0.13"
   }
 }
