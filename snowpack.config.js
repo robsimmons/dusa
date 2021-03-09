@@ -1,9 +1,9 @@
 module.exports = {
   mount: {
-    public: { url: '/', static: true },
-    src: { url: '/dist' },
+    public: { url: "/", static: true },
+    src: { url: "/dist" }
   },
-  plugins: ['@snowpack/plugin-react-refresh', '@snowpack/plugin-webpack'],
+  plugins: ["@snowpack/plugin-react-refresh", "@snowpack/plugin-webpack"],
   routes: [
     /* Enable an SPA Fallback in development: */
     // {"match": "routes", "src": ".*", "dest": "/index.html"},
@@ -20,5 +20,5 @@ module.exports = {
   },
   buildOptions: {
     /* ... */
-  },
+  }
 };

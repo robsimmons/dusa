@@ -7,10 +7,8 @@
   "engines": {
     "node": "12"
   },
-  "webDependencies": {},
   "devDependencies": {
     "@snowpack/plugin-react-refresh": "^2.3.7",
-    "@snowpack/app-scripts-react": "^1.12.6",
     "@snowpack/plugin-webpack": "^2.1.0"
   },
   "dependencies": {
