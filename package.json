@@ -8,10 +8,9 @@
     "node": "12"
   },
   "devDependencies": {
-    "@snowpack/plugin-react-refresh": "^2.3.7"
   },
   "dependencies": {
-    "snowpack": "^3.0.13",
+    "snowpack": "3.0.13",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },

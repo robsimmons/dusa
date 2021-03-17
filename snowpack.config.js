@@ -3,13 +3,12 @@ module.exports = {
     public: { url: "/", static: true },
     src: { url: "/dist" }
   },
-  plugins: ["@snowpack/plugin-react-refresh"],
+  plugins: [],
   routes: [],
   optimize: {
     bundle: true
   },
   packageOptions: {
-    source: 'remote'
   },
   devOptions: {
   },
