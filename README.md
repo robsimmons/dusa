@@ -10,7 +10,7 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← README.md: That’s this file, where you can tell people what your cool website does and how you built it.
 
-← 
+← LICENSE: something about the MIT License
 
 ← src/App.jsx: Your React app!! You can see the language strings, and the click event to change it. 
 
