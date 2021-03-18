@@ -5,10 +5,9 @@
     "build": "snowpack build"
   },
   "engines": {
-    "node": "12"
+    "node": "14"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "dependencies": {
     "snowpack": "3.0.13",
     "react": "^17.0.1",
