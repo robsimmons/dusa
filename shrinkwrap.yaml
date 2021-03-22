@@ -1,7 +1,7 @@
 dependencies:
   react: 17.0.2
   react-dom: 17.0.2
-  snowpack: 3.1.2
+  snowpack: 3.0.13
 packages:
   /big-integer/1.6.48:
     dev: false
@@ -15,12 +15,6 @@ packages:
     dev: false
     resolution:
       integrity: sha1-1g1dzCDLptx+HymbNdPh+V2vuuY=
-  /cli-spinners/2.6.0:
-    dev: false
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-t+4/y50K/+4xcCRosKkA7W4gTr1MySvLV0q+PxmG7FJ5g+66ChKurYjxBCjHggHH3HA5Hh9cy+lcUGWDqVH+4Q==
   /default-browser-id/2.0.0:
     dependencies:
       bplist-parser: 0.1.1
@@ -31,16 +25,12 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-AezONxpx6F8VoXF354YwR+c9vn0=
-  /esbuild/0.9.6:
+  /esbuild/0.8.57:
     dev: false
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-F6vASxU0wT/Davt9aj2qtDwDNSkQxh9VbyO56M7PDWD+D/Vgq/rmUDGDQo7te76W5auauVojjnQr/wTu3vpaUA==
-  /fdir/5.0.0:
-    dev: false
-    resolution:
-      integrity: sha512-cteqwWMA43lEmgwOg5HSdvhVFD39vHjQDhZkRMlKmeoNPtSSgUw1nUypydiY2upMdGiBFBZvNBDbnoBh0yCzaQ==
+      integrity: sha512-j02SFrUwFTRUqiY0Kjplwjm1psuzO1d6AjaXKuOR9hrY0HuPsT6sV42B6myW34h1q4CRy+Y3g4RU/cGJeI/nNA==
   /fsevents/2.3.2:
     dev: false
     engines:
@@ -119,12 +109,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-GSmOT2EbHrINBf9SR7CDELwlJ8AENk3Qn7OikK4nFYAu3Ote2+JYNVvkpAEQm3/TLNEJFD/xZJjzyxg3KBWOzw==
-  /picomatch/2.2.2:
-    dev: false
-    engines:
-      node: '>=8.6'
-    resolution:
-      integrity: sha512-q0M/9eZHzmr0AulXyPwNfZjtwZ/RBZlbN3K3CErVrk50T2ASYI7Bye0EvekFY3IP1Nt2DHu0re+V2ZHIpMkuWg==
   /pify/2.3.0:
     dev: false
     engines:
@@ -173,14 +157,11 @@ packages:
     dev: false
     resolution:
       integrity: sha512-2eWfGgAqqWFGqtdMmcL5zCMK1U8KlXv8SQFGglL3CEtd0aDVDWgeF/YoCmvln55m5zSk3J/20hTaSBeSObsQDQ==
-  /snowpack/3.1.2:
+  /snowpack/3.0.13:
     dependencies:
-      cli-spinners: 2.6.0
       default-browser-id: 2.0.0
-      esbuild: 0.9.6
-      fdir: 5.0.0
+      esbuild: 0.8.57
       open: 7.4.2
-      picomatch: 2.2.2
       resolve: 1.20.0
       rollup: 2.42.3
     dev: false
@@ -190,7 +171,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     resolution:
-      integrity: sha512-LsYlBNjB/t/p5QP434Pa1TqjyuX8VtXiYQaAWZkOn1d1TVKEt7nigMBr8Z+EDXYn6YlLXYKHXDvv/NhUS7Ri9A==
+      integrity: sha512-USTcpfJ68rbuFvUygw+3n9qS1CC/tGsr/JNVc6FNk0ZRfGBE4OmB+Mmk5nWtdxi546GeCr/GvveJenYLen/WpA==
   /untildify/2.1.0:
     dependencies:
       os-homedir: 1.0.2
@@ -205,4 +186,4 @@ shrinkwrapVersion: 3
 specifiers:
   react: ^17.0.1
   react-dom: ^17.0.2
-  snowpack: ^3.1.1
+  snowpack: 3.0.13
