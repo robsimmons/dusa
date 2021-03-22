@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from "react";
+import * as React from 'react';
 
-// Import and apply CSS stylesheet
-import "../public/styles.css";
+// You can import SVG files directly
+import illustration from "../../public/illustration.svg";
 
-// Routes
-import Router from './components/router.jsx';
-
-// Language strings
+// Our language strings
 const strings = ["Hello React", "Bonjour React", "Hola React", "안녕 React", "Hej React"];
 
 // Utility function to choose a random value from the language array
@@ -15,7 +12,7 @@ function randomLanguage() {
 }
 
 export default function Home() {
-  const [hello, setHello] = useState(strings[0]);
+  const [hello, setHello] = React.useState(strings[0]);
   const handleChangeHello = () => {
     // Choose a new Hello from our languages
     const newHello = randomLanguage();
@@ -26,14 +23,19 @@ export default function Home() {
     <>
       <div className="wrapper">
         <div className="content">
-          <Router />
+          <span className="title">{hello}!</span>
+          <img
+            src={illustration}
+            className="illustration"
+            onClick={handleChangeHello}
+            alt="Illustration click to change language"
+          />
         </div>
       </div>
       <nav className="navigation">
-        <a href="https://glitch.com/edit/#!/remix/glitch-hello-react" className="btn--remix">
-          <img src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576" />
-          Remix on Glitch
-        </a>
+        <button className="btn--remix" onClick={handleChangeHello}>
+          Pssst, click me
+        </button>
       </nav>
     </>
   );

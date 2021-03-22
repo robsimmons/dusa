@@ -1,14 +1,12 @@
 import * as React from 'react';
 import { Link, Route } from "wouter";
+import Home from '../pages/home';
+
 
 const Router = () => (
-  <div>
-    <Link href="/users/1">
-      <a className="link">Profile.</a>
-    </Link>
-
-    <Route path="/about">About Us</Route>
-  </div>
+  <>
+    <Route path="/" component={Home} />
+  </>
 );
 
 export default Router;
