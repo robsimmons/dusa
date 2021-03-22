@@ -5,13 +5,16 @@
     "build": "snowpack build"
   },
   "engines": {
-    "node": "14"
+    "node": "12"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "snowpack": "^3.1.1",
+    "@snowpack/plugin-react-refresh": "^2.4.1"
+  },
   "dependencies": {
-    "snowpack": "3.0.13",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "wouter": "^2.7.4"
   },
   "browserslist": [
     ">0.2%",

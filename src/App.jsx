@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 
-// Import and apply our CSS stylesheet
+// Import and apply CSS stylesheet
 import "./styles.css";
 
 // You can import SVG files directly
 import illustration from "./illustration.svg";
 
-// Our language strings
+// Routes
+import Router from './components/router.jsx';
+
+// Language strings
 const strings = ["Hello React", "Bonjour React", "Hola React", "안녕 React", "Hej React"];
 
 // Utility function to choose a random value from the language array
@@ -26,13 +29,7 @@ export default function Home() {
     <>
       <div className="wrapper">
         <div className="content">
-          <span className="title">{hello}!</span>
-          <img
-            src={illustration}
-            className="illustration"
-            onClick={handleChangeHello}
-            alt="Illustration click to change language"
-          />
+          <Router />? ?
         </div>
       </div>
       <nav className="navigation">

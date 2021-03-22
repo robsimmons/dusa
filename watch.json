@@ -8,6 +8,7 @@
   "restart": {
     "include": [
       "^\\.env$",
+      "^snowpack.config.js'"
       "^backend/"
     ],
     "exclude": [
