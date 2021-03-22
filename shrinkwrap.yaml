@@ -1,7 +1,7 @@
 dependencies:
-  react: 17.0.1
-  react-dom: 17.0.1
-  snowpack: 3.0.13
+  react: 17.0.2
+  react-dom: 17.0.2
+  snowpack: 3.1.2
 packages:
   /big-integer/1.6.48:
     dev: false
@@ -15,6 +15,12 @@ packages:
     dev: false
     resolution:
       integrity: sha1-1g1dzCDLptx+HymbNdPh+V2vuuY=
+  /cli-spinners/2.6.0:
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-t+4/y50K/+4xcCRosKkA7W4gTr1MySvLV0q+PxmG7FJ5g+66ChKurYjxBCjHggHH3HA5Hh9cy+lcUGWDqVH+4Q==
   /default-browser-id/2.0.0:
     dependencies:
       bplist-parser: 0.1.1
@@ -25,12 +31,16 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-AezONxpx6F8VoXF354YwR+c9vn0=
-  /esbuild/0.8.57:
+  /esbuild/0.9.6:
     dev: false
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-j02SFrUwFTRUqiY0Kjplwjm1psuzO1d6AjaXKuOR9hrY0HuPsT6sV42B6myW34h1q4CRy+Y3g4RU/cGJeI/nNA==
+      integrity: sha512-F6vASxU0wT/Davt9aj2qtDwDNSkQxh9VbyO56M7PDWD+D/Vgq/rmUDGDQo7te76W5auauVojjnQr/wTu3vpaUA==
+  /fdir/5.0.0:
+    dev: false
+    resolution:
+      integrity: sha512-cteqwWMA43lEmgwOg5HSdvhVFD39vHjQDhZkRMlKmeoNPtSSgUw1nUypydiY2upMdGiBFBZvNBDbnoBh0yCzaQ==
   /fsevents/2.3.2:
     dev: false
     engines:
@@ -109,23 +119,29 @@ packages:
     dev: false
     resolution:
       integrity: sha512-GSmOT2EbHrINBf9SR7CDELwlJ8AENk3Qn7OikK4nFYAu3Ote2+JYNVvkpAEQm3/TLNEJFD/xZJjzyxg3KBWOzw==
+  /picomatch/2.2.2:
+    dev: false
+    engines:
+      node: '>=8.6'
+    resolution:
+      integrity: sha512-q0M/9eZHzmr0AulXyPwNfZjtwZ/RBZlbN3K3CErVrk50T2ASYI7Bye0EvekFY3IP1Nt2DHu0re+V2ZHIpMkuWg==
   /pify/2.3.0:
     dev: false
     engines:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-7RQaasBDqEnqWISY59yosVMw6Qw=
-  /react-dom/17.0.1:
+  /react-dom/17.0.2:
     dependencies:
       loose-envify: 1.4.0
       object-assign: 4.1.1
-      scheduler: 0.20.1
+      scheduler: 0.20.2
     dev: false
     peerDependencies:
-      react: 17.0.1
+      react: 17.0.2
     resolution:
-      integrity: sha512-6eV150oJZ9U2t9svnsspTMrWNyHc6chX0KzDeAOXftRa8bNeOKTTfCJ7KorIwenkHd2xqVTBTCZd79yk/lx/Ug==
-  /react/17.0.1:
+      integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
+  /react/17.0.2:
     dependencies:
       loose-envify: 1.4.0
       object-assign: 4.1.1
@@ -133,7 +149,7 @@ packages:
     engines:
       node: '>=0.10.0'
     resolution:
-      integrity: sha512-lG9c9UuMHdcAexXtigOZLX8exLWkW0Ku29qPRU8uhF2R9BN96dLCt0psvzPLlHc5OWkgymP3qwTRgbnw5BKx3w==
+      integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==
   /resolve/1.20.0:
     dependencies:
       is-core-module: 2.2.0
@@ -141,7 +157,7 @@ packages:
     dev: false
     resolution:
       integrity: sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A==
-  /rollup/2.41.4:
+  /rollup/2.42.3:
     dev: false
     engines:
       node: '>=10.0.0'
@@ -149,21 +165,24 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     resolution:
-      integrity: sha512-f9IHfMO8p2Y8OdisI7Oj3oKkPuaQ6cgSwYqAi0TDvP3w2p+oX1VejX/w28a1h8WTnrapzfO5d4Uqhww+gL0b0g==
-  /scheduler/0.20.1:
+      integrity: sha512-JjaT9WaUS5vmjy6xUrnPOskjkQg2cN4WSACNCwbOvBz8VDmbiKVdmTFUoMPRqTud0tsex8Xy9/boLbDW9HKD1w==
+  /scheduler/0.20.2:
     dependencies:
       loose-envify: 1.4.0
       object-assign: 4.1.1
     dev: false
     resolution:
-      integrity: sha512-LKTe+2xNJBNxu/QhHvDR14wUXHRQbVY5ZOYpOGWRzhydZUqrLb2JBvLPY7cAqFmqrWuDED0Mjk7013SZiOz6Bw==
-  /snowpack/3.0.13:
+      integrity: sha512-2eWfGgAqqWFGqtdMmcL5zCMK1U8KlXv8SQFGglL3CEtd0aDVDWgeF/YoCmvln55m5zSk3J/20hTaSBeSObsQDQ==
+  /snowpack/3.1.2:
     dependencies:
+      cli-spinners: 2.6.0
       default-browser-id: 2.0.0
-      esbuild: 0.8.57
+      esbuild: 0.9.6
+      fdir: 5.0.0
       open: 7.4.2
+      picomatch: 2.2.2
       resolve: 1.20.0
-      rollup: 2.41.4
+      rollup: 2.42.3
     dev: false
     engines:
       node: '>=10.19.0'
@@ -171,7 +190,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     resolution:
-      integrity: sha512-USTcpfJ68rbuFvUygw+3n9qS1CC/tGsr/JNVc6FNk0ZRfGBE4OmB+Mmk5nWtdxi546GeCr/GvveJenYLen/WpA==
+      integrity: sha512-LsYlBNjB/t/p5QP434Pa1TqjyuX8VtXiYQaAWZkOn1d1TVKEt7nigMBr8Z+EDXYn6YlLXYKHXDvv/NhUS7Ri9A==
   /untildify/2.1.0:
     dependencies:
       os-homedir: 1.0.2
@@ -185,5 +204,5 @@ shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
 specifiers:
   react: ^17.0.1
-  react-dom: ^17.0.1
-  snowpack: 3.0.13
+  react-dom: ^17.0.2
+  snowpack: ^3.1.1
