@@ -32,7 +32,7 @@ export default function Home() {
     <>
       <div className="wrapper">
         <div className="content">
-          <Router />
+          <Router />????
         </div>
       </div>
       <nav className="navigation">
