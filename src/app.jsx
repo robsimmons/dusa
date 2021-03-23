@@ -32,18 +32,25 @@ export default function Home() {
     <>
       <div className="wrapper">
         <div className="content">
-          <Router />????
+          <Router />
         </div>
       </div>
-      <nav className="navigation">
+      <footer class="footer">
+        <div class="links">
+          <a href="/">Home</a>
+          <span class="divider">|</span>
+          <a href="/posts">Posts</a>
+          <span class="divider">|</span>
+          <a href="/about">About</a>
+        </div>
         <a
-          href="https://glitch.com/edit/#!/remix/glitch-hello-react"
           className="btn--remix"
+          href="https://glitch.com/edit/#!/remix/glitch-hello-eleventy"
         >
           <img src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576" />
           Remix on Glitch
         </a>
-      </nav>
+      </footer>
     </>
   );
 }

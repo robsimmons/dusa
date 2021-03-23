@@ -127,6 +127,30 @@ body {
 }
 
 
-/*
-  Add hover state to the buttons!! oops
-*/
+/* Navigation grid */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding-top: 2rem;
+  width: 100%;
+}
+
+.footer a:not(.btn--remix):link,
+        a:not(.btn--remix):visited {
+  font-family: HK Grotesk;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 1.1rem;
+  color: #000;
+  text-decoration: none;
+  border-style: none;
+}
+
+.footer .links {
+  padding: .5rem 1rem;
+}
+
+.divider {
+  padding: 0 1rem;
+}
