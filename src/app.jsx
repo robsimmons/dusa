@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "wouter";
 
 // Import and apply CSS stylesheet
 import "./styles/styles.css";
@@ -37,11 +38,11 @@ export default function Home() {
       </div>
       <footer class="footer">
         <div class="links">
-          <a href="/">Home</a>
+          <Link href="/">Home</Link>
           <span class="divider">|</span>
-          <a href="/posts">Posts</a>
+          <Link href="/how-to-use">How to Use</Link>
           <span class="divider">|</span>
-          <a href="/about">About</a>
+          <Link href="/next-steps">Next Steps</Link>
         </div>
         <a
           className="btn--remix"
