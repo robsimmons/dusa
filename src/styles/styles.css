@@ -51,15 +51,6 @@ body {
   background-color: var(--color-bg);
 }
 
-.title {
-  color: var(--color-text-main);
-  font-family: HK Grotesk;
-  font-style: normal;
-  font-weight: bold;
-  font-size: 120px;
-  line-height: 105%;
-}
-
 .wrapper {
   min-height: var(--wrapper-height);
   display: grid;
@@ -73,6 +64,19 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.title {
+  color: var(--color-text-main);
+  font-family: HK Grotesk;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 120px;
+  line-height: 105%;
+}
+
+.page .title {
+  font-size: 64px;
 }
 
 /* Navigation grid */
