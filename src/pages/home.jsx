@@ -1,10 +1,16 @@
-import * as React from 'react';
+import * as React from "react";
 
 // You can import SVG files directly
 import illustration from "../../public/illustration.svg";
 
 // Our language strings
-const strings = ["Hello React", "Bonjour React", "Hola React", "안녕 React", "Hej React"];
+const strings = [
+  "Hello React",
+  "Bonjour React",
+  "Hola React",
+  "안녕 React",
+  "Hej React"
+];
 
 // Utility function to choose a random value from the language array
 function randomLanguage() {
@@ -21,17 +27,13 @@ export default function Home() {
   };
   return (
     <>
-      <div className="wrapper">
-        <div className="content">
-          <span className="title">{hello}!</span>
-          <img
-            src={illustration}
-            className="illustration"
-            onClick={handleChangeHello}
-            alt="Illustration click to change language"
-          />
-        </div>
-      </div>
+      <span className="title">{hello}!</span>
+      <img
+        src={illustration}
+        className="illustration"
+        onClick={handleChangeHello}
+        alt="Illustration click to change language"
+      />
       <nav className="navigation">
         <button className="btn--remix" onClick={handleChangeHello}>
           Pssst, click me
