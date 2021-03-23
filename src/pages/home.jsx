@@ -1,8 +1,5 @@
 import * as React from "react";
 
-// You can import SVG files directly
-import illustration from "../../public/illustration.svg";
-
 // Our language strings
 const strings = [
   "Hello React",
@@ -29,7 +26,7 @@ export default function Home() {
     <>
       <span className="title">{hello}!</span>
       <img
-        src={illustration}
+        src="/illustration.svg"
         className="illustration"
         onClick={handleChangeHello}
         alt="Illustration click to change language"
