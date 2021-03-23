@@ -9,7 +9,7 @@ export default defineConfig({
   },
   server: {
     hmr: {
-      path: '/hmr',
+      protocol: 'wss',
       port: 3000
     }
   }
