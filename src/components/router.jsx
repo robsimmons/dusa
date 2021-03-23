@@ -7,6 +7,7 @@ import NextSteps from '../pages/next-steps'
 const Router = () => (
   <>
     <Route path="/" component={Home} />
+    <Route path="/how-to-use" component={HowToUse} />
   </>
 );
 
