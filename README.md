@@ -2,9 +2,9 @@
 
 [React](https://reactjs.org) is a popular UI library for building web apps, usually single page apps. 
 
-While you're in the editor working, Glitch is running your `start` script in the background. We're using [snowpack](https://snowpack.dev) to run. While you develop your application, your changes will happen  immediately in the preview window, or if you've opened it in another tab. 
+While you're in the editor working, Glitch is running your `start` script in the background. We're using [vite](https://vite.dev) to run. While you develop your application, your changes will happen  immediately in the preview window, or if you've opened it in another tab. 
 
-Once you close the window and your remix goes to sleep, Glitch runs the `build` script. We're using [snowpack](https://snowpack.dev) to optimize the final build.
+Once you close the window and your remix goes to sleep, Glitch runs the `build` script. We're using [vite](https://vite.dev) to optimize the final build.
 
 ### Files
 
