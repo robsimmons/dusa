@@ -16,5 +16,8 @@
   "browserslist": [
     ">0.2%",
     "not dead"
-  ]
+  ],
+  "glitch": {
+    "projectType": "generated_static"
+  }
 }
