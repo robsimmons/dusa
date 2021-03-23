@@ -24,7 +24,7 @@ export default function Home() {
   };
   return (
     <>
-      <span className="title">{hello}!</span>
+      <span className="title">{hello}!?</span>
       <img
         src="/illustration.svg"
         className="illustration"

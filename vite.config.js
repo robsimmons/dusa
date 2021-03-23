@@ -6,5 +6,11 @@ export default defineConfig({
   plugins: [reactRefresh()],
   build: {
     outDir: "build"
+  },
+  server: {
+    hmr: {
+      path: '/hmr',
+      port: 3000
+    }
   }
 });
