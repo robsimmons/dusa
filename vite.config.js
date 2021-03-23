@@ -8,9 +8,10 @@ export default defineConfig({
     outDir: "build"
   },
   server: {
+    strictPort: true,
     hmr: {
       protocol: 'wss',
-      port: 3000
+      port: null
     }
   }
 });
