@@ -1,10 +1,7 @@
 dependencies:
   react: 17.0.2
   react-dom: 17.0.2
-<<<<<<< HEAD
-=======
   wouter: 2.7.4
->>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa
 devDependencies:
   '@vitejs/plugin-react-refresh': 1.3.1
   vite: 2.1.2
@@ -238,7 +235,7 @@ packages:
     dependencies:
       caniuse-lite: 1.0.30001204
       colorette: 1.2.2
-      electron-to-chromium: 1.3.695
+      electron-to-chromium: 1.3.698
       escalade: 3.1.1
       node-releases: 1.1.71
     dev: true
@@ -289,10 +286,10 @@ packages:
       node: '>=6.0'
     resolution:
       integrity: sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ==
-  /electron-to-chromium/1.3.695:
+  /electron-to-chromium/1.3.698:
     dev: true
     resolution:
-      integrity: sha512-lz66RliUqLHU1Ojxx1A4QUxKydjiQ79Y4dZyPobs2Dmxj5aVL2TM3KoQ2Gs7HS703Bfny+ukI3KOxwAB0xceHQ==
+      integrity: sha512-VEXDzYblnlT+g8Q3gedwzgKOso1evkeJzV8lih7lV8mL8eAnGVnKyC3KsFT6S+R5PQO4ffdr1PI16/ElibY/kQ==
   /esbuild/0.9.6:
     dev: true
     hasBin: true
@@ -433,7 +430,6 @@ packages:
     dev: false
     peerDependencies:
       react: 17.0.2
-<<<<<<< HEAD
     resolution:
       integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
   /react-refresh/0.9.0:
@@ -441,15 +437,6 @@ packages:
     engines:
       node: '>=0.10.0'
     resolution:
-=======
-    resolution:
-      integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
-  /react-refresh/0.9.0:
-    dev: true
-    engines:
-      node: '>=0.10.0'
-    resolution:
->>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa
       integrity: sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==
   /react/17.0.2:
     dependencies:
@@ -467,7 +454,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A==
-  /rollup/2.42.3:
+  /rollup/2.42.4:
     dev: true
     engines:
       node: '>=10.0.0'
@@ -475,7 +462,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     resolution:
-      integrity: sha512-JjaT9WaUS5vmjy6xUrnPOskjkQg2cN4WSACNCwbOvBz8VDmbiKVdmTFUoMPRqTud0tsex8Xy9/boLbDW9HKD1w==
+      integrity: sha512-Zqv3EvNfcllBHyyEUM754npqsZw82VIjK34cDQMwrQ1d6aqxzeYu5yFb7smGkPU4C1Bj7HupIMeT6WU7uIdnMw==
   /safe-buffer/5.1.2:
     dev: true
     resolution:
@@ -523,7 +510,7 @@ packages:
       esbuild: 0.9.6
       postcss: 8.2.8
       resolve: 1.20.0
-      rollup: 2.42.3
+      rollup: 2.42.4
     dev: true
     engines:
       node: '>=12.0.0'
@@ -532,15 +519,12 @@ packages:
       fsevents: 2.3.2
     resolution:
       integrity: sha512-K96k5Nb1kywggFwZNGf/NQVZIrjMSvjebYWFIEQRu8AQWtzxatMF8/reExFXebmrfWAT3PTUk6l4zJBkpMtyVg==
-<<<<<<< HEAD
-=======
   /wouter/2.7.4:
     dev: false
     peerDependencies:
       react: '>=16.8.0'
     resolution:
       integrity: sha512-shJIsHR+gcn69L2zR+0eKquOvAcjfIEdhzf8iAP502DlrAwg5lO2Q90DqIvXryNz/mk1fe2crTB40ZHXjoF1Bg==
->>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa
 registry: 'https://registry.npmjs.org/'
 shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
@@ -549,7 +533,4 @@ specifiers:
   react: ^17.0.2
   react-dom: ^17.0.2
   vite: ^2.1.0
-<<<<<<< HEAD
-=======
   wouter: ^2.7.4
->>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa

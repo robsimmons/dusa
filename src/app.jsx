@@ -4,31 +4,11 @@ import { Link } from "wouter";
 // Import and apply CSS stylesheet
 import "./styles/styles.css";
 
-// Routes
+// Where all of our pages come from
 import Router from "./components/router.jsx";
 
-// Language strings
-const strings = [
-  "Hello React",
-  "Bonjour React",
-  "Hola React",
-  "안녕 React",
-  "Hej React"
-];
-
-// Utility function to choose a random value from the language array
-function randomLanguage() {
-  return strings[Math.floor(Math.random() * strings.length)];
-}
 
 export default function Home() {
-  const [hello, setHello] = useState(strings[0]);
-  const handleChangeHello = () => {
-    // Choose a new Hello from our languages
-    const newHello = randomLanguage();
-    // And set it in our components state
-    setHello(newHello);
-  };
   return (
     <>
       <div className="wrapper">
