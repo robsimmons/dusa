@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "wouter";
 
-// Import and apply our CSS stylesheet
-import "./styles.css";
+// Import and apply CSS stylesheet
+import "./styles/styles.css";
 
-// You can import SVG files directly
-import illustration from "./illustration.svg";
+// Routes
+import Router from "./components/router.jsx";
 
-// Our language strings
-const strings = ["Hello React", "Bonjour React", "Hola React", "안녕 React", "Hej React"];
+// Language strings
+const strings = [
+  "Hello React",
+  "Bonjour React",
+  "Hola React",
+  "안녕 React",
+  "Hej React"
+];
 
 // Utility function to choose a random value from the language array
 function randomLanguage() {
@@ -26,24 +33,25 @@ export default function Home() {
     <>
       <div className="wrapper">
         <div className="content">
-          <span className="title">{hello}!</span>
-          <img
-            src={illustration}
-            className="illustration"
-            onClick={handleChangeHello}
-            alt="Illustration click to change language"
-          />
+          <Router />
         </div>
       </div>
-      <nav className="navigation">
-        <button className="btn--remix" onClick={handleChangeHello}>
-          Pssst, click me
-        </button>
-        <a href="https://glitch.com/edit/#!/remix/glitch-hello-react" className="btn--remix">
+      <footer class="footer">
+        <div class="links">
+          <Link href="/">Home</Link>
+          <span class="divider">|</span>
+          <Link href="/how-to-use">How to Use</Link>
+          <span class="divider">|</span>
+          <Link href="/next-steps">Next Steps</Link>
+        </div>
+        <a
+          className="btn--remix"
+          href="https://glitch.com/edit/#!/remix/glitch-hello-eleventy"
+        >
           <img src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576" />
           Remix on Glitch
         </a>
-      </nav>
+      </footer>
     </>
   );
 }

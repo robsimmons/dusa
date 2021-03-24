@@ -1,6 +1,10 @@
 dependencies:
   react: 17.0.2
   react-dom: 17.0.2
+<<<<<<< HEAD
+=======
+  wouter: 2.7.4
+>>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa
 devDependencies:
   '@vitejs/plugin-react-refresh': 1.3.1
   vite: 2.1.2
@@ -429,6 +433,7 @@ packages:
     dev: false
     peerDependencies:
       react: 17.0.2
+<<<<<<< HEAD
     resolution:
       integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
   /react-refresh/0.9.0:
@@ -436,6 +441,15 @@ packages:
     engines:
       node: '>=0.10.0'
     resolution:
+=======
+    resolution:
+      integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
+  /react-refresh/0.9.0:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+>>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa
       integrity: sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==
   /react/17.0.2:
     dependencies:
@@ -518,6 +532,15 @@ packages:
       fsevents: 2.3.2
     resolution:
       integrity: sha512-K96k5Nb1kywggFwZNGf/NQVZIrjMSvjebYWFIEQRu8AQWtzxatMF8/reExFXebmrfWAT3PTUk6l4zJBkpMtyVg==
+<<<<<<< HEAD
+=======
+  /wouter/2.7.4:
+    dev: false
+    peerDependencies:
+      react: '>=16.8.0'
+    resolution:
+      integrity: sha512-shJIsHR+gcn69L2zR+0eKquOvAcjfIEdhzf8iAP502DlrAwg5lO2Q90DqIvXryNz/mk1fe2crTB40ZHXjoF1Bg==
+>>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa
 registry: 'https://registry.npmjs.org/'
 shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
@@ -526,3 +549,7 @@ specifiers:
   react: ^17.0.2
   react-dom: ^17.0.2
   vite: ^2.1.0
+<<<<<<< HEAD
+=======
+  wouter: ^2.7.4
+>>>>>>> e56bf2aed36ddd5c3481a7f735c7fdf99cdc97fa

@@ -51,15 +51,6 @@ body {
   background-color: var(--color-bg);
 }
 
-.title {
-  color: var(--color-text-main);
-  font-family: HK Grotesk;
-  font-style: normal;
-  font-weight: bold;
-  font-size: 120px;
-  line-height: 105%;
-}
-
 .wrapper {
   min-height: var(--wrapper-height);
   display: grid;
@@ -73,6 +64,19 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.title {
+  color: var(--color-text-main);
+  font-family: HK Grotesk;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 120px;
+  line-height: 105%;
+}
+
+.page .title {
+  font-size: 64px;
 }
 
 /* Navigation grid */
@@ -123,6 +127,30 @@ body {
 }
 
 
-/*
-  Add hover state to the buttons!! oops
-*/
+/* Navigation grid */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  padding-top: 1rem;
+  width: 100%;
+}
+
+.footer a:not(.btn--remix):link,
+        a:not(.btn--remix):visited {
+  font-family: HK Grotesk;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 1.1rem;
+  color: #000;
+  text-decoration: none;
+  border-style: none;
+}
+
+.footer .links {
+  padding: .5rem 1rem;
+}
+
+.divider {
+  padding: 0 1rem;
+}
