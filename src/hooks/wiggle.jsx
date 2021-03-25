@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { useSpring } from 'react-spring'
-import { usePrefersReducedMotion } from '../components/prefers-reduced-motion'
+import { usePrefersReducedMotion } from './prefers-reduced-motion'
 // Heavily inspired by Josh Comeau: https://www.joshwcomeau.com/react/boop/ 💖
 
 

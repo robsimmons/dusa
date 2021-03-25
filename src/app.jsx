@@ -16,10 +16,10 @@ export default function Home() {
           <Router />
         </div>
       </div>
-      <footer class="footer">
-        <div class="links">
+      <footer className="footer">
+        <div className="links">
           <Link href="/">Home</Link>
-          <span class="divider">|</span>
+          <span className="divider">|</span>
           <Link href="/how-to-use">How to Use</Link>
         </div>
         <a
