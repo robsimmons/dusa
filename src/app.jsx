@@ -21,8 +21,6 @@ export default function Home() {
           <Link href="/">Home</Link>
           <span class="divider">|</span>
           <Link href="/how-to-use">How to Use</Link>
-          <span class="divider">|</span>
-          <Link href="/next-steps">Next Steps</Link>
         </div>
         <a
           className="btn--remix"

@@ -118,6 +118,10 @@ body {
   margin-right: 1rem;
 }
 
+.btn--click-me {
+  
+}
+
 /* Very light scaling for our illustration */
 .illustration {
   max-width: 100%;
