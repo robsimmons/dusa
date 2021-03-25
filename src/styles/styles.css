@@ -119,7 +119,12 @@ body {
 }
 
 .btn--click-me {
-  
+  user-select: none;
+  cursor: pointer;
+}
+
+.btn--click-me:hover {
+  text-decoration: underline;
 }
 
 /* Very light scaling for our illustration */
@@ -128,6 +133,7 @@ body {
   max-height: var(--image-max-width);
   margin-top: var(--image-margin);
   cursor: pointer;
+  padding-left: 3.5rem;
 }
 
 

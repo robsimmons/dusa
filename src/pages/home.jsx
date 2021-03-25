@@ -18,7 +18,7 @@ function randomLanguage() {
 
 export default function Home() {
   const [hello, setHello] = React.useState(strings[0]);
-  const [style, trigger] = useWiggle({ x: 10, y: 10, scale: 1 })
+  const [style, trigger] = useWiggle({ x: 5, y: 5, scale: 1 })
   
   
   const handleChangeHello = () => {
@@ -29,7 +29,7 @@ export default function Home() {
   };
   return (
     <>
-      <span className="title">{hello}!?</span>
+      <span className="title">{hello}!</span>
       <animated.div onMouseEnter={trigger} style={style}>
       <img
         src="/illustration.svg"
@@ -39,9 +39,11 @@ export default function Home() {
       />
       </animated.div>
       <nav className="navigation">
-        <a className="btn--click-me" onClick={handleChangeHello}>
-          Pssst, click me
-        </a>
+        <animated.div onMouseEnter={trigger}>
+          <a className="btn--click-me" onClick={handleChangeHello}>
+            Psst, click me
+          </a>
+        </animated.div>
       </nav>
     </>
   );
