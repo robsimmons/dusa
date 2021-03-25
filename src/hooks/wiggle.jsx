@@ -1,8 +1,7 @@
-import React, { useState, useCallback } from 'react'
-import { useSpring } from 'react-spring'
-import { usePrefersReducedMotion } from './prefers-reduced-motion'
+import React, { useState, useCallback } from "react";
+import { useSpring } from "react-spring";
+import { usePrefersReducedMotion } from "./prefers-reduced-motion";
 // Heavily inspired by Josh Comeau: https://www.joshwcomeau.com/react/boop/ 💖
-
 
 export function useWiggle({
   x = 0,
@@ -12,35 +11,36 @@ export function useWiggle({
   timing = 150,
   springConfig = {
     tension: 300,
-    friction: 10,
-  },
+    friction: 10
+  }
 }) {
-  const prefersReducedMotion = usePrefersReducedMotion()
-  const [isActive, setIsActive] = useState(false)
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [isActive, setIsActive] = useState(false);
   // We offload the actual animation to spring: https://www.react-spring.io/docs/hooks/use-spring
   const style = useSpring({
-    transform: isActive ? `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`
+    transform: isActive
+      ? `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`
       : `translate(0px, 0px) rotate(0deg) scale(1)`,
-    config: springConfig,
-  })
+    config: springConfig
+  });
 
   React.useEffect(() => {
     if (!isActive) {
-      return
+      return;
     }
     const timeoutId = window.setTimeout(() => {
-      setIsActive(false)
-    }, timing)
+      setIsActive(false);
+    }, timing);
     return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [isActive])
+      window.clearTimeout(timeoutId);
+    };
+  }, [isActive]);
 
   const trigger = useCallback(() => {
-    setIsActive(true)
-  }, [])
+    setIsActive(true);
+  }, []);
 
-  let appliedStyle = prefersReducedMotion ? {} : style
-  
-  return [appliedStyle, trigger]
+  let appliedStyle = prefersReducedMotion ? {} : style;
+
+  return [appliedStyle, trigger];
 }
