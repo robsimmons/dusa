@@ -18,8 +18,6 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← src/index.css: CSS files add styling rules to your content.
 
-← `build`: Your development bundle will be here while you're creating your app. When it goes to sleep, glitch will automatically run the `build` NPM command for a production build.
-
 
 ![Glitch](https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576)
 
