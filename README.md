@@ -16,8 +16,6 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← `src/index.css`: CSS files add styling rules to your content.
 
-← `src/seo/seo.json`: When you're ready to share your new site or add a custom domain change settings for social sharing in here.
-
 
 ![Glitch](https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576)
 
