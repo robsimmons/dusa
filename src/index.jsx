@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from 'react-helmet';
 import ReactDOM from "react-dom";
 import App from "./app.jsx";
 
