@@ -10,6 +10,12 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← `README.md`: That’s this file, where you can tell people what your cool website does and how you built it.
 
+← `index.html`: This is the main page template React will render your site around.
+
+← `src/`: This folder contains all the files React will use to build your site.
+
+### Working in the `src/` folder
+
 ← `src/App.jsx`: Your React app!! You can see the language strings, and the click event to change it. 
 
 ← `src/index.jsx`: This is the root of your React app. If you add libraries like [chakra-ui](https://chakra-ui.com) or [redux](https://react-redux.js.org), you'll insert their providers here.
