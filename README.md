@@ -10,7 +10,7 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← `README.md`: That’s this file, where you can tell people what your cool website does and how you built it.
 
-← `index.html`: This is the main page template React will render your site around.
+← `index.html`: This is the main page template React uses to build your site. When you're ready to share it or add a custom domain, change SEO/meta settings in here.
 
 ← `src/`: This folder contains all the files React will use to build your site.
 
