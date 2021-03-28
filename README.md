@@ -14,7 +14,7 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← `src/`: This folder contains all the files React will use to build your site.
 
-### Working in the `src/` folder
+### Working in the `src/` folder 📁
 
 ← `src/App.jsx`: Your React app!! You can see the language strings, and the click event to change it. 
 
