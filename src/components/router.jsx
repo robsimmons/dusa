@@ -1,12 +1,12 @@
 import * as React from "react";
 import { Link, Route } from "wouter";
 import Home from "../pages/home";
-import HowToUse from '../pages/how-to-use'
+import About from '../pages/about'
 
 const Router = () => (
   <>
     <Route path="/" component={Home} />
-    <Route path="/how-to-use" component={HowToUse} />
+    <Route path="/about" component={About} />
   </>
 );
 

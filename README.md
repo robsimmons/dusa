@@ -2,9 +2,11 @@
 
 [React](https://reactjs.org) is a popular UI library for building web apps, usually single page apps.
 
-While you're in the editor working, Glitch is running your `start` script in the background. While you develop your application, your changes will happen 🪄 immediately in the preview window, or if you've opened it in another tab.
+[Vite](https://vitejs.dev) is a powerful tool for building javascript apps. It bundles all of your code and shows immediate changes while you're editing. We're big fans!
 
-Once you close the window and your remix goes to sleep, Glitch runs the `build` script.
+While you're in the editor working, Glitch is running your `start` script in the background (`vite dev`). While you develop your application, your changes will happen 🪄 immediately in the preview window, or if you've opened it in another tab.
+
+Once you close the window and your remix goes to sleep, Glitch runs the `build` script and Vite builds your app for modern browsers.
 
 ## What's in this project?
 

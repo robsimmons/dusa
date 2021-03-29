@@ -1,9 +1,9 @@
 import * as React from "react";
 
-export default function Home() {
+export default function About() {
   return (
     <div className="page">
-      <span className="title">How to use</span>
+      <span className="title">About This Starter</span>
       <p>
         React is a 
       </p>
