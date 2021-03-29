@@ -7,10 +7,14 @@ import "./styles/styles.css";
 // Where all of our pages come from
 import Router from "./components/router.jsx";
 
+// And our SEO / Meta tags!
+import Seo from './components/seo.jsx';
+
 
 export default function Home() {
   return (
     <>
+      <Seo />
       <div className="wrapper">
         <div className="content">
           <Router />
