@@ -5,7 +5,7 @@ export default function About() {
     <div className="page">
       <span className="title">About this site</span>
       <p>
-        Here's a great spot to tell the world a few details about the new React app you built on Glitch!
+        This page is defined in the router. It's a great spot to tell the world a few details about the new React app you built on Glitch!
       </p>
       <ul>
         <li>🎉 Detail one</li>
