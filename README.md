@@ -16,11 +16,11 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ### Working in the `src/` folder 📁
 
-← `src/App.jsx`: Your React app!! You can see the language strings, and the click event to change it. 
+← `src/app.jsx`: Your React app!! You can see the language strings, and the click event to change it. 
 
 ← `src/index.jsx`: This is the root of your React app. If you add libraries like [chakra-ui](https://chakra-ui.com) or [redux](https://react-redux.js.org), you'll insert their providers here.
 
-← `src/index.css`: CSS files add styling rules to your content.
+← `src/styles/styles.css`: CSS files add styling rules to your content.
 
 
 ![Glitch](https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576)
