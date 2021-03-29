@@ -7,7 +7,7 @@ import "./styles/styles.css";
 // Where all of our pages come from
 import Router from "./components/router.jsx";
 
-// And our SEO / Meta tags!
+// And the component that adds our Meta tags to the page
 import Seo from './components/seo.jsx';
 
 

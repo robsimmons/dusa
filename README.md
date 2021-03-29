@@ -16,11 +16,13 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ### Working in the `src/` folder 📁
 
-← `src/app.jsx`: Your React app!! You can see the language strings, and the click event to change it. 
+← `src/index.jsx`: This is the root of your React app. If you add libraries like [chakra-ui](https://chakra-ui.com) or [redux](https://react-redux.js.org), you'll insert their providers here. The `<HelmetProvider`> is an example of a provider you'd use!
 
-← `src/index.jsx`: This is the root of your React app. If you add libraries like [chakra-ui](https://chakra-ui.com) or [redux](https://react-redux.js.org), you'll insert their providers here.
+← `src/app.jsx`: The base for your react app, here is where the magic really happens. The router (from `wouter` 🐰) is imported here.
 
-← `src/styles/styles.css`: CSS files add styling rules to your content.
+### Styles 🎨
+
+← `src/styles`: CSS files add styling rules to your content. You can import CSS files directly (`import `)
 
 
 ![Glitch](https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576)

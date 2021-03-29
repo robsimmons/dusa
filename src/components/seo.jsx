@@ -1,12 +1,14 @@
 import * as React from "react";
 import SEO from "../seo.json";
-import { Helmet } from "react-helmet";
+import { Helmet } from 'react-helmet-async';
 
 const Seo = () => {
+  // If url is set to 'glitch-default', we use the hostname for the current page
+  // Otherwise we use the value set in seo.json
+  const url = SEO.url === 'glitch-default' ? window.location.hostname : SEO.url
+  
   return <Helmet>
     <title>{SEO.title}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Glitch: React Starter</title>
 
     <meta
       name="description"
@@ -14,15 +16,15 @@ const Seo = () => {
     />
     <meta name="robots" content="index,follow" />
 
-    <link rel="canonical" href={SEO.url} />
+    <link rel="canonical" href={url} />
 
-    <meta property="og:title" content="Hello React!" />
+    <meta property="og:title" content={SEO.title} />
     <meta property="og:type" content="article" />
 
-    <meta property="og:url" content={SEO.url} />
+    <meta property="og:url" content={url} />
     <meta
       property="og:description"
-      content="A simple React site, built with Glitch. Remix it to get your own."
+      content={SEO.description}
     />
     <meta
       property="og:image"
@@ -31,15 +33,15 @@ const Seo = () => {
 
     <meta name="twitter:card" content="summary" />
 
-    <meta name="twitter:url" content={SEO.url} />
-    <meta name="twitter:title" content="Hello React!" />
+    <meta name="twitter:url" content={url} />
+    <meta name="twitter:title" content={SEO.title} />
     <meta
       name="twitter:description"
-      content="A simple React site, built with Glitch. Remix it to get your own."
+      content={SEO.description}
     />
     <meta
       name="twitter:image"
-      content="https://cdn.glitch.com/605e2a51-d45f-4d87-a285-9410ad350515%2Fhello-react-social.png?v=1616712748355"
+      content={SEO.image}
     />
   </Helmet>
 };
