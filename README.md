@@ -2,7 +2,7 @@
 
 [React](https://reactjs.org) is a popular UI library for building web apps, usually single page apps.
 
-[Vite](https://vitejs.dev) is a powerful tool for building javascript apps. It bundles all of your code and shows immediate changes while you're editing. We're big fans!
+[Vite](https://vitejs.dev) is a powerful tool for building javascript apps. It bundles all of your code and shows immediate changes while you're editing. We're big fans! While you're building, Vite **make note about ES modules and magic and that your lighthouse score will actually be good**
 
 While you're in the editor working, Glitch is running your `start` script in the background (`vite dev`). While you develop your application, your changes will happen 🪄 immediately in the preview window, or if you've opened it in another tab.
 
@@ -26,7 +26,7 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← `src/pages/`: Pages to import to the router should go here!
 
-← `src/components/router.jsx`: One of the most important parts of a single page app is the router. We're using [Wouter](https://github.com/molefrog/wouter), a small and easy router. You could replace it for something like [https://reactrouter.com/](React Router), but we really like wouter!
+← `src/components/router.jsx`: One of the most important parts of a single page app is the router. We're using [Wouter](https://github.com/molefrog/wouter), a small and easy router. You could replace it for something like [React Router](https://reactrouter.com/), but we really like wouter!
 
 ← `src/components/seo.jsx`: When you share your site on social media, you want to make sure the meta tags are correct and you've got an image. All of the settings for this file are in `src/seo.json`.
 

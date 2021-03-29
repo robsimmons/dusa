@@ -13,7 +13,7 @@ ReactDOM.render(
 );
 
 // Hot Module Replacement (HMR) - Remove this snippet to remove HMR.
-// Learn more: https://www.snowpack.dev/#hot-module-replacement
+// Learn more: https://vitejs.dev/guide/api-hmr.html
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
