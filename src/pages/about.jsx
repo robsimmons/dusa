@@ -5,10 +5,8 @@ export default function About() {
     <div className="page">
       <span className="title">About this site</span>
       <p>
-        React is a 
+        Here's a great spot to tell the world all about the new React app you built on Glitch!
       </p>
-      <p>Edit these files</p>
-      <p>Check out this hook</p>
     </div>
   );
 }
