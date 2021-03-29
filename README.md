@@ -1,10 +1,10 @@
 # Hello React!
 
-[React](https://reactjs.org) is a popular UI library for building web apps, usually single page apps. 
+[React](https://reactjs.org) is a popular UI library for building web apps, usually single page apps.
 
-While you're in the editor working, Glitch is running your `start` script in the background. While you develop your application, your changes will happen 🪄 immediately in the preview window, or if you've opened it in another tab. 
+While you're in the editor working, Glitch is running your `start` script in the background. While you develop your application, your changes will happen 🪄 immediately in the preview window, or if you've opened it in another tab.
 
-Once you close the window and your remix goes to sleep, Glitch runs the `build` script. 
+Once you close the window and your remix goes to sleep, Glitch runs the `build` script.
 
 ## What's in this project?
 
@@ -20,10 +20,15 @@ Once you close the window and your remix goes to sleep, Glitch runs the `build` 
 
 ← `src/app.jsx`: The base for your react app, here is where the magic really happens. The router (from `wouter` 🐰) is imported here.
 
-### Styles 🎨
+← `src/hooks/`: [Hooks](https://reactjs.org/docs/hooks-intro.html) are a powerful way to interact with your app. Included are two examples, `wiggle` and `prefers-reduced-motion`. You can use the wiggle on any of your elements!
 
-← `src/styles`: CSS files add styling rules to your content. You can import CSS files directly (`import `)
+← `src/pages/`: Pages to import to the router should go here!
 
+← `src/components/router.jsx`: One of the most important parts of a single page app is the router. We're using [Wouter](https://github.com/molefrog/wouter), a small and easy router. You could replace it for something like [https://reactrouter.com/](React Router), but we really like wouter!
+
+← `src/components/seo.jsx`: When you share your site on social media, you want to make sure the meta tags are correct and you've got an image. All of the settings for this file are in `src/seo.json`.
+
+← `src/styles`: CSS files add styling rules to your content. You have [a lot of](https://vitejs.dev/guide/features.html#css) importing options for CSS including CSS modules if that's your jam.
 
 ![Glitch](https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576)
 
