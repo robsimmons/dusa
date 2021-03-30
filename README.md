@@ -1,6 +1,6 @@
 # Hello React!
 
-[React](https://reactjs.org/) is a popular UI library for building web apps, usually single page apps. This React app uses [Vite](https://vitejs.dev/), a powerful tool for building javascript apps. It bundles all of your code and shows immediate changes while you're editing. We're big fans!
+[React](https://reactjs.org/) is a popular UI library for building web apps, usually single page apps. [Vite](https://vitejs.dev/) is a powerful tool for building javascript apps that bundles all of your code and shows immediate changes while you're editing. We're big fans!
 
 While you're in the editor working, Glitch is running your `start` script in the background (`vite dev`). The site will be in dev mode and you'll see your changes happen 🪄 immediately in the preview window. Once you close the editor window and your app goes to sleep, Glitch runs the `build` script and Vite builds your app for modern browsers.
 
