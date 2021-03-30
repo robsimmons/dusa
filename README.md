@@ -14,7 +14,7 @@ While you're in the editor working, Glitch is running your `start` script in the
 
 ### Working in the `src/` folder 📁
 
-← `src/index.jsx`: This is the root of your React app. If you add libraries like [chakra-ui](https://chakra-ui.com) or [redux](https://react-redux.js.org), you'll insert their providers here. The `<HelmetProvider`> is an example of a provider you'd use!
+← `src/index.jsx`: This is the root of your React app. If you add libraries like [chakra-ui](https://chakra-ui.com) or [redux](https://react-redux.js.org), you'll insert their providers here. The `<HelmetProvider`> is an example of a provider you'd use.
 
 ← `src/app.jsx`: The base for your react app, here is where the magic really happens. The router (from [wouter](https://github.com/molefrog/wouter) 🐰) is imported here.
 
