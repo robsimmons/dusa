@@ -15,17 +15,16 @@ export default function Home() {
   return (
     <>
       <Seo />
-      <div className="wrapper">
+      <main role="main" className="wrapper">
         <div className="content">
           <Router />
         </div>
-      </div>
+      </main>
       <footer className="footer">
-        <div className="links">
-          <Link href="/">Home</Link>
-          <span className="divider">|</span>
-          <Link href="/about">About</Link>
-        </div>
+        <ul className="links">
+          <li><Link href="/">Home</Link></li>
+          <li><Link href="/about">About</Link></li>
+        </ul>
         <a
           className="btn--remix"
           href="https://glitch.com/edit/#!/remix/glitch-hello-react"

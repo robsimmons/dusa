@@ -170,9 +170,23 @@ a:hover {
   border-style: none;
 }
 
-.footer .links {
-  padding: .5rem 1rem;
+
+.footer ul {
+  display: flex;
+  justify-content: space-between;
 }
+
+
+.footer li {
+  list-style-type: none;
+  padding: .5rem 1rem;
+  border-right: 1px solid black;
+}
+
+.footer li:last-of-type {
+  border: none;
+}
+
 
 .divider {
   padding: 0 1rem;

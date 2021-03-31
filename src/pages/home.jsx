@@ -29,7 +29,7 @@ export default function Home() {
   };
   return (
     <>
-      <span className="title">{hello}!</span>
+      <h1 className="title">{hello}!</h1>
       <animated.div onMouseEnter={trigger} style={style}>
       <img
         src="/illustration.svg"
@@ -38,13 +38,13 @@ export default function Home() {
         alt="Illustration click to change language"
       />
       </animated.div>
-      <nav className="navigation">
+      <div className="navigation">
         <animated.div onMouseEnter={trigger}>
           <a className="btn--click-me" onClick={handleChangeHello}>
             (Psst, click me.)
           </a>
         </animated.div>
-      </nav>
+      </div>
     </>
   );
 }
