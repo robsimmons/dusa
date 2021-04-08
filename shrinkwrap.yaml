@@ -6,7 +6,7 @@ dependencies:
   wouter: 2.7.4
 devDependencies:
   '@vitejs/plugin-react-refresh': 1.3.1
-  vite: 2.1.2
+  vite: 2.1.5
 packages:
   /@alloc/types/1.3.0:
     dev: false
@@ -404,12 +404,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-VEXDzYblnlT+g8Q3gedwzgKOso1evkeJzV8lih7lV8mL8eAnGVnKyC3KsFT6S+R5PQO4ffdr1PI16/ElibY/kQ==
-  /esbuild/0.9.6:
+  /esbuild/0.9.7:
     dev: true
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-F6vASxU0wT/Davt9aj2qtDwDNSkQxh9VbyO56M7PDWD+D/Vgq/rmUDGDQo7te76W5auauVojjnQr/wTu3vpaUA==
+      integrity: sha512-VtUf6aQ89VTmMLKrWHYG50uByMF4JQlVysb8dmg6cOgW8JnFCipmz7p+HNBl+RR3LLCuBxFGVauAe2wfnF9bLg==
   /escalade/3.1.1:
     dev: true
     engines:
@@ -536,7 +536,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-GSmOT2EbHrINBf9SR7CDELwlJ8AENk3Qn7OikK4nFYAu3Ote2+JYNVvkpAEQm3/TLNEJFD/xZJjzyxg3KBWOzw==
-  /postcss/8.2.8:
+  /postcss/8.2.9:
     dependencies:
       colorette: 1.2.2
       nanoid: 3.1.22
@@ -545,7 +545,7 @@ packages:
     engines:
       node: ^10 || ^12 || >=14
     resolution:
-      integrity: sha512-1F0Xb2T21xET7oQV9eKuctbM9S7BC0fetoHCc4H13z0PT6haiRLP4T0ZY4XWh7iLP0usgqykT6p9B2RtOf4FPw==
+      integrity: sha512-b+TmuIL4jGtCHtoLi+G/PisuIl9avxs8IZMSmlABRwNz5RLUUACrC+ws81dcomz1nRezm5YPdXiMEzBEKgYn+Q==
   /prop-types/15.7.2:
     dependencies:
       loose-envify: 1.4.0
@@ -632,7 +632,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A==
-  /rollup/2.42.4:
+  /rollup/2.44.0:
     dev: true
     engines:
       node: '>=10.0.0'
@@ -640,7 +640,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     resolution:
-      integrity: sha512-Zqv3EvNfcllBHyyEUM754npqsZw82VIjK34cDQMwrQ1d6aqxzeYu5yFb7smGkPU4C1Bj7HupIMeT6WU7uIdnMw==
+      integrity: sha512-rGSF4pLwvuaH/x4nAS+zP6UNn5YUDWf/TeEU5IoXSZKBbKRNTCI3qMnYXKZgrC0D2KzS2baiOZt1OlqhMu5rnQ==
   /safe-buffer/5.1.2:
     dev: true
     resolution:
@@ -687,12 +687,12 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-3F5pjL0HkmW8c+A3doGk5Og/YW4=
-  /vite/2.1.2:
+  /vite/2.1.5:
     dependencies:
-      esbuild: 0.9.6
-      postcss: 8.2.8
+      esbuild: 0.9.7
+      postcss: 8.2.9
       resolve: 1.20.0
-      rollup: 2.42.4
+      rollup: 2.44.0
     dev: true
     engines:
       node: '>=12.0.0'
@@ -700,7 +700,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     resolution:
-      integrity: sha512-K96k5Nb1kywggFwZNGf/NQVZIrjMSvjebYWFIEQRu8AQWtzxatMF8/reExFXebmrfWAT3PTUk6l4zJBkpMtyVg==
+      integrity: sha512-tYU5iaYeUgQYvK/CNNz3tiJ8vYqPWfCE9IQ7K0iuzYovWw7lzty7KRYGWwV3CQPh0NKxWjOczAqiJsCL0Xb+Og==
   /wouter/2.7.4:
     dev: false
     peerDependencies:
@@ -716,5 +716,5 @@ specifiers:
   react-dom: ^17.0.2
   react-helmet-async: ^1.0.8
   react-spring: ^9.0.0
-  vite: ^2.1.0
+  vite: ^2.1.5
   wouter: ^2.7.4
