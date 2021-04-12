@@ -1,15 +1,12 @@
 /******************************************************************************
-START Glitch default styles
-Everything in this section is used
-******************************************************************************/
-* {
-  box-sizing: border-box;
-}
-[hidden] {
-  display: none !important;
-}
+START Glitch hello-app default styles
 
-/* Our default values set for mobile */
+The styles in this section do some minimal CSS resets, set default fonts and 
+colors, and handle the layout for our footer and "Remix on Glitch" button. If
+you're new to CSS they may seem a little complicated, but you can scroll down
+to this section's matching END comment to see page-specific styles.
+******************************************************************************/
+/* Our default values set as CSS variables */
 :root {
   --color-bg: #D7F5EF;
   --color-text-main: #2800FF;
@@ -20,30 +17,20 @@ Everything in this section is used
   --font-family-header: "HK Grotesk";
 }
 
-/* Tablet portrait */
-@media (min-width: 768px) {
-  :root {
-  }
+/* Basic page style resets */
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
 }
 
-/* Tablet Landscape */
-@media (min-width: 1024px) {
-  :root {
-  }
-}
-
-/* Desktop */
-@media (min-width: 1280px) {
-  :root {
-  }
-}
-
+/* Import fonts */
 @font-face {
   font-family: HK Grotesk;
   src: url("https://cdn.glitch.com/605e2a51-d45f-4d87-a285-9410ad350515%2FHKGrotesk-Regular.otf?v=1603136326027")
     format("opentype");
 }
-
 @font-face {
   font-family: HK Grotesk;
   font-weight: bold;
@@ -67,6 +54,7 @@ Everything in this section is used
   border-radius: 4px;
   text-decoration: none;
   color: #000;
+  white-space: nowrap;
 }
 .btn--remix img {
   margin-right: 0.5rem;
@@ -107,7 +95,7 @@ a:not(.btn--remix):visited {
   padding: 0 1rem;
 }
 /******************************************************************************
-END Glitch default styles
+END Glitch hello-app default styles
 ******************************************************************************/
 
 /* Page structure */
