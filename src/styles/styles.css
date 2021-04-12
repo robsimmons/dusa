@@ -1,36 +1,33 @@
 /* Our default values set for mobile */
+/* Our default values set for mobile */
 :root {
-  --color-bg: #FFFFA0;
+  --color-bg: #D7F5EF;
   --color-text-main: #2800FF;
   --color-primary: #AFECE0;
-  --wrapper-height: 87vh;
-  --image-max-width: 300px;
-  --image-margin: 3rem;
-
+  --wrapper-height: 85vh;
+  --image-max-width: 320px;
+  --font-family: "HK Grotesk";
+  --font-family-header: "HK Grotesk";
 }
 
 /* Tablet portrait */
 @media (min-width: 768px) {
   :root {
-    --wrapper-height: 87vh;
-    --image-max-width: 400px;
-    --image-margin: 5rem;
+    
   }
 }
 
 /* Tablet Landscape */
 @media (min-width: 1024px) {
   :root {
-    --wrapper-height: 87vh;
-    --image-max-width: 500px;
+    
   }
 }
 
 /* Desktop */
 @media (min-width: 1280px) {
   :root {
-    --wrapper-height: 87vh;
-    --image-max-width: 500px;
+
   }
 }
 
