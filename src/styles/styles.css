@@ -54,7 +54,6 @@ Everything in this section is used
   line-height: 1rem;
   font-weight: 500;
   height: 2.75rem;
-  margin-top: 0.75rem;
   align-items: center;
   cursor: pointer;
   background: #FFFFFF;
@@ -75,48 +74,7 @@ Everything in this section is used
 .footer {
   display: flex;
   justify-content: space-between;
-  margin: 0 auto;
-  padding-top: 1rem;
-  width: 100%;
-}
-
-.footer a:not(.btn--remix):link,
-        a:not(.btn--remix):visited {
-  font-family: HK Grotesk;
-  font-style: normal;
-  font-weight: normal;
-  font-size: 1.1rem;
-  color: #000;
-  text-decoration: none;
-  border-style: none;
-}
-
-.footer ul {
-  display: flex;
-  justify-content: space-between;
-}
-
-.footer li {
-  list-style-type: none;
-  padding: .5rem 1rem;
-  border-right: 1px solid black;
-}
-
-.footer li:last-of-type {
-  border: none;
-}
-
-.divider {
-  padding: 0 1rem;
-}
-
-
-
-
-.footer {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 auto;
+  margin: 1rem auto 0;
   padding: 1rem 0;
   width: 100%;
   border-top: 4px solid #fff;
@@ -155,7 +113,8 @@ body {
   display: grid;
   place-items: center;
   margin-left: 2rem;
-  margin-top: 3rem;
+  margin-top: 0;
+  min-height: 86vh;
 }
 
 .content {
@@ -197,11 +156,6 @@ body {
   padding-left: 3.5rem;
 }
 
-/* Navigation grid */
-.navigation {
-  display: flex;
-  justify-content: flex-end;
-}
 
 a:not(.btn--remix):link,
 a:not(.btn--remix):visited {

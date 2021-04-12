@@ -21,10 +21,11 @@ export default function Home() {
         </div>
       </main>
       <footer className="footer">
-        <ul className="links">
-          <li><Link href="/">Home</Link></li>
-          <li><Link href="/about">About</Link></li>
-        </ul>
+        <div class="links">
+          <a href="/">Home</a>
+          <span class="divider">|</span>
+          <a href="/about">About</a>
+        </div>
         <a
           className="btn--remix"
           target="_top"
