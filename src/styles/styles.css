@@ -95,6 +95,9 @@ a:not(.btn--remix):visited {
   text-decoration: none;
   border-style: none;
 }
+.footer a:hover {
+  background: var(--color-primary);
+}
 
 .footer .links {
   padding: 0.5rem 1rem;
@@ -107,20 +110,18 @@ a:not(.btn--remix):visited {
 END Glitch default styles
 ******************************************************************************/
 
+/* Page structure */
 body {
   font-family: HK Grotesk;
   background-color: var(--color-bg);
 }
-
 .wrapper {
   min-height: var(--wrapper-height);
   display: grid;
   place-items: center;
-  margin-left: 2rem;
-  margin-top: 0;
+  margin: 0 2rem;
   min-height: 86vh;
 }
-
 .content {
   display: flex;
   flex-direction: column;
@@ -128,7 +129,8 @@ body {
   justify-content: center;
 }
 
-.title {
+/* Page titles */
+h1 {
   color: var(--color-text-main);
   font-family: HK Grotesk;
   font-style: normal;
@@ -136,12 +138,11 @@ body {
   font-size: 120px;
   line-height: 105%;
 }
-
-.page .title {
+.page h1 {
   font-size: 64px;
 }
 
-/* Our remix on glitch button + grid for other actions */
+/* The React image and "click me" text */
 .btn--click-me {
   user-select: none;
   cursor: pointer;
@@ -156,16 +157,4 @@ body {
   max-height: var(--image-max-width);
   cursor: pointer;
   padding-left: 3.5rem;
-}
-
-/* In-page link styles */
-a:not(.btn--remix):link,
-a:not(.btn--remix):visited {
-  text-decoration: none;
-  border-bottom: 6px solid var(--color-primary);
-  color: var(--foreground);
-  transition: background 0.2s linear;
-}
-a:hover {
-  background: var(--color-primary);
 }
