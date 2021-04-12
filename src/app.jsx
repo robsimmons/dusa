@@ -30,7 +30,7 @@ export default function Home() {
           target="_top"
           href="https://glitch.com/edit/#!/remix/glitch-hello-react"
         >
-          <img src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576" alt="Glitch logo" />
+          <img src="https://cdn.glitch.com/605e2a51-d45f-4d87-a285-9410ad350515%2FLogo_Color.svg?v=1618199565140" alt="" />
           Remix on Glitch
         </a>
       </footer>
