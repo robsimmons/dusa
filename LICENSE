@@ -6,6 +6,7 @@ say "we wrote this and you can do whatever you want with it."
 ******************************************************************************
 ~glitch-hello-react
 ******************************************************************************
+MIT License
 
 Copyright (c) 2021, Glitch, Inc.
 
@@ -41,7 +42,7 @@ can learn more if you want.
 2. react-spring: A spring-physics based animation library.
 3. vite: Vite is a new breed of frontend build tool.
 4. @vitejs/plugin-react-refresh: 
-5. wouter: 
+5. wouter: wouter is a tiny router for modern React and Preact apps.
 6. HK Grotesk: The font we're using. 
 
 
@@ -140,12 +141,11 @@ END, vite
 
 ******************************************************************************
 4. @vitejs/plugin-react-refresh
-URL: https://vitejs.dev/
-     https://github.com/vitejs/vite
+URL: https://github.com/vitejs/vite-plugin-react
 ******************************************************************************
 MIT License
 
-Copyright (c) 2019-present, Yuxi (Evan) You and Vite contributors
+Copyright (c) 2020-present, Yuxi (Evan) You
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -166,6 +166,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************
 END, @vitejs/plugin-react-refresh
+******************************************************************************
+
+
+******************************************************************************
+5. wouter
+URL: https://github.com/molefrog/wouter
+     https://www.npmjs.com/package/wouter
+******************************************************************************
+ISC License
+
+wouter is published to npm (https://www.npmjs.com/package/wouter) under an
+ISC license. No additional copyright information is present on the project's
+github or npm pages as of April 11, 2021.
+******************************************************************************
+END, wouter
 ******************************************************************************
 
 
