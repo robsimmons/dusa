@@ -87,34 +87,6 @@ body {
 }
 
 /* Our remix on glitch button + grid for other actions */
-/* Our remix on glitch button */
-
-.btn--remix {
-  font-family: HK Grotesk;
-  padding: 0.75rem 1rem;
-  font-size: 1.1rem;
-  line-height: 1rem;
-  font-weight: 500;
-  height: 2.75rem;
-  margin-top: 0.75rem;
-  align-items: center;
-  cursor: pointer;
-  background: #FFFFFF;
-  border: 1px solid #000000;
-  box-sizing: border-box;
-  border-radius: 4px;
-  text-decoration: none;
-  color: #000;
-}
-
-.btn--remix img {
-  margin-right: 0.5rem;
-}
-
-.btn--remix:hover {
-  background-color: #D0FFF1;
-}
-
 .btn--click-me {
   user-select: none;
   cursor: pointer;
@@ -143,6 +115,34 @@ a:hover {
   margin-top: var(--image-margin);
   cursor: pointer;
   padding-left: 3.5rem;
+}
+
+/* Our remix on glitch button */
+
+.btn--remix {
+  font-family: HK Grotesk;
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
+  line-height: 1rem;
+  font-weight: 500;
+  height: 2.75rem;
+  margin-top: 0.75rem;
+  align-items: center;
+  cursor: pointer;
+  background: #FFFFFF;
+  border: 1px solid #000000;
+  box-sizing: border-box;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #000;
+}
+
+.btn--remix img {
+  margin-right: 0.5rem;
+}
+
+.btn--remix:hover {
+  background-color: #D0FFF1;
 }
 
 
@@ -181,7 +181,6 @@ a:hover {
 .footer li:last-of-type {
   border: none;
 }
-
 
 .divider {
   padding: 0 1rem;
