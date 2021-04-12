@@ -2,6 +2,14 @@
 START Glitch default styles
 Everything in this section is used
 ******************************************************************************/
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+
+/* Our default values set for mobile */
 :root {
   --color-bg: #D7F5EF;
   --color-text-main: #2800FF;
@@ -15,21 +23,18 @@ Everything in this section is used
 /* Tablet portrait */
 @media (min-width: 768px) {
   :root {
-    
   }
 }
 
 /* Tablet Landscape */
 @media (min-width: 1024px) {
   :root {
-    
   }
 }
 
 /* Desktop */
 @media (min-width: 1280px) {
   :root {
-
   }
 }
 
@@ -75,13 +80,13 @@ Everything in this section is used
   display: flex;
   justify-content: space-between;
   margin: 1rem auto 0;
-  padding: 1rem 0;
+  padding: 1rem 0 0.75rem 0;
   width: 100%;
   border-top: 4px solid #fff;
 }
 
 .footer a:not(.btn--remix):link,
-        a:not(.btn--remix):visited {
+a:not(.btn--remix):visited {
   font-family: HK Grotesk;
   font-style: normal;
   font-weight: normal;
@@ -92,16 +97,15 @@ Everything in this section is used
 }
 
 .footer .links {
-  padding: .5rem 1rem;
+  padding: 0.5rem 1rem;
 }
 
 .divider {
   padding: 0 1rem;
 }
-
-
-
-
+/******************************************************************************
+END Glitch default styles
+******************************************************************************/
 
 body {
   font-family: HK Grotesk;
@@ -142,7 +146,6 @@ body {
   user-select: none;
   cursor: pointer;
 }
-
 .btn--click-me:hover {
   text-decoration: underline;
 }
@@ -151,12 +154,11 @@ body {
 .illustration {
   max-width: 100%;
   max-height: var(--image-max-width);
-  margin-top: var(--image-margin);
   cursor: pointer;
   padding-left: 3.5rem;
 }
 
-
+/* In-page link styles */
 a:not(.btn--remix):link,
 a:not(.btn--remix):visited {
   text-decoration: none;
@@ -164,7 +166,6 @@ a:not(.btn--remix):visited {
   color: var(--foreground);
   transition: background 0.2s linear;
 }
-
 a:hover {
   background: var(--color-primary);
 }
