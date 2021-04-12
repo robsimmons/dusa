@@ -3,7 +3,7 @@ import * as React from "react";
 export default function About() {
   return (
     <div className="page">
-      <span className="title">About this site</span>
+      <h1 className="title">About this site</h1>
       <p>Welcome to the Glitch React starter, where you can instantly create a React site that's fully customizable.</p>
       <p>
         This page is a great spot to tell the world a few details about the new React app you built on Glitch! The content is defined in the router. Check out your project's <code>readme</code> file to learn more about how to customize your contnet.
