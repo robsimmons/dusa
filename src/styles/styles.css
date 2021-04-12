@@ -95,6 +95,8 @@ body {
   font-size: 1.1rem;
   line-height: 1rem;
   font-weight: 500;
+  height: 2.75rem;
+  margin-top: 0.75rem;
   align-items: center;
   cursor: pointer;
   background: #FFFFFF;
@@ -170,10 +172,9 @@ a:hover {
   justify-content: space-between;
 }
 
-
 .footer li {
   list-style-type: none;
- 
+  padding: .5rem 1rem;
   border-right: 1px solid black;
 }
 
