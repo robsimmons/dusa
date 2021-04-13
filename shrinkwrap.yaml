@@ -2,16 +2,12 @@ dependencies:
   react: 17.0.2
   react-dom: 17.0.2
   react-helmet-async: 1.0.9
-  react-spring: 9.0.0
+  react-spring: 9.1.1
   wouter: 2.7.4
 devDependencies:
   '@vitejs/plugin-react-refresh': 1.3.1
   vite: 2.1.5
 packages:
-  /@alloc/types/1.3.0:
-    dev: false
-    resolution:
-      integrity: sha512-mH7LiFiq9g6rX2tvt1LtwsclfG5hnsmtIfkZiauAGrm1AwXhoRS0sF2WrN9JGN7eV5vFXqNaB0eXZ3IvMsVi9g==
   /@babel/code-frame/7.12.13:
     dependencies:
       '@babel/highlight': 7.13.10
@@ -224,100 +220,95 @@ packages:
     dev: true
     resolution:
       integrity: sha512-K4nY2xFN4QMvQwkQ+zmBDp6ANMbVNw6BbxWmYA4qNjhR9W+Lj/8ky5MEY2Me5r+B2c6/v6F53oMndG+f9s3IiA==
-  /@react-spring/animated/9.0.0:
+  /@react-spring/animated/9.1.1:
     dependencies:
-      '@react-spring/shared': 9.0.0
-      '@react-spring/types': 9.0.0
-      react-layout-effect: 1.0.5
+      '@react-spring/shared': 9.1.1
+      '@react-spring/types': 9.1.1
     dev: false
     peerDependencies:
       react: '>=16.8'
     resolution:
-      integrity: sha512-6EF7iNnBJzFozqc9rhdAvqW5WAIcLO3VapGd8OjRqHPL27zHP14n9klfPx2ccSPtVqs5EbttG6a+ntiP6RUTGw==
-  /@react-spring/core/9.0.0:
+      integrity: sha512-u8Assg5uySwqyoeb1f7eBAUSl8sleJTewdfhVi1EtcM9ngU2Snhcp6snF8NGxvf4gZp5z7v+Dfx3KdB2V8NnXQ==
+  /@react-spring/core/9.1.1:
     dependencies:
-      '@react-spring/animated': 9.0.0
-      '@react-spring/shared': 9.0.0
-      '@react-spring/types': 9.0.0
-      react-layout-effect: 1.0.5
+      '@react-spring/animated': 9.1.1
+      '@react-spring/shared': 9.1.1
+      '@react-spring/types': 9.1.1
     dev: false
     peerDependencies:
       react: '>=16.8'
     requiresBuild: true
     resolution:
-      integrity: sha512-VE193rRuv4BKON+K+UpHhPfs2snt2ySr0bYz35Lm+7Xw9PDoV7VVsoG3p/K/zNKLJWioyUQXKI0UkbUaS3KCfQ==
-  /@react-spring/konva/9.0.0:
+      integrity: sha512-flHeLN56idxQ1YIpUYY1m3r2ZAM2xg7Zb/pHBFSCbnOKP7TtlhAAOfmrabERqaThmrqkFKiq9FjyF76d3OjE5g==
+  /@react-spring/konva/9.1.1:
     dependencies:
-      '@react-spring/animated': 9.0.0
-      '@react-spring/core': 9.0.0
-      '@react-spring/shared': 9.0.0
-      '@react-spring/types': 9.0.0
+      '@react-spring/animated': 9.1.1
+      '@react-spring/core': 9.1.1
+      '@react-spring/shared': 9.1.1
+      '@react-spring/types': 9.1.1
     dev: false
     peerDependencies:
       konva: '>=2.6'
       react: '>=16.8'
       react-konva: '>=16.8'
     resolution:
-      integrity: sha512-eTCwVLGecs9D18ak8zj5RE6wOF/ARF1WWac/x989+NChvVGd2DgEEH+TB8kMiU/u7AvE9V2nzJBIW6dfNbdQYw==
-  /@react-spring/native/9.0.0:
+      integrity: sha512-xD93j5gNYyNTspvtxZXIU91RIfAKdqHMCJ4m6pugFQyHpa3EYVFDIMkPx7l7sCngMH/9Ez5Irit7NDtp7rZ1Hw==
+  /@react-spring/native/9.1.1:
     dependencies:
-      '@react-spring/animated': 9.0.0
-      '@react-spring/core': 9.0.0
-      '@react-spring/shared': 9.0.0
-      '@react-spring/types': 9.0.0
+      '@react-spring/animated': 9.1.1
+      '@react-spring/core': 9.1.1
+      '@react-spring/shared': 9.1.1
+      '@react-spring/types': 9.1.1
     dev: false
     peerDependencies:
       react: '>=16.8'
       react-native: '>=0.58'
     resolution:
-      integrity: sha512-BvtS/zrHfdWUesrOwfhuzA0RdNwHtEGyACbsF5hvk+hPRJ7DyEI4wPvDMUCgKA1XdU7uHwFC8+F9cdiE27Vfpw==
-  /@react-spring/shared/9.0.0:
+      integrity: sha512-eDBB4rSCmsuqyhc15VtEOQmEebvnMdg4Nh/OTyAvfDVNQTXm9H1LwZpKi1enxq2kUhpyZ8jX3kHzz3DPy0+Dag==
+  /@react-spring/shared/9.1.1:
     dependencies:
-      '@react-spring/types': 9.0.0
-      fluids: 0.2.8
+      '@react-spring/types': 9.1.1
       rafz: 0.1.14
     dev: false
     peerDependencies:
       react: '>=16.8'
     resolution:
-      integrity: sha512-cbVTcepW5vj5BtGwxm6DU19C1QgK55YiPiEGRQLoQuvyKo/6LUPTWg0DO+Nzti90d52hcyb2WnGA5tE8sQHifw==
-  /@react-spring/three/9.0.0:
+      integrity: sha512-GA9A9l5JxC50eDTDPu5IDUMhQ4MiBrXd3ZdlI6/wUCgAsZ1wPx77sxaccomxlUomRet0IUcXCEKcL1Flax7ZMQ==
+  /@react-spring/three/9.1.1:
     dependencies:
-      '@react-spring/animated': 9.0.0
-      '@react-spring/core': 9.0.0
-      '@react-spring/shared': 9.0.0
-      '@react-spring/types': 9.0.0
+      '@react-spring/animated': 9.1.1
+      '@react-spring/core': 9.1.1
+      '@react-spring/shared': 9.1.1
+      '@react-spring/types': 9.1.1
     dev: false
     peerDependencies:
       '@react-three/fiber': '>=6.0'
       react: '>=16.11'
       three: '>=0.126'
     resolution:
-      integrity: sha512-UeaR+i7rSShliF5kcrp/c9E/nLQ1kBPlePVowRBBVHo4vr/6iR9U/WRyK2V+iFLPWctW3PXvolXSzKrucrkDaQ==
-  /@react-spring/types/9.0.0:
-    dependencies:
-      '@alloc/types': 1.3.0
+      integrity: sha512-0CW41OHFkyx9laD/ZEkuHLXTq58c25ZFPTD+NyI2wHuhI1wyM0YGhlueNFXVpzkgpwj9dYnpdI7KxN7Cx0dnJg==
+  /@react-spring/types/9.1.1:
     dev: false
     resolution:
-      integrity: sha512-29PVjz3luTk1gMV6ZjVKmyIT45tpTKd7g37hfAzYE8drm7bOC5T/kcLM+gXl2HRYCwrzXKduW7jOwjlpEmma+w==
-  /@react-spring/web/9.0.0:
+      integrity: sha512-GaesYowey+nmDw/yhZ5jErEH2UaDl4jxax8aQtW5h3OpNu/QS8swoEn/jxQgffLb0n6gjsER7QyIx/dmZIWlyw==
+  /@react-spring/web/9.1.1:
     dependencies:
-      '@react-spring/animated': 9.0.0
-      '@react-spring/core': 9.0.0
-      '@react-spring/shared': 9.0.0
-      '@react-spring/types': 9.0.0
+      '@react-spring/animated': 9.1.1
+      '@react-spring/core': 9.1.1
+      '@react-spring/shared': 9.1.1
+      '@react-spring/types': 9.1.1
     dev: false
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
     resolution:
-      integrity: sha512-A75WR7eYUS1p80KQcmVOakWwXCZ/+bnGd4FhKfAm8E4Kl//ZvPXVMuOuPP8hOsxy5sd7FZkbIULOCsRvXHFRQg==
-  /@react-spring/zdog/9.0.0:
+      integrity: sha512-py4c/Agqz9Unf+Apame29XYTLqHnKXSwJA6Q44jcNtHRFMuRjIpCyhS13C1ZI5PcJT0g9b8CvtMQFiShne8wNQ==
+  /@react-spring/zdog/9.1.1:
     dependencies:
-      '@react-spring/animated': 9.0.0
-      '@react-spring/core': 9.0.0
-      '@react-spring/shared': 9.0.0
-      '@react-spring/types': 9.0.0
+      '@react-spring/animated': 9.1.1
+      '@react-spring/core': 9.1.1
+      '@react-spring/shared': 9.1.1
+      '@react-spring/types': 9.1.1
     dev: false
     peerDependencies:
       react: '>=16.8'
@@ -325,7 +316,7 @@ packages:
       react-zdog: '>=1.0'
       zdog: '>=1.0'
     resolution:
-      integrity: sha512-DsTUnKIZnpTpsJq6O1aTr0jtjFpXbZimwYRV/Df7wH1QgZgCkFFewjQa45MC/0c7+Mgy1zCEG4BAgUstuYabNA==
+      integrity: sha512-v0bSWfc0HtfAH+ijdml+/h8pFtP+WtWkd8pDq1ncfA0V0ey+8/SILE6vd69jSIYq8Wr/Q/qIpMvPmM77YkT+Ag==
   /@vitejs/plugin-react-refresh/1.3.1:
     dependencies:
       '@babel/core': /@babel/core/7.13.10/@babel!core@7.13.10
@@ -422,10 +413,6 @@ packages:
       node: '>=0.8.0'
     resolution:
       integrity: sha1-G2HAViGQqN/2rjuyzwIAyhMLhtQ=
-  /fluids/0.2.8:
-    dev: false
-    resolution:
-      integrity: sha512-60W1IZZaIm7OeNKhlyxNgCqEt0t89ds+RODxiWy6BVgaolK1eXFCamIEmxdAx8o83XtuH1haIl5QkOX2nff9wA==
   /fsevents/2.3.2:
     dev: true
     engines:
@@ -589,29 +576,23 @@ packages:
     dev: false
     resolution:
       integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
-  /react-layout-effect/1.0.5:
-    dev: false
-    peerDependencies:
-      react: '>=16.8'
-    resolution:
-      integrity: sha512-zdRXHuch+OBHU6bvjTelOGUCM+UDr/iCY+c0wXLEAc+G4/FlcJruD/hUOzlKH5XgO90Y/BUJPNhI/g9kl+VAsA==
   /react-refresh/0.9.0:
     dev: true
     engines:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-Gvzk7OZpiqKSkxsQvO/mbTN1poglhmAV7gR/DdIrRrSMXraRQQlfikRJOr3Nb9GTMPC5kof948Zy6jJZIFtDvQ==
-  /react-spring/9.0.0:
+  /react-spring/9.1.1:
     dependencies:
-      '@react-spring/core': 9.0.0
-      '@react-spring/konva': 9.0.0
-      '@react-spring/native': 9.0.0
-      '@react-spring/three': 9.0.0
-      '@react-spring/web': 9.0.0
-      '@react-spring/zdog': 9.0.0
+      '@react-spring/core': 9.1.1
+      '@react-spring/konva': 9.1.1
+      '@react-spring/native': 9.1.1
+      '@react-spring/three': 9.1.1
+      '@react-spring/web': 9.1.1
+      '@react-spring/zdog': 9.1.1
     dev: false
     resolution:
-      integrity: sha512-90s8beqIAKJA3VdmkGBEv8wZNAuhxE7ngKA5TGCd6Ya3wjyoZPzMR76vEYUSGv3Psu6q5R2dYXHh89LdlQTY1A==
+      integrity: sha512-gdRyLETB5183zCygEKXq5lNsNLSRXC8PZjEacB6CXC4gK7EErqsJBaC5vIHYc9/PMsi2XvUyTP17y8IhYHnKjg==
   /react/17.0.2:
     dependencies:
       loose-envify: 1.4.0
@@ -715,6 +696,6 @@ specifiers:
   react: ^17.0.2
   react-dom: ^17.0.2
   react-helmet-async: ^1.0.8
-  react-spring: ^9.0.0
+  react-spring: ^9.1.0
   vite: ^2.1.5
   wouter: ^2.7.4
