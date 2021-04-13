@@ -1,6 +1,6 @@
 import * as React from "react";
-import { animated } from 'react-spring'
-import { useWiggle } from '../hooks/wiggle'
+import { animated } from "react-spring";
+import { useWiggle } from "../hooks/wiggle";
 
 // Our language strings
 const strings = [
@@ -18,9 +18,8 @@ function randomLanguage() {
 
 export default function Home() {
   const [hello, setHello] = React.useState(strings[0]);
-  const [style, trigger] = useWiggle({ x: 5, y: 5, scale: 1 })
-  
-  
+  const [style, trigger] = useWiggle({ x: 5, y: 5, scale: 1 });
+
   const handleChangeHello = () => {
     // Choose a new Hello from our languages
     const newHello = randomLanguage();
@@ -31,12 +30,12 @@ export default function Home() {
     <>
       <h1 className="title">{hello}!</h1>
       <animated.div onMouseEnter={trigger} style={style}>
-      <img
-        src="https://cdn.glitch.com/2f80c958-3bc4-4f47-8e97-6a5c8684ac2c%2Fillustration.svg?v=1618196579405"
-        className="illustration"
-        onClick={handleChangeHello}
-        alt="Illustration click to change language"
-      />
+        <img
+          src="https://cdn.glitch.com/2f80c958-3bc4-4f47-8e97-6a5c8684ac2c%2Fillustration.svg?v=1618196579405"
+          className="illustration"
+          onClick={handleChangeHello}
+          alt="Illustration click to change language"
+        />
       </animated.div>
       <div className="navigation">
         <animated.div onMouseEnter={trigger}>
