@@ -123,7 +123,7 @@ h1 {
   font-family: HK Grotesk;
   font-style: normal;
   font-weight: bold;
-  font-size: 120px;
+  font-size: 100px;
   line-height: 105%;
 }
 .page h1 {
@@ -134,6 +134,7 @@ h1 {
 .btn--click-me {
   user-select: none;
   cursor: pointer;
+  white-space: nowrap;
 }
 .btn--click-me:hover {
   text-decoration: underline;

@@ -5,7 +5,7 @@ import { useWiggle } from '../hooks/wiggle'
 // Our language strings
 const strings = [
   "Hello React",
-  "Bonjour React",
+  "Salut React",
   "Hola React",
   "안녕 React",
   "Hej React"
