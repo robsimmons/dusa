@@ -21,9 +21,9 @@ export default function Home() {
         </div>
       </main>
       <footer className="footer">
-        <div class="links">
+        <div className="links">
           <a href="/">Home</a>
-          <span class="divider">|</span>
+          <span className="divider">|</span>
           <a href="/about">About</a>
         </div>
         <a
