@@ -1,4 +1,7 @@
 {
+  "name": "hello-react",
+  "version": "0.0.1",
+  "description": "A simple React single page app, built with Glitch.",
   "scripts": {
     "start": "vite",
     "build": "vite build",
