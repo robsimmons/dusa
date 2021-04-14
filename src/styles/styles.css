@@ -107,7 +107,7 @@ body {
   min-height: var(--wrapper-height);
   display: grid;
   place-items: center;
-  margin: 0 2rem;
+  margin: 0 1rem;
   min-height: 86vh;
 }
 .content {
