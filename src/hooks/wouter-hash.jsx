@@ -8,13 +8,17 @@ const currentLoc = () => window.location.hash.replace("#", "") || "/";
 
 const useHashLocation = () => {
   const [loc, setLoc] = useState(currentLoc());
+  
+  console.log("✨", "text", window.location.hash)
 
   useEffect(() => {
-    const handler = () => setLoc(currentLoc());
+    const handler = () => {
+      console.log("✨", "text", currentLoc())
+      setLoc(currentLoc())
+    };
 
     // subscribe on hash changes
     window.addEventListener("hashchange", handler);
-    console.log("✨", "text", currentLoc())
     return () => window.removeEventListener("hashchange", handler);
   }, []);
 
