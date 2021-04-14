@@ -22,9 +22,9 @@ export default function Home() {
       </main>
       <footer className="footer">
         <div className="links">
-          <Link href="/">Home</Link>
+          <Link href="/#/">Home</Link>
           <span className="divider">|</span>
-          <Link href="/about">About</Link>
+          <Link href="/#/about">About</Link>
         </div>
         <a
           className="btn--remix"

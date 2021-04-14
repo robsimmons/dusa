@@ -1,14 +1,14 @@
 import * as React from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, Router } from "wouter";
 import Home from "../pages/home";
 import About from "../pages/about";
+import useHashLocation from "../hooks/wouter-hash";
 
-const Router = () => (
-  <Switch>
-    <Route path="/" component={Home} />
-    <Route path="/about" component={About} />
-    <Route>404, Not Found!</Route>
-  </Switch>
+export default () => (
+  <Router hook={useHashLocation}>
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/about" component={About} />
+    </Switch>
+  </Router>
 );
-
-export default Router;
