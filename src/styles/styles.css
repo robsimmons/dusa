@@ -8,9 +8,9 @@ to this section's matching END comment to see page-specific styles.
 ******************************************************************************/
 /* Our default values set as CSS variables */
 :root {
-  --color-bg: #FFFF60;
+  --color-bg: #FFFFA0;
   --color-text-main: #000000;
-  --color-primary: #FEC1EE;
+  --color-primary: #AFECE0;
   --wrapper-height: 85vh;
   --image-max-width: 320px;
   --font-family: "HK Grotesk";
