@@ -8,14 +8,9 @@ const currentLoc = () => window.location.hash.replace("#", "") || "/";
 
 const useHashLocation = () => {
   const [loc, setLoc] = useState(currentLoc());
-  
-  console.log("✨", "text", window.location.hash)
 
   useEffect(() => {
-    const handler = () => {
-      console.log("✨", "text", currentLoc())
-      setLoc(currentLoc())
-    };
+    const handler = () => setLoc(currentLoc());
 
     // subscribe on hash changes
     window.addEventListener("hashchange", handler);
@@ -25,7 +20,5 @@ const useHashLocation = () => {
   const navigate = useCallback(to => (window.location.hash = to), []);
   return [loc, navigate];
 };
-
-
 
 export default useHashLocation;

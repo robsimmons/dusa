@@ -698,4 +698,4 @@ specifiers:
   react-helmet-async: ^1.0.8
   react-spring: ^9.1.0
   vite: ^2.1.5
-  wouter: ^2.7.3
+  wouter: ^2.7.4
