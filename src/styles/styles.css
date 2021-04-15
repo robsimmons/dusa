@@ -130,7 +130,19 @@ h1 {
   line-height: 105%;
 }
 .page h1 {
-  font-size: 64px;
+  font-size: 48px;
+}
+
+.page p {
+  line-height: 1.5;
+}
+
+.page a:visited {
+  color: #000;
+}
+
+.page a:hover {
+  text-decoration: none;
 }
 
 /* The React image and "click me" text */
