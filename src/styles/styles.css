@@ -122,7 +122,7 @@ body {
 
 /* Page titles */
 h1 {
-  color: var(--color-text-main);
+  color: #2800FF;
   font-family: HK Grotesk;
   font-style: normal;
   font-weight: bold;
