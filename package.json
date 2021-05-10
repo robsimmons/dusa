@@ -1,7 +1,7 @@
 {
-  "name": "hello-react",
+  "name": "glitch-hello-react",
   "version": "0.0.1",
-  "description": "A simple React single page app, built with Glitch.",
+  "description": "A simple React single page app, built with Vite and React.",
   "scripts": {
     "start": "vite",
     "build": "vite build",
@@ -23,7 +23,10 @@
     "not dead"
   ],
   "engines": {
-    "node": "12"
+    "node": "12.x"
+  },
+  "repository": {
+    "url": "https://glitch.com/edit/#!/glitch-hello-react"
   },
   "glitch": {
     "projectType": "generated_static"
