@@ -61,7 +61,7 @@ export default function Home() {
           </a>
         </animated.div>
       </div>
-      <div class="instructions">
+      <div className="instructions">
         <h2>Using this project</h2>
         <p>
           This is the Glitch <strong>Hello React</strong> project. You can use
