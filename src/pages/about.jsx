@@ -1,22 +1,22 @@
 import * as React from "react";
-{/* Add imports from README Next steps here */}
+/* ADD IMPORTS FROM TODO ON THE NEXT LINE */
 
 
-/*
-The About function defines the component that makes up the About page
-- This component is attached to the /about path in router.jsx
+/**
+* The About function defines the component that makes up the About page
+* This component is attached to the /about path in router.jsx
 */
 
 export default function About() {
-  {/* Declare style and trigger for wiggle effect from README here */}
+  /* DECLARE STYLE AND TRIGGER FOR WIGGLE EFFECT FROM TODO ON NEXT LINE */
   
   return (
     <div className="page">
-      {/* Extend h1 tag from README here */}
+      {/* REPLACE H1 ELEMENT BELOW WITH CODE FROM TODO */}
       <h1 className="title">
         About this site
       </h1>
-      {/* Extend p tag from README here */}
+      {/* REPLACE OPENING P TAG BELOW WITH CODE FROM TODO */}
       <p>
         Welcome to the Glitch React starter, where you can instantly create a
         React site that's fully customizable.

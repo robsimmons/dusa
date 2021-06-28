@@ -1,10 +1,14 @@
 # Hello React!
 
-This project contains a foundation for building and learning about React apps. The site includes two routes showing how navigation works in a single page app. We manage the page head and body using a standard React flow. The homepage features a click effect that demonstrates using state, and an animation you can try out yourself by following the steps below. 💫
+This project contains a foundation for building and learning about React apps. The site includes two routes showing how navigation works in a single page app. We manage the page head and body using a standard React flow. The homepage features a click effect that demonstrates using state, and an animation you can try out yourself by following the steps in `TODO.md`. 💫
 
 [React](https://reactjs.org/) is a popular UI library for building web apps. [Vite](https://vitejs.dev/) is a powerful tool for building javascript apps that bundles all of your code and shows immediate changes while you're editing.
 
 _While you're in the editor working, Glitch is running your `start` script in the background (`vite dev`). The site will be in dev mode and you'll see your changes happen ✨ immediately in the preview window. Once you close the editor window and your app goes to sleep, Glitch runs the `build` script and Vite builds your app for modern browsers._
+
+## Prerequisites
+
+You'll get best use out of this project if you're familiar with basic JavaScript. This project is a static site, which means that the server builds the site from the content of the `src` folder while you're developing it, then it's able to serve the pages super quickly when the user requests them.
 
 ## What's in this project?
 
@@ -34,7 +38,7 @@ React defines site components in [JSX](https://reactjs.org/docs/introducing-jsx.
 
 ← `src/hooks/prefers-reduced-motion.jsx`: For accessibility reasons, some users will indicate in their system settings that they prefer motion effects to be minimized–this allows you to hold off on these effects in such cases.
 
-← `src/hooks/wiggle.jsx`: The wiggle effect animates elements, as you'll see if you hover over the image (or text below it) on the homepage. You can apply the effect anywhere you like in the site as outlined in the steps below.
+← `src/hooks/wiggle.jsx`: The wiggle effect animates elements, as you'll see if you hover over the image (or text below it) on the homepage. You can apply the effect anywhere you like in the site as outlined in `TODO.md`.
 
 ← `src/hooks/wouter-hash.jsx`: We use hashed routing with wouter.
 
@@ -46,39 +50,11 @@ React defines site components in [JSX](https://reactjs.org/docs/introducing-jsx.
 
 ← `src/pages/home.jsx` The content of the Home page, also defined as a component function. The page includes the animated effect on hover, and title change effect on click (which is also a handy demo of using state data in React).
 
+## Try this next 🏗️
 
-## Next steps 🚀
+Take a look in `TODO.md` for next steps you can try out in your new site!
 
-Let's add the wiggle function to other elements in the site.
-
-In `pages/about.jsx`, add the imports at the top:
-
-```js
-import { useWiggle } from "../hooks/wiggle";
-import { animated } from "react-spring";
-```
-
-Bring the wiggle style and trigger function in before the `return` statement, this time with slightly different parameters:
-
-```js
-const [style, trigger] = useWiggle({ x: 50, rotation: 1, scale: 1.2 });
-```
-
-Extend the header element to use `animated` and apply the wiggle style:
-
-```js
-<animated.h1 className="title" style={style}>
- About this site
-</animated.h1>
-```
-
-Let's make the effect happen when the user hovers over the first paragraph element by extending its opening tag:
-
-```js
-<p onMouseEnter={trigger}>
-```
-
-Hover over the paragraph to see the effect on the About page header!
+___Want a basic template version of this project to build your own React app? Check out [Minimal React](https://glitch.com/edit/#!/remix/glitch-mvp-react)!___
 
 ![Glitch](https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576)
 
