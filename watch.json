@@ -7,7 +7,6 @@
   },
   "restart": {
     "include": [
-      "^\\.env$",
       "^backend/"
     ],
     "exclude": [
