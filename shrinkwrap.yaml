@@ -1,6 +1,6 @@
 dependencies:
-  react: 17.0.2
-  react-dom: 17.0.2
+  react: 18.0.0
+  react-dom: 18.0.0
   react-helmet-async: 1.2.3
   react-spring: 9.4.4
   wouter: 2.7.5
@@ -768,16 +768,15 @@ packages:
     dev: false
     resolution:
       integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
-  /react-dom/17.0.2:
+  /react-dom/18.0.0:
     dependencies:
       loose-envify: 1.4.0
-      object-assign: 4.1.1
-      scheduler: 0.20.2
+      scheduler: 0.21.0
     dev: false
     peerDependencies:
-      react: 17.0.2
+      react: ^18.0.0
     resolution:
-      integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
+      integrity: sha512-XqX7uzmFo0pUceWFCt7Gff6IyIMzFUn7QMZrbrQfGxtaxXZIcGQzoNpRLE3fQLnS4XzLLPMZX2T9TRcSrasicw==
   /react-fast-compare/3.2.0:
     dev: false
     resolution:
@@ -816,15 +815,14 @@ packages:
     dev: false
     resolution:
       integrity: sha512-VOqilh9DJBsS6Pf550YLhdReS3j9a2AQVh7NcsNtWoxTYIeuErWi6ym0++6bBhQp4yT5xvVvUDaJ8ez8vrFgaw==
-  /react/17.0.2:
+  /react/18.0.0:
     dependencies:
       loose-envify: 1.4.0
-      object-assign: 4.1.1
     dev: false
     engines:
       node: '>=0.10.0'
     resolution:
-      integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==
+      integrity: sha512-x+VL6wbT4JRVPm7EGxXhZ8w8LTROaxPXOqhlGyVSrv0sB1jkyFGgXxJ8LVoPRLvPR6/CIZGFmfzqUa2NYeMr2A==
   /regenerator-runtime/0.13.9:
     dev: false
     resolution:
@@ -851,13 +849,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
-  /scheduler/0.20.2:
+  /scheduler/0.21.0:
     dependencies:
       loose-envify: 1.4.0
-      object-assign: 4.1.1
     dev: false
     resolution:
-      integrity: sha512-2eWfGgAqqWFGqtdMmcL5zCMK1U8KlXv8SQFGglL3CEtd0aDVDWgeF/YoCmvln55m5zSk3J/20hTaSBeSObsQDQ==
+      integrity: sha512-1r87x5fz9MXqswA2ERLo0EbOAU74DpIUO090gIasYTqlVoJeMcl+Z1Rg7WHz+qtPujhS/hGIt9kxZOYBV3faRQ==
   /semver/6.3.0:
     dev: true
     hasBin: true
@@ -928,8 +925,8 @@ shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
 specifiers:
   '@vitejs/plugin-react-refresh': ^1.3.6
-  react: ^17.0.2
-  react-dom: ^17.0.2
+  react: ^18.0.0
+  react-dom: ^18.0.0
   react-helmet-async: ^1.2.3
   react-spring: ^9.4.4
   vite: ^2.4.4
