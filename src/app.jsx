@@ -16,7 +16,6 @@ import "./styles/styles.css";
 
 // Where all of our pages come from
 import PageRouter from "./components/router.jsx";
-import useHashLocation from "./hooks/wouter-hash";
 
 // The component that adds our Meta tags to the page
 import Seo from './components/seo.jsx';
@@ -24,7 +23,7 @@ import Seo from './components/seo.jsx';
 // Home function that is reflected across the site
 export default function Home() {
   return (
-    <Router hook={useHashLocation}>
+    <Router>
       <Seo />
       <main role="main" className="wrapper">
         <div className="content">

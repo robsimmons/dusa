@@ -40,8 +40,6 @@ React defines site components in [JSX](https://reactjs.org/docs/introducing-jsx.
 
 ← `src/hooks/wiggle.jsx`: The wiggle effect animates elements, as you'll see if you hover over the image (or text below it) on the homepage. You can apply the effect anywhere you like in the site as outlined in `TODO.md`.
 
-← `src/hooks/wouter-hash.jsx`: We use hashed routing with wouter.
-
 ### Pages 📃
 
 ← `src/pages/`: These files include components that specify the content of the Home and About pages. Each one is defined as a function and referenced in `router.jsx`. The content is built into the page outline specified in `app.jsx`.
