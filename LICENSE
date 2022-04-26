@@ -41,7 +41,7 @@ can learn more if you want.
 1. react: React is a JavaScript library for building user interfaces.
 2. react-spring: A spring-physics based animation library.
 3. vite: Vite is a new breed of frontend build tool.
-4. @vitejs/plugin-react-refresh: 
+4. @vitejs/plugin-react: An all in one Vite plugin for React.
 5. wouter: wouter is a tiny router for modern React and Preact apps.
 6. HK Grotesk: The font we're using. 
 
@@ -140,8 +140,8 @@ END, vite
 
 
 ******************************************************************************
-4. @vitejs/plugin-react-refresh
-URL: https://github.com/vitejs/vite-plugin-react
+4. @vitejs/plugin-react
+URL: https://github.com/vitejs/vite
 ******************************************************************************
 MIT License
 
@@ -165,7 +165,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************
-END, @vitejs/plugin-react-refresh
+END, @vitejs/plugin-react
 ******************************************************************************
 
 
