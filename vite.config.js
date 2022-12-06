@@ -8,9 +8,11 @@ export default defineConfig({
     outDir: "build"
   },
   server: {
+    host:"0.0.0.0",
+    port:3000,
     strictPort: true,
     hmr: {
-      port: 443 // Run the websocket server on the SSL port
+      clientPort: 443 // Run the websocket server on the SSL port
     }
   }
 });
