@@ -6,7 +6,7 @@ import { HelmetProvider } from 'react-helmet-async';
 /**
 * Root of react site 
 *
-* Imports Helment provider for the page head
+* Imports Helmet provider for the page head
 * And App which defines the content and navigation
 */
 
