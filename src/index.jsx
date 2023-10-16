@@ -1,7 +1,6 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import App from "./app.jsx";
-import { HelmetProvider } from 'react-helmet-async';
+import ReactDOM from "react-dom/client";
+import App from "./app";
 
 /**
 * Root of react site 
@@ -10,12 +9,11 @@ import { HelmetProvider } from 'react-helmet-async';
 * And App which defines the content and navigation
 */
 
+
+
 // Render the site https://reactjs.org/docs/react-dom.html#render
-ReactDOM.render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <HelmetProvider>
-      <App />
-    </HelmetProvider>
-  </React.StrictMode>,
-  document.getElementById("root")
+    <App/>
+  </React.StrictMode>
 );
