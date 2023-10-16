@@ -29,7 +29,11 @@ function recursiveDescentParser(s: string): {
       if (end === -1) {
         throw new Error("no matching end quote");
       }
-      result.push(slice.slice(0, end));
+      const newString = slice.slice(0, end);
+      if (!newString.match(/^[a-zA-Z0-9 _-.!?()*&^%$#@+=]*$/)) {
+        throw new Error("unexpected string contents");
+      }
+      result.push(newString);
       s = slice.slice(end + 1);
     } else if (s[0] === "(") {
       s = s.slice(1).trimStart();
@@ -65,14 +69,35 @@ function recursiveDescentParser(s: string): {
   }
 }
 
-function chainToString(chain) {
-  return `root${chain.map(index => `.children[${index}]`).join('')}`;
+function chainToString(chain: number[] ) {
+  return `root${chain.map((index) => `.children[${index}]`).join("")}`;
+}
+
+function createDomElement(chain: number, node: VirtuRobDomNode): string[] {
+  if (typeof node === 'string') {
+    return [`temp = document.createElement("span");`,
+            `temp.innerText = "${node}";,`,
+            chainToString(chain) + `.append(temp);`];
+  }
+  const domType: string =
+    typeof node === "string"
+      ? "span"
+      : node.type === "div"
+      ? "div"
+      : node.type === "unordered_list"
+      ? "ul"
+      : node.type === "list_item"
+      ? "li"
+      : node.type === "paragraph"
+      ? "p"
+      : null;
+  
 }
 
 function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
   const result: string[] = [];
   for (const node of nodes) {
-    result.push(chainToString(chain) + '.append()')
+    result.push(chainToString(chain) + `.append()`);
   }
   return result;
 }
