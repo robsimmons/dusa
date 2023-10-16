@@ -73,68 +73,85 @@ function chainToString(chain: number[]) {
   return `root${chain.map((index) => `.children[${index}]`).join("")}`;
 }
 
-export function getDomType(type: VirtuRobDomNode) {
+export function getDomType(node: VirtuRobDomNode): string {
   return typeof node === "string"
-      ? "span"
-      : node.type === "div"
-      ? "div"
-      : node.type === "unordered_list"
-      ? "ul"
-      : node.type === "list_item"
-      ? "li"
-      : node.type === "paragraph"
-      ? "p"
-      : "textarea";
+    ? "span"
+    : node.type === "div"
+    ? "div"
+    : node.type === "unordered_list"
+    ? "ul"
+    : node.type === "list_item"
+    ? "li"
+    : node.type === "paragraph"
+    ? "p"
+    : "textarea";
 }
 
-export function createDomElement(
+export function appendDomElement(
   chain: number[],
-  index: number,
   node: VirtuRobDomNode
-): string[] {
-  const domType: string = getDomType(node);
-  const creationLine =
-    chainToString(chain) + `.append(document.createElement("${domType}"));`;
-
+): string {
+  return (
+    chainToString(chain) +
+    `.append(document.createElement("${getDomType(node)}"));`
+  );
 }
 
-export function populateDomElement(
-chain: number[],
-  index: number,
-    node: VirtuRobDomNode) {
+export function populateDomElement(chain: number[], node: VirtuRobDomNode) {
   if (typeof node === "string") {
-    return [
-      creationLine,
-      chainToString(chain) + `.children[${index}].innerText = "${node}";`,
-    ];
+    return [chainToString(chain) + `.innerText = "${node}";`];
   } else {
-    return [creationLine, ...createDom([...chain, index], node.children)];
+    return createDom(chain, node.children);
   }
-      
-    }
+}
 
 export function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
   const result: string[] = [];
   for (let i = 0; i < nodes.length; i++) {
-    result.push(...createDomElement(chain, i, nodes[i]));
+    result.push(appendDomElement(chain, nodes[i]));
+    result.push(...populateDomElement([...chain, i], nodes[i]));
   }
   return result;
 }
 
-function diffDomElement(chain: number[], oldVD: VirtuRobDomNode, newVD: VirtuRobDomNode): string[] {
-  if (typeof oldVD === 'string' && typeof newVD === 'string') {
+function diffDomElement(
+  chain: number[],
+  oldVD: VirtuRobDomNode,
+  newVD: VirtuRobDomNode
+): string[] {
+  if (typeof oldVD === "string" && typeof newVD === "string") {
     if (oldVD === newVD) return [];
     return [chainToString(chain) + `.innerText = "${newVD}"`];
   }
-  if (typeof oldVD === 'string' || typeof newVD === 'string' || oldVD.type !== newVD.type) {
-    return []
+  if (
+    typeof oldVD === "string" ||
+    typeof newVD === "string" ||
+    oldVD.type !== newVD.type
+  ) {
+    return [chainToString(chain) + `.replaceWith(document.createElement("${getDomType(newVD)}")`,
+           ...populateDomElement(chain, newVD)];
   }
+  return [];
 }
 
-export function diffDom(chain: number[], oldVD: VirtuRobDomNode[], newVD: VirtuRobDomNode[]): string[] {
+export function diffDom(
+  chain: number[],
+  oldVD: VirtuRobDomNode[],
+  newVD: VirtuRobDomNode[]
+): string[] {
   const result: string[] = [];
   for (let i = 0; i < Math.min(oldVD.length, newVD.length); i++) {
-    result.append(...diffDomElement([...chain, i], oldVD[i], newVD[i]));
+    result.push(...diffDomElement([...chain, i], oldVD[i], newVD[i]));
+  }
+  if (oldVD.length < newVD.length) {
+    for (let i = oldVD.length; i < newVD.length; i ++) {
+      result.push(...appendDomElement(chain, newVD[i]));
+      result.push(...populateDomElement([...chain, i], newVD[i]))
+    }
+  } else {
+    for (let i = newVD.length; i < oldVD.length; i++) {
+      result.push(chainToString(chain) + `.`)
+    }
   }
   return result;
 }
