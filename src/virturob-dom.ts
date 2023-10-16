@@ -1,9 +1,26 @@
-type VirtuRobDomType = "divider" | "unordered_list" | "list_item" | "paragraph";
+export type VirtuRobDomType =
+  | "divider"
+  | "unordered_list"
+  | "list_item"
+  | "paragraph";
 
-type VirtuRobDomNode = string | { type: VirtuRobDomType; children: [] };
+export type VirtuRobDomNode =
+  | string
+  | { type: VirtuRobDomType; children: VirtuRobDomNode[] };
 
-function recursiveDescentParser(s: string): { nodes: VirtuRobDomNode[]; rest: string } {
-  const result = [];
+export function parse(s: string): VirtuRobDomNode[] {
+  const result = recursiveDescentParser(s);
+  if (s.rest.trim() !== "") {
+    throw new Error(`Unexpeced character '${s.rest.trim()[0]}'`);
+  }
+  return result.nodes;
+}
+
+function recursiveDescentParser(s: string): {
+  nodes: VirtuRobDomNode[];
+  rest: string;
+} {
+  const result: VirtuRobDomNode[] = [];
   while (true) {
     s = s.trimStart();
     if (s[0] === '"') {
@@ -33,15 +50,17 @@ function recursiveDescentParser(s: string): { nodes: VirtuRobDomNode[]; rest: st
       if (domType === null) {
         throw new Error(`Invalid dom type '${match[0]}'`);
       }
-      const children = recursiveDescentParser(s.slice(match[0].length));
-      s = children.rest.trimStart();
+      const recursiveCallResult = recursiveDescentParser(
+        s.slice(match[0].length)
+      );
+      s = recursiveCallResult.rest.trimStart();
       if (s[0] !== ")") {
         throw new Error("Closing parenthesis expected and not found");
       }
-      result.push({ type: domType, children: children.nodes });
-      s = s.slice(1).trimStart();
+      result.push({ type: domType, children: recursiveCallResult.nodes });
+      s = s.slice(1);
     } else {
-      return { s}
+      return { nodes: result, rest: s };
     }
   }
 }
