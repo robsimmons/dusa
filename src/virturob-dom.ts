@@ -111,3 +111,10 @@ export function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
   }
   return result;
 }
+
+export function diffDom(chain: number[], oldVD: VirtuRobDomNode[], newVD: VirtuRobDomNode[]): string[] {
+  const result: string[] = [];
+  for (let i = 0; i < oldVD.length; i++) {
+    
+  }
+}

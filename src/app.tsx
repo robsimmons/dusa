@@ -5,7 +5,10 @@ import "./styles.css";
 import { VirtuRobDomNode, parse, createDom } from "./virturob-dom";
 
 export default function App() {
-  //const [currentVD, setCurrentVD] = React.useState<VirtuRobDomNode[]>([]);
+  const [currentVD, setCurrentVD] = React.useState<{
+    text: string;
+    value: VirtuRobDomNode[];
+  }>({ text: "", value: [] });
   const [parseOutput, setParseOutput] = React.useState<
     | { success: true; value: VirtuRobDomNode[]; instructions: string[] }
     | { success: false; value: string }
@@ -28,7 +31,9 @@ export default function App() {
       setParseOutput({
         success: true,
         value: vDom,
-        instructions: createDom([], vDom),
+        instructions: [
+          'const root = document.getElementById("robs-root");',
+        ].concat(createDom([], vDom)),
       });
     } catch (e) {
       setParseOutput({ success: false, value: `${e}` });
@@ -39,23 +44,19 @@ export default function App() {
     if (!parseOutput.success) {
       return;
     }
-    eval(
-      'const root = document.getElementById("robs-root");' +
-        "console.log(root);" +
-        "window.foo = 99;" +
-        parseOutput.instructions.join("\n")
-    );
+    eval(parseOutput.instructions.join("\n"));
   }
 
   return (
     <main>
       <div className="currently-rendered">
-        <h3>Currently In The Dom</h3>
-        <textarea disabled value={"a"}></textarea>
+        <h3>Current DOM ZONE contents as a VirtuRob DOM</h3>
+        <textarea disabled value={}></textarea>
       </div>
+      <div />
 
       <div className="next-in-dom">
-        <h3>New Stuff For Dom</h3>
+        <h3>New VirtRob Dom</h3>
         <textarea
           onChange={(event) => setText(event.target.value)}
           value={text}
@@ -67,13 +68,18 @@ export default function App() {
         )}
         {parseOutput.success && (
           <>
+            <h3>Instructions for updating THE DOM ZONE</h3>
             <button onClick={runInstructions}>Run These Instructions</button>
             <pre>{parseOutput.instructions.join("\n")}</pre>
           </>
         )}
       </div>
+      <div></div>
 
-      <div id="robs-root" ref={ref}></div>
+      <div>
+        <h3>THE DOM ZONE</h3>
+        <div id="robs-root" ref={ref}></div>
+      </div>
     </main>
   );
 }

@@ -14,17 +14,22 @@ main {
   margin: auto;
   min-height: 100vh;
   max-height: 100vh;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 2rem 1fr;
   grid-template-rows: 15rem 1fr;
 }
 
 .instructions {
   display: grid;
-  grid-template-rows: 2rem 1fr;
+  grid-template-rows: 3rem  2rem 1fr;
 }
 
 pre {
   overflow-x: scroll;
+}
+
+#robs-root {
+  padding: 2rem;
+  border: 3px solid gray;
 }
 
 #robs-root div {
@@ -36,5 +41,5 @@ pre {
 #robs-root ul {
   border: 2px solid blue;
   margin: 2px;
-  padding: 2px 2px 2px 1rem;
+  padding: 2px 2px 2px 1.5rem;
 }
