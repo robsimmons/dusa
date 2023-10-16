@@ -2,14 +2,14 @@ import React from "react";
 
 import "./styles.css";
 
-import { VirtuRobDomNode, parse } from "./virturob-dom";
+import { VirtuRobDomNode, parse, createDom } from "./virturob-dom";
 
 export default function App() {
   //const [currentVD, setCurrentVD] = React.useState<VirtuRobDomNode[]>([]);
   const [parseOutput, setParseOutput] = React.useState<
-    | { success: true; value: VirtuRobDomNode[] }
+    | { success: true; value: VirtuRobDomNode[]; instructions: string[] }
     | { success: false; value: string }
-  >({ success: true, value: [] });
+  >({ success: true, value: [], instructions: [] });
   const [text, setText] = React.useState(
     `(div 
   (unordered_list 
@@ -24,11 +24,20 @@ export default function App() {
 
   React.useEffect(() => {
     try {
-      setParseOutput({ success: true, value: parse(text) });
+      const vDom = parse(text);
+      setParseOutput({
+        success: true,
+        value: vDom,
+        instructions: createDom([], vDom),
+      });
     } catch (e) {
       setParseOutput({ success: false, value: `${e}` });
     }
   }, [text]);
+
+  function runInstructions() {
+    if (!)
+  }
 
   return (
     <>
@@ -39,6 +48,13 @@ export default function App() {
       {!parseOutput.success && (
         <div className="errorMsg">{parseOutput.value}</div>
       )}
+      {parseOutput.success && (
+        <>
+          <pre>{parseOutput.instructions.join("\n")}</pre>
+          <button>Run These Instructions</button>
+        </>
+      )}
+
       <div id="robs-root" ref={ref}></div>
     </>
   );

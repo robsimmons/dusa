@@ -30,7 +30,7 @@ function recursiveDescentParser(s: string): {
         throw new Error("no matching end quote");
       }
       const newString = slice.slice(0, end);
-      if (!newString.match(/^[a-zA-Z0-9 _-.!?()*&^%$#@+=]*$/)) {
+      if (!newString.match(/^[a-zA-Z0-9 !@#$%^&*()_\-+=]*$/)) {
         throw new Error("unexpected string contents");
       }
       result.push(newString);
@@ -78,39 +78,36 @@ export function createDomElement(
   index: number,
   node: VirtuRobDomNode
 ): string[] {
-  
-    const domType: string =
-      typeof n
-      node.type === "div"
-        ? "div"
-        : node.type === "unordered_list"
-        ? "ul"
-        : node.type === "list_item"
-        ? "li"
-        : node.type === "paragraph"
-        ? "p"
-        : "span";
-  
-  
-  
+  const domType: string =
+    typeof node === "string"
+      ? "span"
+      : node.type === "div"
+      ? "div"
+      : node.type === "unordered_list"
+      ? "ul"
+      : node.type === "list_item"
+      ? "li"
+      : node.type === "paragraph"
+      ? "p"
+      : "textarea";
+
+  const creationLine =
+    chainToString(chain) + `.append(document.createElement(${domType}));`;
+
   if (typeof node === "string") {
     return [
-      `temp = document.createElement("span");`,
-      `temp.innerText = "${node}";,`,
-      chainToString(chain) + `.append(temp);`,
+      creationLine,
+      chainToString(chain) + `.children[${index}].innerText = "${node}";`,
     ];
   } else {
-    return [
-      chainToString(chain) + `.append(document.createElement(${domType}));`,
-      ...createDom([...chain, index], node.children),
-    ];
+    return [creationLine, ...createDom([...chain, index], node.children)];
   }
 }
 
 export function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
   const result: string[] = [];
-  for (const node of nodes) {
-    result.push(chainToString(chain) + `.append()`);
+  for (let i = 0; i < nodes.length; i++) {
+    result.push(...createDomElement(chain, i, nodes[i]));
   }
   return result;
 }
