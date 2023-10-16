@@ -39,7 +39,7 @@ export default function App() {
       {!parseOutput.success && (
         <div className="errorMsg">{parseOutput.value}</div>
       )}
-      <div className="root" ref={ref}></div>
+      <div id="robs-root" ref={ref}></div>
     </>
   );
 }

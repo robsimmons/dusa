@@ -65,3 +65,14 @@ function recursiveDescentParser(s: string): {
   }
 }
 
+function chainToString(chain) {
+  return `root${chain.map(index => `.children[${index}]`).join('')}`;
+}
+
+function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
+  const result: string[] = [];
+  for (const node of nodes) {
+    result.push(chainToString(chain) + '.append()')
+  }
+  return result;
+}
