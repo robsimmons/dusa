@@ -69,32 +69,45 @@ function recursiveDescentParser(s: string): {
   }
 }
 
-function chainToString(chain: number[] ) {
+function chainToString(chain: number[]) {
   return `root${chain.map((index) => `.children[${index}]`).join("")}`;
 }
 
-function createDomElement(chain: number, node: VirtuRobDomNode): string[] {
-  if (typeof node === 'string') {
-    return [`temp = document.createElement("span");`,
-            `temp.innerText = "${node}";,`,
-            chainToString(chain) + `.append(temp);`];
-  }
-  const domType: string =
-    typeof node === "string"
-      ? "span"
-      : node.type === "div"
-      ? "div"
-      : node.type === "unordered_list"
-      ? "ul"
-      : node.type === "list_item"
-      ? "li"
-      : node.type === "paragraph"
-      ? "p"
-      : null;
+export function createDomElement(
+  chain: number[],
+  index: number,
+  node: VirtuRobDomNode
+): string[] {
   
+    const domType: string =
+      typeof n
+      node.type === "div"
+        ? "div"
+        : node.type === "unordered_list"
+        ? "ul"
+        : node.type === "list_item"
+        ? "li"
+        : node.type === "paragraph"
+        ? "p"
+        : "span";
+  
+  
+  
+  if (typeof node === "string") {
+    return [
+      `temp = document.createElement("span");`,
+      `temp.innerText = "${node}";,`,
+      chainToString(chain) + `.append(temp);`,
+    ];
+  } else {
+    return [
+      chainToString(chain) + `.append(document.createElement(${domType}));`,
+      ...createDom([...chain, index], node.children),
+    ];
+  }
 }
 
-function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
+export function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
   const result: string[] = [];
   for (const node of nodes) {
     result.push(chainToString(chain) + `.append()`);
