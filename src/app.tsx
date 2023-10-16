@@ -28,7 +28,7 @@ export default function App() {
     } catch (e) {
       setParseOutput({ success: false, value: `${e}` });
     }
-  }, text);
+  }, [text]);
 
   return (
     <>
@@ -39,7 +39,7 @@ export default function App() {
       {!parseOutput.success && (
         <div className="errorMsg">{parseOutput.value}</div>
       )}
-      <div ref={ref}></div>
+      <div className="root" ref={ref}></div>
     </>
   );
 }

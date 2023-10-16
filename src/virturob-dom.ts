@@ -1,5 +1,5 @@
 export type VirtuRobDomType =
-  | "divider"
+  | "div"
   | "unordered_list"
   | "list_item"
   | "paragraph";
@@ -10,8 +10,8 @@ export type VirtuRobDomNode =
 
 export function parse(s: string): VirtuRobDomNode[] {
   const result = recursiveDescentParser(s);
-  if (s.rest.trim() !== "") {
-    throw new Error(`Unexpeced character '${s.rest.trim()[0]}'`);
+  if (result.rest.trim() !== "") {
+    throw new Error(`Unexpeced character '${result.rest.trim()[0]}'`);
   }
   return result.nodes;
 }
@@ -33,13 +33,13 @@ function recursiveDescentParser(s: string): {
       s = slice.slice(end + 1);
     } else if (s[0] === "(") {
       s = s.slice(1).trimStart();
-      const match = s.match(/^[a-zA-Z0-9]+/);
+      const match = s.match(/^[a-zA-Z0-9_-]+/);
       if (!match) {
         throw new Error("No dom type identifier found");
       }
       const domType: VirtuRobDomType | null =
-        match[0] === "divider"
-          ? "divider"
+        match[0] === "div"
+          ? "div"
           : match[0] === "unordered_list"
           ? "unordered_list"
           : match[0] === "list_item"
@@ -64,3 +64,4 @@ function recursiveDescentParser(s: string): {
     }
   }
 }
+
