@@ -15,7 +15,7 @@ export default function App() {
   
   return (
     <>
-      <textarea onChange={(event) => setText()} value={text} />
+      <textarea onChange={(event) => setText(event.target.value)} value={text} />
     </>
   );
 }
