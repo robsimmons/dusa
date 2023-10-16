@@ -92,7 +92,7 @@ export function createDomElement(
       : "textarea";
 
   const creationLine =
-    chainToString(chain) + `.append(document.createElement(${domType}));`;
+    chainToString(chain) + `.append(document.createElement("${domType}"));`;
 
   if (typeof node === "string") {
     return [

@@ -2,3 +2,8 @@ textarea {
   width: 100%;
   height: 20rem;
 }
+
+main {
+  display: grid;
+  
+}

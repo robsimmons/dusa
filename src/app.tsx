@@ -36,26 +36,42 @@ export default function App() {
   }, [text]);
 
   function runInstructions() {
-    if (!)
+    if (!parseOutput.success) {
+      return;
+    }
+    eval(
+      'const root = document.getElementById("robs-root");' +
+      'console.log(root);' + 'window.foo = 99;' +
+        parseOutput.instructions.join("\n")
+    );
   }
 
   return (
-    <>
-      <textarea
+    <main>
+      <div className="currently-rendered">
+        <h3>Currently In The Dom</h3>
+        <textarea disabled value={'a'}></textarea>
+      </div>
+      
+      <div className="next-in-dom">
+        <h3>New Stuff For Dom</h3>
+            <textarea
         onChange={(event) => setText(event.target.value)}
         value={text}
       />
+
+      </div>
       {!parseOutput.success && (
         <div className="errorMsg">{parseOutput.value}</div>
       )}
       {parseOutput.success && (
         <>
           <pre>{parseOutput.instructions.join("\n")}</pre>
-          <button>Run These Instructions</button>
+          <button onClick={runInstructions}>Run These Instructions</button>
         </>
       )}
 
       <div id="robs-root" ref={ref}></div>
-    </>
+    </main>
   );
 }
