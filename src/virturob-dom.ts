@@ -73,13 +73,8 @@ function chainToString(chain: number[]) {
   return `root${chain.map((index) => `.children[${index}]`).join("")}`;
 }
 
-export function createDomElement(
-  chain: number[],
-  index: number,
-  node: VirtuRobDomNode
-): string[] {
-  const domType: string =
-    typeof node === "string"
+export function getDomType(type: VirtuRobDomNode) {
+  return typeof node === "string"
       ? "span"
       : node.type === "div"
       ? "div"
@@ -90,10 +85,23 @@ export function createDomElement(
       : node.type === "paragraph"
       ? "p"
       : "textarea";
+}
 
+export function createDomElement(
+  chain: number[],
+  index: number,
+  node: VirtuRobDomNode
+): string[] {
+  const domType: string = getDomType(node);
   const creationLine =
     chainToString(chain) + `.append(document.createElement("${domType}"));`;
 
+}
+
+export function populateDomElement(
+chain: number[],
+  index: number,
+    node: VirtuRobDomNode) {
   if (typeof node === "string") {
     return [
       creationLine,
@@ -102,7 +110,8 @@ export function createDomElement(
   } else {
     return [creationLine, ...createDom([...chain, index], node.children)];
   }
-}
+      
+    }
 
 export function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
   const result: string[] = [];
@@ -112,9 +121,20 @@ export function createDom(chain: number[], nodes: VirtuRobDomNode[]): string[] {
   return result;
 }
 
+function diffDomElement(chain: number[], oldVD: VirtuRobDomNode, newVD: VirtuRobDomNode): string[] {
+  if (typeof oldVD === 'string' && typeof newVD === 'string') {
+    if (oldVD === newVD) return [];
+    return [chainToString(chain) + `.innerText = "${newVD}"`];
+  }
+  if (typeof oldVD === 'string' || typeof newVD === 'string' || oldVD.type !== newVD.type) {
+    return []
+  }
+}
+
 export function diffDom(chain: number[], oldVD: VirtuRobDomNode[], newVD: VirtuRobDomNode[]): string[] {
   const result: string[] = [];
-  for (let i = 0; i < oldVD.length; i++) {
-    
+  for (let i = 0; i < Math.min(oldVD.length, newVD.length); i++) {
+    result.append(...diffDomElement([...chain, i], oldVD[i], newVD[i]));
   }
+  return result;
 }

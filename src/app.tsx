@@ -44,6 +44,7 @@ export default function App() {
     if (!parseOutput.success) {
       return;
     }
+    setCurrentVD({ text, value: parseOutput.value });
     eval(parseOutput.instructions.join("\n"));
   }
 
@@ -51,7 +52,7 @@ export default function App() {
     <main>
       <div className="currently-rendered">
         <h3>Current DOM ZONE contents as a VirtuRob DOM</h3>
-        <textarea disabled value={}></textarea>
+        <textarea disabled value={currentVD.text}></textarea>
       </div>
       <div />
 
