@@ -41,7 +41,8 @@ export default function App() {
     }
     eval(
       'const root = document.getElementById("robs-root");' +
-      'console.log(root);' + 'window.foo = 99;' +
+        "console.log(root);" +
+        "window.foo = 99;" +
         parseOutput.instructions.join("\n")
     );
   }
@@ -50,26 +51,27 @@ export default function App() {
     <main>
       <div className="currently-rendered">
         <h3>Currently In The Dom</h3>
-        <textarea disabled value={'a'}></textarea>
+        <textarea disabled value={"a"}></textarea>
       </div>
-      
+
       <div className="next-in-dom">
         <h3>New Stuff For Dom</h3>
-            <textarea
-        onChange={(event) => setText(event.target.value)}
-        value={text}
-      />
-
+        <textarea
+          onChange={(event) => setText(event.target.value)}
+          value={text}
+        />
       </div>
-      {!parseOutput.success && (
-        <div className="errorMsg">{parseOutput.value}</div>
-      )}
-      {parseOutput.success && (
-        <>
-          <pre>{parseOutput.instructions.join("\n")}</pre>
-          <button onClick={runInstructions}>Run These Instructions</button>
-        </>
-      )}
+      <div className="instructions">
+        {!parseOutput.success && (
+          <div className="errorMsg">{parseOutput.value}</div>
+        )}
+        {parseOutput.success && (
+          <>
+            <button onClick={runInstructions}>Run These Instructions</button>
+            <pre>{parseOutput.instructions.join("\n")}</pre>
+          </>
+        )}
+      </div>
 
       <div id="robs-root" ref={ref}></div>
     </main>

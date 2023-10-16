@@ -1,9 +1,40 @@
 textarea {
   width: 100%;
-  height: 20rem;
+  height: 10rem;  
+}
+
+textarea:disabled {
+  background-color: #EEEEEE;
 }
 
 main {
   display: grid;
-  
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
+  min-height: 100vh;
+  max-height: 100vh;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 15rem 1fr;
+}
+
+.instructions {
+  display: grid;
+  grid-template-rows: 2rem 1fr;
+}
+
+pre {
+  overflow-x: scroll;
+}
+
+#robs-root div {
+  border: 2px solid #000000;
+  margin: 2px;
+  padding: 2px;
+}
+
+#robs-root ul {
+  border: 2px solid blue;
+  margin: 2px;
+  padding: 2px 2px 2px 1rem;
 }
