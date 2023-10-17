@@ -109,11 +109,11 @@ export default function App() {
             value={text}
           />
         </div>
+        <div />
         <div className="currently-rendered">
           <h3>Current DOM ZONE contents as a VirtuRob DOM</h3>
           <textarea disabled value={currentVD.text}></textarea>
         </div>
-        <div />
 
         <div className="instructions">
           {!parseOutput.success && (
