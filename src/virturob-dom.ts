@@ -128,7 +128,7 @@ function diffDomElement(
     typeof newVD === "string" ||
     oldVD.type !== newVD.type
   ) {
-    return [chainToString(chain) + `.replaceWith(document.createElement("${getDomType(newVD)}");`,
+    return [chainToString(chain) + `.replaceWith(document.createElement("${getDomType(newVD)}"));`,
            ...populateDomElement(chain, newVD)];
   }
   return diffDom(chain, oldVD.children, newVD.children);

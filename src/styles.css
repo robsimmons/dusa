@@ -1,3 +1,8 @@
+html body {
+  padding: 0;
+  margin: 0;
+}
+
 textarea {
   width: 100%;
   height: 10rem;  
@@ -27,6 +32,14 @@ pre {
   overflow-x: scroll;
 }
 
+.modal {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  background: rgba(0,0,0,0.5)
+}
+
 #dom-zone-root {
   padding: 2rem;
   border: 3px solid gray;
@@ -42,4 +55,10 @@ pre {
   border: 2px solid blue;
   margin: 2px;
   padding: 2px 2px 2px 1.5rem;
+}
+
+#dom-zone-root p {
+  border: 2px solid green;
+  margin: 2px;
+  padding: 1rem 2px;
 }

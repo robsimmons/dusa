@@ -21,7 +21,7 @@ export default function App() {
     (list_item (div "xyz"))) 
   "whatever 1" 
   (div "whatever 2") 
-  "whatever 3")`
+  (paragraph "whatever 3"))`
   );
   const ref = React.useRef<HTMLDivElement | null>(null);
 
@@ -49,38 +49,43 @@ export default function App() {
   }
 
   return (
-    <main>
-      <div className="currently-rendered">
-        <h3>Current DOM ZONE contents as a VirtuRob DOM</h3>
-        <textarea disabled value={currentVD.text}></textarea>
+    <>
+      <div className="modal">
+        <div className="modal-content">xyz</div>
       </div>
-      <div />
+      <main>
+        <div className="currently-rendered">
+          <h3>Current DOM ZONE contents as a VirtuRob DOM</h3>
+          <textarea disabled value={currentVD.text}></textarea>
+        </div>
+        <div />
 
-      <div className="next-in-dom">
-        <h3>New VirtRob Dom</h3>
-        <textarea
-          onChange={(event) => setText(event.target.value)}
-          value={text}
-        />
-      </div>
-      <div className="instructions">
-        {!parseOutput.success && (
-          <div className="errorMsg">{parseOutput.value}</div>
-        )}
-        {parseOutput.success && (
-          <>
-            <h3>Instructions for updating THE DOM ZONE</h3>
-            <button onClick={runInstructions}>Run These Instructions</button>
-            <pre>{parseOutput.instructions.join("\n")}</pre>
-          </>
-        )}
-      </div>
-      <div></div>
+        <div className="next-in-dom">
+          <h3>New VirtRob Dom</h3>
+          <textarea
+            onChange={(event) => setText(event.target.value)}
+            value={text}
+          />
+        </div>
+        <div className="instructions">
+          {!parseOutput.success && (
+            <div className="errorMsg">{parseOutput.value}</div>
+          )}
+          {parseOutput.success && (
+            <>
+              <h3>Instructions for updating THE DOM ZONE</h3>
+              <button onClick={runInstructions}>Run These Instructions</button>
+              <pre>{parseOutput.instructions.join("\n")}</pre>
+            </>
+          )}
+        </div>
+        <div></div>
 
-      <div>
-        <h3>THE DOM ZONE</h3>
-        <div id="dom-zone-root" ref={ref}></div>
-      </div>
-    </main>
+        <div>
+          <h3>THE DOM ZONE</h3>
+          <div id="dom-zone-root" ref={ref}></div>
+        </div>
+      </main>
+    </>
   );
 }
