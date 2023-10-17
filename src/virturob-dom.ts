@@ -30,7 +30,7 @@ function recursiveDescentParser(s: string): {
         throw new Error("no matching end quote");
       }
       const newString = slice.slice(0, end);
-      if (!newString.match(/^[a-zA-Z0-9 !@#$%^&*()_\-+=]*$/)) {
+      if (!newString.match(/^[a-zA-Z0-9 `~!@#$%^&*()_\-+=,.?':;]*$/)) {
         throw new Error("unexpected string contents");
       }
       result.push(newString);
@@ -128,8 +128,11 @@ function diffDomElement(
     typeof newVD === "string" ||
     oldVD.type !== newVD.type
   ) {
-    return [chainToString(chain) + `.replaceWith(document.createElement("${getDomType(newVD)}"));`,
-           ...populateDomElement(chain, newVD)];
+    return [
+      chainToString(chain) +
+        `.replaceWith(document.createElement("${getDomType(newVD)}"));`,
+      ...populateDomElement(chain, newVD),
+    ];
   }
   return diffDom(chain, oldVD.children, newVD.children);
 }
@@ -144,9 +147,9 @@ export function diffDom(
     result.push(...diffDomElement([...chain, i], oldVD[i], newVD[i]));
   }
   if (oldVD.length < newVD.length) {
-    for (let i = oldVD.length; i < newVD.length; i ++) {
+    for (let i = oldVD.length; i < newVD.length; i++) {
       result.push(appendDomElement(chain, newVD[i]));
-      result.push(...populateDomElement([...chain, i], newVD[i]))
+      result.push(...populateDomElement([...chain, i], newVD[i]));
     }
   } else {
     for (let i = newVD.length; i < oldVD.length; i++) {

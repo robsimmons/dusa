@@ -28,6 +28,10 @@ main {
   grid-template-rows: 3rem  2rem 1fr;
 }
 
+.tt {
+  font-family: monospace;
+}
+
 pre {
   overflow-x: scroll;
 }

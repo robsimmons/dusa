@@ -5,12 +5,16 @@ import "./styles.css";
 import { VirtuRobDomNode, parse, diffDom } from "./virturob-dom";
 
 const BNF = `TERM_LIST ::=
-           | TERM TERM_LIST
+           |  TERM TERM_LIST
 
 TERM      ::= STRING_LITERAL
-           | "(" TYPE TERM_LIST ")"
+           |  "(" TYPE TERM_LIST ")"
            
-TYPE      ::= "div" | "unordered_list" | "list_item" | "paragraph"`
+TYPE      ::= "div" | "unordered_list" | "list_item" | "paragraph"`;
+
+function TT(props: any) {
+  return <span className="tt">{props.children}</span>
+}
 
 export default function App() {
   const [modal, setModal] = React.useState(false);
@@ -59,18 +63,25 @@ export default function App() {
 
   return (
     <>
-      { modal && <div className="modal" onClick={() => setModal(false)}>
-        <div className="modal-content" >
-          <h3>The VirtuRob Dom</h3>
-          <p>
-            The VirtuRob Dom is a Lisp-like way of describing the structure of a
-            virtual document object model. A VirtuRob dom is a sequence of zero
-            or more <tt>TERM</tt> elements, where <tt>TERM</tt> is defined as:
-          </p>
+      {modal && (
+        <div className="modal" onClick={() => setModal(false)}>
+          <div className="modal-content">
+            <h3>The VirtuRob Dom</h3>
+            <p>
+              The VirtuRob Dom is a Lisp-like way of describing the structure of
+              a virtual document object model. A VirtuRob dom is{" "}
+              <TT>TERM_LIST</TT> defined as follows:
+            </p>
             <pre>{BNF}</pre>
-          <button onClick={() => setModal(false)}>Close</button>
+            <p>
+              A <TT>STRING_LITERAL</TT> is two quote marks <TT>"</TT>{" "}
+              surrounding alphanumeric characters, spaces, basic punctuation,
+              and top-row-of-keyboard symbols.
+            </p>
+            <button onClick={() => setModal(false)}>Close</button>
+          </div>
         </div>
-      </div>}
+      )}
       <main>
         <div className="currently-rendered">
           <h3>Current DOM ZONE contents as a VirtuRob DOM</h3>
@@ -79,8 +90,10 @@ export default function App() {
         <div />
 
         <div className="next-in-dom">
-          <h3>New VirtuRob Dom           <button onClick={() => setModal(true)}>View Grammar</button>
-</h3>
+          <h3>
+            New VirtuRob Dom{" "}
+            <button onClick={() => setModal(true)}>View Grammar</button>
+          </h3>
           <textarea
             onChange={(event) => setText(event.target.value)}
             value={text}
