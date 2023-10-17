@@ -40,6 +40,15 @@ pre {
   background: rgba(0,0,0,0.5)
 }
 
+.modal-content { 
+  width: 90%;
+  max-width: 700px;
+  background: white;
+  border: 5px solid black;
+  margin: 10rem auto;
+  padding: 4rem;
+}
+
 #dom-zone-root {
   padding: 2rem;
   border: 3px solid gray;
