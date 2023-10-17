@@ -128,10 +128,10 @@ function diffDomElement(
     typeof newVD === "string" ||
     oldVD.type !== newVD.type
   ) {
-    return [chainToString(chain) + `.replaceWith(document.createElement("${getDomType(newVD)}")`,
+    return [chainToString(chain) + `.replaceWith(document.createElement("${getDomType(newVD)}");`,
            ...populateDomElement(chain, newVD)];
   }
-  return [];
+  return diffDom(chain, oldVD.children, newVD.children);
 }
 
 export function diffDom(
@@ -145,12 +145,12 @@ export function diffDom(
   }
   if (oldVD.length < newVD.length) {
     for (let i = oldVD.length; i < newVD.length; i ++) {
-      result.push(...appendDomElement(chain, newVD[i]));
+      result.push(appendDomElement(chain, newVD[i]));
       result.push(...populateDomElement([...chain, i], newVD[i]))
     }
   } else {
     for (let i = newVD.length; i < oldVD.length; i++) {
-      result.push(chainToString(chain) + `.`)
+      result.push(chainToString([...chain, newVD.length]) + `.remove()`);
     }
   }
   return result;

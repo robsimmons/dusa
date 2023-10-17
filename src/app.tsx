@@ -2,7 +2,7 @@ import React from "react";
 
 import "./styles.css";
 
-import { VirtuRobDomNode, parse, createDom } from "./virturob-dom";
+import { VirtuRobDomNode, parse, diffDom } from "./virturob-dom";
 
 export default function App() {
   const [currentVD, setCurrentVD] = React.useState<{
@@ -32,13 +32,13 @@ export default function App() {
         success: true,
         value: vDom,
         instructions: [
-          'const root = document.getElementById("robs-root");',
-        ].concat(createDom([], vDom)),
+          'const root = document.getElementById("dom-zone-root");',
+        ].concat(diffDom([], currentVD.value, vDom)),
       });
     } catch (e) {
       setParseOutput({ success: false, value: `${e}` });
     }
-  }, [text]);
+  }, [currentVD, text]);
 
   function runInstructions() {
     if (!parseOutput.success) {
@@ -79,7 +79,7 @@ export default function App() {
 
       <div>
         <h3>THE DOM ZONE</h3>
-        <div id="robs-root" ref={ref}></div>
+        <div id="dom-zone-root" ref={ref}></div>
       </div>
     </main>
   );
