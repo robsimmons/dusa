@@ -1,8 +1,8 @@
 import React from "react";
+import { VirtuRobDomNode, diffDom } from "./virturob-dom";
+import { parse } from "./parser";
 
 import "./styles.css";
-
-import { VirtuRobDomNode, parse, diffDom } from "./virturob-dom";
 
 const BNF = `TERM_LIST ::=
            |  TERM TERM_LIST
@@ -13,7 +13,7 @@ TERM      ::= STRING_LITERAL
 TYPE      ::= "div" | "unordered_list" | "list_item" | "paragraph"`;
 
 function TT(props: any) {
-  return <span className="tt">{props.children}</span>
+  return <span className="tt">{props.children}</span>;
 }
 
 export default function App() {
@@ -68,8 +68,8 @@ export default function App() {
           <div className="modal-content">
             <h3>The VirtuRob DOM</h3>
             <p>
-              The VirtuRob Dom is a Lisp-like way of describing the structure of
-              a virtual document object model. A VirtuRob dom is{" "}
+              The VirtuRob Dom is a Lisp/Scheme-like way of describing the
+              structure of a virtual document object model. A VirtuRob dom is{" "}
               <TT>TERM_LIST</TT> defined as follows:
             </p>
             <pre>{BNF}</pre>
@@ -77,6 +77,22 @@ export default function App() {
               A <TT>STRING_LITERAL</TT> is two quote marks <TT>"</TT>{" "}
               surrounding alphanumeric characters, spaces, basic punctuation,
               and top-row-of-keyboard symbols.
+            </p>
+
+            <h3>Why does this look like Scheme?</h3>
+            <p>
+              Not an endorsement of Scheme or anything, but I wanted to have a
+              parser as part of the project, and Lisp-like parenthesis-ful
+              languages are rather easy to write parsers for. If you{" "}
+              <a href="https://glitch.com/~virtu-rob-dom/">
+                remix this project on Glitch
+              </a>{" "}
+              and check out <TT>src/parser.ts</TT>, you can see the couple of
+              dozen lines that make up the{" "}
+              <a href="https://en.wikipedia.org/wiki/Recursive_descent_parser">
+                recursive descent parser
+              </a>{" "}
+              that turns text into the data structure of a VirtuRob DOM tree.
             </p>
             <button onClick={() => setModal(false)}>Close</button>
           </div>
