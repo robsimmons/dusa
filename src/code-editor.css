@@ -1,0 +1,22 @@
+.cm-editor {
+  height: 100%;
+}
+.cm-editor.cm-focused {
+  outline: none;
+}
+.cm-editor .cm-content {
+  font-family: var(--dk-mono);
+}
+.cm-editor .cm-gutters {
+  background: transparent;
+  width: 2.7rem;
+  border: none;
+  color: var(--dk-text-deemph);
+}
+.cm-gutter.cm-lineNumbers {
+  width: 100%;
+  font-family: var(--dk-condensed);
+}
+.cm-editor .cm-gutter.cm-lineNumbers .cm-gutterElement {
+    padding-right: 5pt;
+}

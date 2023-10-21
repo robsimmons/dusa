@@ -1,0 +1,138 @@
+:root {
+  --dk-bg-gray: oklch(96% 0 0);
+  --dk-bg-glow: oklch(80% 0 0);
+  --dk-tab-hover: oklch(93% 0 0);
+  --dk-active-tab: oklch(90% 0 0);
+  --dk-active-tab-hover: oklch(87% 0 0);
+  --dk-border-radius: 2rem;
+  --dk-button-radius: 0.75rem;
+  --dk-mono: 'Fira Mono', monospace;
+  --dk-condensed: 'Fira Sans Condensed', sans-serif;
+  --dk-emphasis: oklch(72% 0.19 320);
+  --dk-emphasis-hover: oklch(75% 0.19 320);
+
+
+  --dk-text-deemph: oklch(75% 0 0);
+}
+
+html {
+  font-family: var(--dk-condensed);
+}
+
+.dk-main {
+  min-height: 100vh;
+  display: grid;
+}
+
+.dk-frame {
+  padding: 1rem;
+  min-height: 100%;
+}
+
+.dk-sessions {
+  background-color: var(--dk-bg-gray);
+  border-radius: var(--dk-border-radius);
+  padding: 0.5rem;
+  display: grid;
+  grid-template-rows: 3rem 1fr;
+  min-height: 100%;
+}
+
+.dk-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.dk-tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  overflow-x: scroll;
+  padding: 0.25rem 0rem 0.75rem 0.25rem;
+}
+
+.dk-tab {
+  display: flex;
+  flex-direction: row;
+}
+
+.dk-tab button {
+  white-space: nowrap;
+  background-color: transparent;
+  border: none;
+}
+.dk-tab button:hover {
+  background-color: var(--dk-tab-hover);
+}
+
+.dk-tab.dk-tab-active button {
+  background-color: var(--dk-active-tab);
+}
+
+.dk-tab.dk-tab-active button:hover {
+  background-color: var(--dk-active-tab-hover);
+}
+
+.dk-tab-button {
+  padding-left: 0.75rem;
+  border-radius: var(--dk-button-radius) 0 0 var(--dk-button-radius);
+  padding-right: 0rem;
+}
+
+.dk-tab-close {
+  border-radius: 0 var(--dk-button-radius) var(--dk-button-radius) 0;
+  padding: 0 0.75rem;
+}
+
+.dk-logo {
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  padding: 0 0.5rem 0.5rem 0.5rem;
+}
+
+.dk-session {
+  display: grid;
+  grid-template-columns: 1fr 10px 1fr;
+}
+
+.dk-edit {
+  background-color: white;
+  filter: drop-shadow(0 0 0.3rem var(--dk-bg-glow));
+  border-radius: 1.5rem;
+  padding: 1rem 1rem 1rem 0;
+  display: grid;
+  grid-template-columns: 1fr 2.5rem;
+  column-gap: 1rem;
+}
+
+.dk-edit textarea {
+  font-family: var(--dk-mono);
+  resize: none;
+  border: none;
+}
+
+.dk-edit-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dk-edit-menu button {
+  border-radius: var(--dk-button-radius);
+  height: 2.5rem;
+  border: none;
+}
+
+.dk-edit-menu button.dk-go {
+  background-color: var(--dk-emphasis);
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.dk-edit-menu button.dk-go:hover {
+  background-color: var(--dk-emphasis-hover);
+}

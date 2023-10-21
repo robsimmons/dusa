@@ -11,8 +11,9 @@ export default defineConfig({
     host:"0.0.0.0",
     port:3000,
     strictPort: true,
-    hmr: {
-      clientPort: 443 // Run the websocket server on the SSL port
-    }
+    /*hmr: {
+      clientPort: 443 // Run the websocket server on the SSL port 
+      // only makes sense on glitch ^^^
+    }*/
   }
 });
