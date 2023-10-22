@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@codemirror/language": "^6.9.1",
+    "@codemirror/lint": "^6.4.2",
     "@codemirror/state": "^6.3.1",
     "@codemirror/view": "^6.21.3",
     "@lezer/highlight": "^1.1.6",

@@ -1,22 +1,73 @@
 .cm-editor {
-  height: 100%;
+  height: calc(100vh - 8rem);
 }
+
 .cm-editor.cm-focused {
   outline: none;
 }
+
+.cm-editor .cm-scroller {
+  overflow: auto;
+}
+
 .cm-editor .cm-content {
   font-family: var(--dk-mono);
 }
+
 .cm-editor .cm-gutters {
   background: transparent;
   width: 2.7rem;
   border: none;
   color: var(--dk-text-deemph);
 }
+
 .cm-gutter.cm-lineNumbers {
   width: 100%;
   font-family: var(--dk-condensed);
 }
+
 .cm-editor .cm-gutter.cm-lineNumbers .cm-gutterElement {
-    padding-right: 5pt;
+  padding-right: 5pt;
+}
+
+.cm-editor .cm-lintRange-error {
+  color: #dc322f;
+}
+
+/* Overwrites other token styles in lint ranges */
+.cm-editor .cm-lintRange-error [class^=tok] {
+  color: #dc322f;
+}
+
+
+.tok-variableName {
+  color: #268bd2;
+}
+
+.tok-number {
+  color: #2aa198;
+}
+
+.tok-literal {
+  color: #2aa198;
+}
+
+.tok-string {
+  color: #2aa198;
+}
+
+.tok-variableName2 {
+  color: #6c71c4;
+}
+
+.tok-punctuation {
+  color: #657b83;
+}
+
+.tok-keyword {
+  color: #657b83;
+}
+
+.tok-invalid {
+  color: #dc322f;
 }

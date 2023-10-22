@@ -1,6 +1,5 @@
 import React from 'react';
 
-import './styles.css';
 import { Declaration, checkDecl, declToString } from './datalog/syntax';
 import { aspLike, characters, edges, ints, mapgen, nats } from './examples';
 import { AppToWorker, WorkerToApp } from './worker';
