@@ -3,10 +3,7 @@ import './defaults.css';
 import './dinnik.css';
 import './code-editor.css';
 import React from 'react';
-import { dinnikTokenizer } from './datalog/parser/dinnik-tokenizer';
-import { parse } from './datalog/parser/dinnik-parser';
-import { parseWithStreamParser } from './datalog/parsing/parser';
-import { ViewUpdate } from '@codemirror/view';
+import DinnikViewer from './viewer';
 
 interface DkTabProps {
   title: string;
@@ -29,20 +26,7 @@ c is (plus A B) :- a is A, b is B.`;
 
 export default function Editor() {
   const getContents = React.useRef<(() => string) | null>(null);
-  const [rhs, setRhs] = React.useState<string>('Blah');
-
-  const debounceRef = React.useRef<number | undefined>();
-
-  function updateListener(update: ViewUpdate) {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const contents = update.state.doc.toString();
-      const tokens = parseWithStreamParser(dinnikTokenizer, contents);
-      if (tokens.issues.length > 0) {
-        setRhs(JSON.stringify(tokens.issues));
-      }
-    }, 5000);
-  }
+  const [program, setProgram] = React.useState<string | null>(null);
 
   return (
     <div className="dk-main">
@@ -59,21 +43,15 @@ export default function Editor() {
           </div>
           <div className="dk-session">
             <div className="dk-edit">
-              <CodeEditor getContents={getContents} updateListener={updateListener} />
+              <CodeEditor getContents={getContents} updateListener={() => {}} />
               <div className="dk-edit-menu">
                 <button
                   className="dk-go"
                   onClick={() => {
                     if (getContents.current === null) {
-                      setRhs('Error');
+                      setProgram(null);
                     } else {
-                      const contents = getContents.current();
-                      const tokens = parseWithStreamParser(dinnikTokenizer, contents);
-                      try {
-                        setRhs(JSON.stringify(parse(tokens.document)));
-                      } catch (e) {
-                        setRhs(`${e}`);
-                      }
+                      setProgram(getContents.current());
                     }
                   }}
                 >
@@ -82,7 +60,7 @@ export default function Editor() {
               </div>
             </div>
             <div className="dk-drag"></div>
-            <div className="dk-view">{rhs}</div>
+            <DinnikViewer program={program} />
           </div>
         </div>
       </div>

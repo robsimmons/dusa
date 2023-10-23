@@ -1,28 +1,22 @@
-import {
-  Database,
-  Fact,
-  InternalConclusion,
-  InternalPartialRule,
-  Program,
-  step,
-} from './datalog/engine';
+import { Database, Fact, Program, step } from './datalog/engine';
 
 export type WorkerToApp =
+  | { count: number; type: 'hello' }
   | { count: number; type: 'saturated'; facts: Fact[]; last: boolean }
   | { count: number; type: 'count' }
-  | { count: number; type: 'done' };
+  | { count: number; type: 'done' }
+  | { count: number; type: 'response'; value: 'stop' | 'reset' | 'load' | 'start' };
 
 export type AppToWorker =
   | { type: 'stop' }
   | { type: 'reset' }
-  | { type: 'load'; program: Program }
+  | { type: 'load'; program: Program; db: Database }
   | { type: 'start' };
 
 let cycleCount = 0;
-let dbStack: Database[];
+let dbStack: Database[] = [];
 let CYCLE_STEP = 10000;
-let rules: { [name: string]: InternalPartialRule } = {};
-let conclusions: { [name: string]: InternalConclusion } = {};
+let program: Program | null = null;
 
 function post(message: WorkerToApp) {
   postMessage(message);
@@ -50,7 +44,7 @@ function cycle(): WorkerToApp {
 
     // Take a step
     cycleCount += 1;
-    const newDbs = step(rules, conclusions, db);
+    const newDbs = step(program!, db);
     dbStack.push(...newDbs);
   }
 
@@ -68,34 +62,53 @@ function liveLoop() {
   }
 }
 
-onmessage = (event) => {
-  const data: AppToWorker = event.data;
-  switch (data.type) {
+onmessage = (event: MessageEvent<AppToWorker>) => {
+  switch (event.data.type) {
     case 'load':
       if (liveLoopHandle !== null) {
         clearTimeout(liveLoopHandle);
       }
       cycleCount = 0;
-      dbStack = [data.program.db];
-      rules = data.program.rules;
-      conclusions = data.program.conclusions;
-      break;
+      dbStack = [event.data.db];
+      program = event.data.program;
+      return post({
+        count: cycleCount,
+        type: 'response',
+        value: event.data.type,
+        id: event.data.id,
+      });
     case 'start':
       liveLoopHandle = setTimeout(liveLoop, 1);
-      break;
+      return post({
+        count: cycleCount,
+        type: 'response',
+        value: event.data.type,
+        id: event.data.id,
+      });
     case 'stop':
       if (liveLoopHandle !== null) {
         clearTimeout(liveLoopHandle);
       }
-      break;
+      return post({
+        count: cycleCount,
+        type: 'response',
+        value: event.data.type,
+        id: event.data.id,
+      });
     case 'reset':
       if (liveLoopHandle !== null) {
         clearTimeout(liveLoopHandle);
       }
       cycleCount = 0;
       dbStack = [];
-      rules = {};
-      conclusions = {};
-      break;
+      program = null;
+      return post({
+        count: cycleCount,
+        type: 'response',
+        value: event.data.type,
+        id: event.data.id,
+      });
   }
 };
+
+post({ count: cycleCount, type: 'hello' });

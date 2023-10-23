@@ -41,33 +41,33 @@
 
 
 .tok-variableName {
-  color: #268bd2;
+  color: var(--solar-light-blue);
 }
 
 .tok-number {
-  color: #2aa198;
+  color: var(--solar-light-cyan);
 }
 
 .tok-literal {
-  color: #2aa198;
+  color: var(--solar-light-cyan);
 }
 
 .tok-string {
-  color: #2aa198;
+  color: var(--solar-light-cyan);
 }
 
 .tok-variableName2 {
-  color: #6c71c4;
+  color: var(--solar-light-violet);
 }
 
 .tok-punctuation {
-  color: #657b83;
+  color: var(--solar-light-text);
 }
 
 .tok-keyword {
-  color: #657b83;
+  color: var(--solar-light-text);
 }
 
 .tok-invalid {
-  color: #dc322f;
+  color: var(--solar-light-red);
 }

@@ -6,11 +6,11 @@ import { ParserState, dinnikTokenizer } from './datalog/parser/dinnik-tokenizer'
 import { StringStream } from './datalog/parsing/string-stream';
 import { classHighlighter, tags } from '@lezer/highlight';
 import { Diagnostic, linter } from '@codemirror/lint';
-import { Position, SourceLocation } from './datalog/parsing/source-location';
+import { Position } from './datalog/parsing/source-location';
 import { parseWithStreamParser } from './datalog/parsing/parser';
 
 const program = `
-character celeste.
+character celeste. "
 character nimbus.
 character terra.
 character luna.
@@ -124,7 +124,7 @@ export default function CodeEditor(props: CodeEditorProps) {
 
   React.useEffect(() => {
     const state = EditorState.create({
-      doc: program + program + program + program,
+      doc: program ,
       extensions: [
         parser,
         syntaxHighlighting(classHighlighter),

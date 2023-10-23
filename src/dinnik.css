@@ -1,9 +1,6 @@
 :root {
-  --dk-bg-gray: oklch(96% 0 0);
   --dk-bg-glow: oklch(80% 0 0);
   --dk-tab-hover: oklch(93% 0 0);
-  --dk-active-tab: oklch(90% 0 0);
-  --dk-active-tab-hover: oklch(87% 0 0);
   --dk-border-radius: 2rem;
   --dk-button-radius: 0.75rem;
   --dk-mono: 'Fira Mono', monospace;
@@ -12,6 +9,30 @@
   --dk-emphasis-hover: oklch(75% 0.19 320);
 
   --dk-text-deemph: oklch(75% 0 0);
+
+  --solar-light-background: oklch(96% 0 0);
+  --solar-light-background-red: oklch(96% 0.02 25);
+  --solar-light-background-orange: oklch(96% 0.02 70);
+
+  --solar-light-highlight: oklch(91% 0 0);
+  --solar-light-highlight-orange: oklch(91% 0.02 70);
+
+  --solar-light-active-orange: oklch(86% 0.02 70);
+
+  --solar-light-text: oklch(58% 0 0);
+  --solar-light-text-transparent: oklch(58% 0 0);
+  --solar-light-emph: oklch(44% 0 0);
+  --solar-light-very-emph: oklch(29% 0 0);
+
+  --solar-light-yellow: oklch(58% 0.13 115);
+  --solar-light-green: oklch(58% 0.13 160);
+  --solar-light-cyan: oklch(58% 0.13 205);
+  --solar-light-blue: oklch(58% 0.13 250);
+  --solar-light-violet: oklch(58% 0.13 295);
+  --solar-light-magenta: oklch(58% 0.13 340);
+  --solar-light-red: oklch(58% 0.13 25);
+  --solar-light-highlight-red: oklch(% 0.13 25);
+  --solar-light-orange: oklch(58% 0.13 70);
 }
 
 html {
@@ -29,7 +50,7 @@ html {
 }
 
 .dk-sessions {
-  background-color: var(--dk-bg-gray);
+  background-color: oklch(92% 0 0);
   border-radius: var(--dk-border-radius);
   padding: 0.5rem;
   display: grid;
@@ -61,15 +82,15 @@ html {
   border: none;
 }
 .dk-tab button:hover {
-  background-color: var(--dk-tab-hover);
+  background-color: oklch(89% 0 0);
 }
 
 .dk-tab.dk-tab-active button {
-  background-color: var(--dk-active-tab);
+  background-color: oklch(84% 0 0);
 }
 
 .dk-tab.dk-tab-active button:hover {
-  background-color: var(--dk-active-tab-hover);
+  background-color: oklch(87% 0 0);
 }
 
 .dk-tab-button {
@@ -88,7 +109,7 @@ html {
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  padding: 0 0.5rem 0.5rem 0.5rem;
+  padding: 0 0.75rem 0.5rem 0.5rem;
 }
 
 .dk-session {
@@ -97,8 +118,8 @@ html {
 }
 
 .dk-edit {
-  background-color: white;
-  filter: drop-shadow(0 0 0.3rem var(--dk-bg-glow));
+  background-color: var(--solar-light-background);
+  box-shadow: 0 0 0.3rem 0 var(--dk-bg-glow);
   border-radius: 1.5rem;
   padding: 1rem 1rem 1rem 0;
   display: grid;
@@ -136,7 +157,59 @@ html {
   background-color: var(--dk-emphasis-hover);
 }
 
-.dk-view {
+/*.dk-view {
   max-height: calc(100vh - 6rem);
   overflow-y: scroll;
+}*/
+
+.dk-view {
+  background-color: oklch(92% 0 0);
+  box-shadow: 0 0 0.3rem 0 var(--dk-bg-glow);
+  border-radius: 1.5rem;
+  border-top-left-radius: 0;
+  display: grid;
+  grid-template-rows: calc(2rem + 1px) 1fr;
+}
+
+.dk-view .dk-view-header {
+  height: calc(2rem + 1px);
+  border-bottom: 1px solid oklch(80% 0 0);
+  display: flex;
+  flex-direction: row;
+  border-top-right-radius: 1.5rem;
+}
+
+.dk-view .dk-load-button {
+  background-color: var(--solar-light-yellow);
+  border: 0;
+  width: 2rem;
+  height: 2rem;
+  color: var(--solar-light-background);
+}
+
+.dk-view .dk-view-stats {
+  padding-left: 0.5rem;
+  display: grid;
+  height: 2rem;
+  justify-content: left;
+  align-items: center;
+}
+
+.dk-view .dk-view-status {
+  display: grid;
+  height: 2rem;
+  padding-right: 0.75rem;
+  justify-content: right;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.dk-view .dk-view-status-error {
+  background-color: var(--solar-light-background-red);
+}
+
+.dk-view .dk-view-errors {
+  background-color: var(--solar-light-background);
+  padding: 1rem 1rem 1rem 1rem;
+  color: var(--solar-light-red);
 }
