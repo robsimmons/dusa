@@ -13,6 +13,7 @@
   --solar-light-background: oklch(96% 0 0);
   --solar-light-background-red: oklch(96% 0.02 25);
   --solar-light-background-orange: oklch(96% 0.02 70);
+  --solar-light-background-green: oklch(96% 0.02 160);
 
   --solar-light-highlight: oklch(91% 0 0);
   --solar-light-highlight-orange: oklch(91% 0.02 70);
@@ -20,7 +21,6 @@
   --solar-light-active-orange: oklch(86% 0.02 70);
 
   --solar-light-text: oklch(58% 0 0);
-  --solar-light-text-transparent: oklch(58% 0 0);
   --solar-light-emph: oklch(44% 0 0);
   --solar-light-very-emph: oklch(29% 0 0);
 
@@ -123,7 +123,7 @@ html {
   border-radius: 1.5rem;
   padding: 1rem 1rem 1rem 0;
   display: grid;
-  grid-template-columns: 1fr 2.5rem;
+  grid-template-columns: 1fr;
   column-gap: 1rem;
 }
 
@@ -176,6 +176,7 @@ html {
   border-bottom: 1px solid oklch(80% 0 0);
   display: flex;
   flex-direction: row;
+  gap: 2px;
   border-top-right-radius: 1.5rem;
 }
 
@@ -208,8 +209,19 @@ html {
   background-color: var(--solar-light-background-red);
 }
 
+.dk-view .dk-view-status-ok {
+  background-color: var(--solar-light-background-green);
+}
+
 .dk-view .dk-view-errors {
   background-color: var(--solar-light-background);
   padding: 1rem 1rem 1rem 1rem;
   color: var(--solar-light-red);
+  border-bottom-left-radius: 1.5rem;
+  border-bottom-right-radius: 1.5rem;
+}
+
+.dk-view .dk-view-solutions {
+  background-color: var(--solar-light-background);
+  padding: 1rem 1rem 1rem 1rem;
 }

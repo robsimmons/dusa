@@ -9,29 +9,6 @@ import { Diagnostic, linter } from '@codemirror/lint';
 import { Position } from './datalog/parsing/source-location';
 import { parseWithStreamParser } from './datalog/parsing/parser';
 
-const program = `
-character celeste. "
-character nimbus.
-character terra.
-character luna.
-
-# Ensure two characters have different races
-char1 is { X... } :- character X.
-char2 is { X... } :- character X.
-:- char1 is C1, char2 is C2, C1 == C2.
-:- char1 is C1, char2 is C2, char1 is R, char2 is R.
-
-home C is { uplands, lowlands, catlands, doghouse } :- character C.
-race C is { cat, dog, horse, bird } :- character C.
-home C is uplands :- race C is bird.
-race C is dog :- home C is doghouse.
-:- home nimbus is H1, home celeste is H2, H1 != H2.
-:- race nimbus is R1, race nimbus is R2, R1 != R2.
-:- home luna is H, home terra is H.
-:- home C1 is doghouse, home C2 is doghouse, C1 != C2.
-:- race C is bird, home C is catlands.
-`.trim();
-
 const bogusPosition = {
   start: { line: 1, column: 1 },
   end: { line: 1, column: 2 },
@@ -98,6 +75,7 @@ const parser = StreamLanguage.define<{ state: ParserState }>({
 export const highlighter = HighlightStyle.define([{ tag: tags.className, backgroundColor: 'red' }]);
 
 export interface CodeEditorProps {
+  contents: string;
   getContents: React.MutableRefObject<null | (() => string)>;
   updateListener: (update: ViewUpdate) => void;
 }
@@ -120,11 +98,13 @@ function dinnikLinter(view: EditorView): readonly Diagnostic[] {
 }
 
 export default function CodeEditor(props: CodeEditorProps) {
-  const editor = React.useRef<HTMLDivElement | null>(null);
+  const editorDiv = React.useRef<HTMLDivElement | null>(null);
+  const editorView = React.useRef<EditorView | null>(null);
 
   React.useEffect(() => {
+    console.log(props.updateListener);
     const state = EditorState.create({
-      doc: program ,
+      doc: props.contents,
       extensions: [
         parser,
         syntaxHighlighting(classHighlighter),
@@ -135,15 +115,31 @@ export default function CodeEditor(props: CodeEditorProps) {
         tooltips({ parent: document.body }),
       ],
     });
-    const view = new EditorView({ state, parent: editor.current ?? undefined });
+    const view = new EditorView({ state, parent: editorDiv.current ?? undefined });
     props.getContents.current = () => {
       return view.state.doc.toString();
     };
+    editorView.current = view;
     return () => {
+      editorView.current = null;
       view.destroy();
       props.getContents.current = null;
     };
   }, []);
 
-  return <div className="dk-editor-parent" ref={editor}></div>;
+  React.useEffect(() => {
+    if (!editorView.current) {
+      console.error('Cannot set contents, no editor view');
+      return;
+    }
+    editorView.current.state.update({
+      changes: {
+        from: 0,
+        to: editorView.current.state.doc.length,
+        insert: props.contents,
+      },
+    });
+  }, [props.contents]);
+
+  return <div className="dk-editor-parent" ref={editorDiv}></div>;
 }

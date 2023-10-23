@@ -75,7 +75,6 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
         count: cycleCount,
         type: 'response',
         value: event.data.type,
-        id: event.data.id,
       });
     case 'start':
       liveLoopHandle = setTimeout(liveLoop, 1);
@@ -83,7 +82,6 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
         count: cycleCount,
         type: 'response',
         value: event.data.type,
-        id: event.data.id,
       });
     case 'stop':
       if (liveLoopHandle !== null) {
@@ -93,7 +91,6 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
         count: cycleCount,
         type: 'response',
         value: event.data.type,
-        id: event.data.id,
       });
     case 'reset':
       if (liveLoopHandle !== null) {
@@ -106,7 +103,6 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
         count: cycleCount,
         type: 'response',
         value: event.data.type,
-        id: event.data.id,
       });
   }
 };

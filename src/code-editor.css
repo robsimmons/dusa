@@ -71,3 +71,8 @@
 .tok-invalid {
   color: var(--solar-light-red);
 }
+
+.tok-comment {
+  color: var(--solar-light-text);
+  font-style: italic;
+}
