@@ -4,7 +4,7 @@ name: Deploy to github pages
 on:
   # Automatically
   push:
-    branches: [$default-branch]
+    branches: main
 
   # Manually
   workflow_dispatch:

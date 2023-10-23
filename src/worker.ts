@@ -30,16 +30,19 @@ function cycle(): WorkerToApp {
 
     // Check for saturation
     if (db.queue.length === 0) {
-      const facts = Object.entries(db.facts).map(([name, argses]) =>
-        argses.map<Fact>((args) => ({ type: 'Fact', name, args: args })),
-      );
+      if (Object.values(db.factValues).every(({ type }) => type === 'is')) {
+        const facts = Object.entries(db.facts).map(([name, argses]) =>
+          argses.map<Fact>((args) => ({ type: 'Fact', name, args: args })),
+        );
 
-      return {
-        type: 'saturated',
-        count: cycleCount,
-        facts: ([] as Fact[]).concat(...facts),
-        last: dbStack.length === 0,
-      };
+        return {
+          type: 'saturated',
+          count: cycleCount,
+          facts: ([] as Fact[]).concat(...facts),
+          last: dbStack.length === 0,
+        };
+      }
+      continue;
     }
 
     // Take a step
