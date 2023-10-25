@@ -1,19 +1,20 @@
-import { useDinnikWorker } from './manager';
 import { factToString } from './datalog/engine';
+import { useDinnikWorker } from './useDinnikWorkers';
 
 interface DinnikViewerProps {
+  uuid: string;
   programModified: boolean;
   getProgram: () => string;
 }
 
 export default function DinnikViewer(props: DinnikViewerProps) {
-  const worker = useDinnikWorker();
+  const worker = useDinnikWorker(props.uuid);
 
-  if (worker.type === 'unready') {
+  if (worker.status === 'unready') {
     return <div className="dk-view"></div>;
   }
 
-  if (worker.type === 'unloaded') {
+  if (worker.status === 'unloaded') {
     return (
       <div className="dk-view">
         <div className={`dk-view-header dk-view-status-unloaded'}`}>
@@ -33,14 +34,14 @@ export default function DinnikViewer(props: DinnikViewerProps) {
   const loadButton = (
     <button
       className="dk-load-button"
-      title="Load program"
+      title="Reset and reload program"
       onClick={() => worker.reload(props.getProgram())}
     >
       <span className="fa-solid fa-right-to-bracket" />
     </button>
   );
 
-  if (worker.type === 'error') {
+  if (worker.status === 'error') {
     return (
       <div className="dk-view">
         <div className="dk-view-header dk-view-status-error">
@@ -65,13 +66,17 @@ export default function DinnikViewer(props: DinnikViewerProps) {
     <div className="dk-view">
       <div className="dk-view-header dk-view-status-ok">
         {loadButton}
-        {worker.type === 'paused' && (
-          <button className="dk-load-button" title="Unload program" onClick={worker.go}>
+        {worker.status === 'paused' && (
+          <button className="dk-load-button" title="Search for more solutions" onClick={worker.go}>
             <span className="fa-solid fa-play"></span>
           </button>
         )}
-        {worker.type === 'running' && (
-          <button className="dk-load-button" title="Unload program" onClick={worker.stop}>
+        {worker.status === 'running' && (
+          <button
+            className="dk-load-button"
+            title="Pause searching for solutions"
+            onClick={worker.stop}
+          >
             <span className="fa-solid fa-pause"></span>
           </button>
         )}
@@ -81,8 +86,8 @@ export default function DinnikViewer(props: DinnikViewerProps) {
             {worker.stats.cycles !== 1 && 's'} <span className="fa-solid fa-lightbulb" />{' '}
             {worker.facts.length} solution
             {worker.facts.length !== 1 && 's'}
-            {worker.type === 'done' && ' (finished)'}
-            {worker.type === 'paused' && ' (paused)'}
+            {worker.status === 'done' && ' (finished)'}
+            {worker.status === 'paused' && ' (paused)'}
           </div>
         </div>
       </div>
@@ -98,5 +103,4 @@ export default function DinnikViewer(props: DinnikViewerProps) {
       )}
     </div>
   );
-
 }

@@ -102,7 +102,6 @@ export default function CodeEditor(props: CodeEditorProps) {
   const editorView = React.useRef<EditorView | null>(null);
 
   React.useEffect(() => {
-    console.log(props.updateListener);
     const state = EditorState.create({
       doc: props.contents,
       extensions: [
@@ -125,7 +124,7 @@ export default function CodeEditor(props: CodeEditorProps) {
       view.destroy();
       props.getContents.current = null;
     };
-  }, []);
+  }, [editorView]);
 
   React.useEffect(() => {
     if (!editorView.current) {
@@ -136,7 +135,7 @@ export default function CodeEditor(props: CodeEditorProps) {
       changes: {
         from: 0,
         to: editorView.current.state.doc.length,
-        insert: props.contents,
+        insert: 'a' + props.contents,
       },
     });
   }, [props.contents]);

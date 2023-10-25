@@ -3,107 +3,136 @@ import './defaults.css';
 import './dinnik.css';
 import './code-editor.css';
 import React from 'react';
-import DinnikViewer from './viewer';
+import DinnikViewer from './DinnikViewer';
+import { createSession, deleteSession, getSessions, rememberCurrentSession } from './localstorage';
+import { ViewUpdate } from '@codemirror/view';
 
-/* 
 interface DkTabProps {
   title: string;
-  active?: boolean;
+  active: boolean;
+  solo: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
 }
-
-              <DkTab title="Graph Connectivity" />
-              <DkTab title="ASP-like" />
-              <DkTab title="Integers" active />
-              <DkTab title="Natural Numbers" />
-
-              function DkTab(props: DkTabProps) {
+function DkTab(props: DkTabProps) {
   return (
     <div className={`dk-tab${props.active ? ' dk-tab-active' : ''}`}>
-      <button className="dk-tab-button">{props.title}</button>
-      <button className="dk-tab-close">x</button>
+      <button
+        className={`dk-tab-button${props.solo ? ' dk-tab-button-solo' : ''}`}
+        onClick={props.onSelect}
+      >
+        {props.title}
+      </button>
+      {!props.solo && (
+        <button className="dk-tab-close" onClick={props.onDelete}>
+          <span className="fa-solid fa-xmark" />
+        </button>
+      )}
     </div>
   );
 }
-*/
 
-const EXAMPLE_PROGRAM = `
-character celeste.
-character nimbus.
-character terra.
-character luna.
+const initialSessions = getSessions();
 
-# Ensure two characters have different races
-char1 is { X... } :- character X.
-char2 is { X... } :- character X.
-:- char1 is C1, char2 is C2, 
-   C1 == C2.
-:- char1 is C1, char2 is C2,
-   char1 is R, char2 is R.
-
-# Characters have one of four homes and one of four races
-home C is {
-  uplands,
-  lowlands,
-  catlands,
-  doghouse
-} :- character C.
-race C is {
-  cat,
-  dog,
-  horse,
-  bird
-} :- character C.
-
-# Birds only live in the uplands
-home C is uplands :- race C is bird.
-
-# Only dogs live in the doghouse
-race C is dog :- home C is doghouse.
-
-# Nimbus and celeste must have the same home & race
-:- home nimbus is H1, home celeste is H2, H1 != H2.
-:- race nimbus is R1, race celeste is R2, R1 != R2.
-
-# Luna and terra can't live in the same place
-:- home luna is H, home terra is H.
-
-# Only room for one in the doghouse
-:- home C1 is doghouse, home C2 is doghouse, C1 != C2.`.trim();
+function getTitleFromContent(content: string) {
+  if (content.startsWith('# ')) {
+    const index = content.indexOf('\n');
+    const title = content.slice(2, index === -1 ? content.length : index).trim();
+    return title === '' ? undefined : title;
+  }
+  return undefined;
+}
 
 export default function Editor() {
+  const sessions = React.useRef(initialSessions.sessions);
+  const [sessionList, setSessionList] = React.useState<{ key: string; title?: string }[]>(
+    initialSessions.sessionList.map((key) => {
+      const content = sessions.current[key] || '';
+      return { key, title: getTitleFromContent(content) };
+    }),
+  );
+  const [currentSession, setCurrentSession] = React.useState(initialSessions.current);
+
   const getContents = React.useRef<() => string>(() => '');
   const [programModified, setProgramModified] = React.useState<boolean>(true);
-  const [contents, setContents] = React.useState<string | null>(null);
+  const updateListener = React.useCallback(
+    (update: ViewUpdate) => {
+      setProgramModified(true);
+      // TODO: debounce this a little bit
+      const contents = update.state.doc.toString();
+      localStorage.setItem(`dinnik-session-${currentSession}`, contents);
+      sessions.current[currentSession] = contents;
+      const newTitle = getTitleFromContent(contents);
+      if (sessionList.some(({ key, title }) => key === currentSession && title !== newTitle)) {
+        console.log(`setting session list`);
+        setSessionList(
+          sessionList.map((item) =>
+            item.key === currentSession ? { key: item.key, title: newTitle } : item,
+          ),
+        );
+      }
+    },
+    [setProgramModified, currentSession],
+  );
 
   React.useEffect(() => {
-    const program = localStorage.getItem('default-text') ?? EXAMPLE_PROGRAM;
-    setContents(program);
-  }, []);
+    rememberCurrentSession(currentSession);
+  }, [currentSession]);
 
   return (
     <div className="dk-main">
       <div className="dk-frame">
         <div className="dk-sessions">
           <div className="dk-header">
-            <div className="dk-tabs"></div>
+            <div className="dk-tabs">
+              {sessionList.map(({ key, title }) => {
+                return (
+                  <DkTab
+                    title={title ?? '<untitled>'}
+                    key={key}
+                    active={key === currentSession}
+                    solo={sessionList.length <= 1}
+                    onSelect={() => setCurrentSession(key)}
+                    onDelete={() => {
+                      const { removed, newSessionList } = deleteSession(sessionList, key);
+                      setSessionList(newSessionList);
+                      if (key === currentSession) {
+                        setCurrentSession(
+                          removed === newSessionList.length
+                            ? newSessionList[removed - 1].key
+                            : newSessionList[removed].key,
+                        );
+                      }
+                    }}
+                  />
+                );
+              })}
+              <button
+                onClick={() => {
+                  const uuid = createSession(sessionList);
+                  setCurrentSession(uuid);
+                  setSessionList((sessionList) => [...sessionList, { key: uuid }]);
+                }}
+              >
+                addSession
+              </button>
+            </div>
             <div className="dk-logo">Dinnik</div>
           </div>
           <div className="dk-session">
             <div className="dk-edit">
-              {contents !== null && (
+              {
                 <CodeEditor
-                  contents={contents}
+                  key={currentSession}
+                  contents={sessions.current[currentSession] || ''}
                   getContents={getContents}
-                  updateListener={(update) => {
-                    setProgramModified(true);
-                    // TODO: debounce this a little bit
-                    localStorage.setItem('default-text', update.state.doc.toString());
-                  }}
+                  updateListener={updateListener}
                 />
-              )}
+              }
             </div>
             <div className="dk-drag"></div>
             <DinnikViewer
+              uuid={currentSession}
               getProgram={() => {
                 setProgramModified(false);
                 return getContents.current();
@@ -116,21 +145,3 @@ export default function Editor() {
     </div>
   );
 }
-
-/**
- * 
- * <!--
-                <button
-                  className="dk-go"
-                  onClick={() => {
-                    if (getContents.current === null) {
-                      setProgram(null);
-                    } else {
-                      setProgram(getContents.current());
-                    }
-                  }}
-                >
-                  <span className="fa-solid fa-right-to-bracket"></span>
-                </button> -->
- * 
- */
