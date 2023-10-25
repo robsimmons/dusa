@@ -1,13 +1,14 @@
 import React from 'react';
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
-import { EditorView, ViewUpdate, lineNumbers, tooltips } from '@codemirror/view';
+import { EditorView, ViewUpdate, keymap, lineNumbers, tooltips } from '@codemirror/view';
 import { ParserState, dinnikTokenizer } from './datalog/parser/dinnik-tokenizer';
 import { StringStream } from './datalog/parsing/string-stream';
 import { classHighlighter, tags } from '@lezer/highlight';
 import { Diagnostic, linter } from '@codemirror/lint';
 import { Position } from './datalog/parsing/source-location';
 import { parseWithStreamParser } from './datalog/parsing/parser';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 
 const bogusPosition = {
   start: { line: 1, column: 1 },
@@ -108,10 +109,12 @@ export default function CodeEditor(props: CodeEditorProps) {
         parser,
         syntaxHighlighting(classHighlighter),
         lineNumbers(),
+        history(),
         EditorView.lineWrapping,
         EditorView.updateListener.of(props.updateListener),
         linter(dinnikLinter),
         tooltips({ parent: document.body }),
+        keymap.of([...defaultKeymap, ...historyKeymap]),
       ],
     });
     const view = new EditorView({ state, parent: editorDiv.current ?? undefined });

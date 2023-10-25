@@ -1,19 +1,21 @@
 :root {
   --dk-bg-glow: oklch(80% 0 0);
   --dk-tab-hover: oklch(93% 0 0);
-  --dk-border-radius: 2rem;
-  --dk-button-radius: 0.75rem;
   --dk-mono: 'Fira Mono', monospace;
   --dk-condensed: 'Fira Sans Condensed', sans-serif;
   --dk-emphasis: oklch(72% 0.19 320);
   --dk-emphasis-hover: oklch(75% 0.19 320);
 
+  --dk-outer-padding: 12px;
+  --dk-small-padding: 8px;
+  --dk-small-radius: 8px;
+
   --dk-text-deemph: oklch(75% 0 0);
 
-  --solar-light-background: oklch(96% 0 0);
-  --solar-light-background-red: oklch(96% 0.02 25);
-  --solar-light-background-orange: oklch(96% 0.02 70);
-  --solar-light-background-green: oklch(96% 0.02 160);
+  --solar-light-background: oklch(97% 0 0);
+  --solar-light-background-red: oklch(97% 0.02 25);
+  --solar-light-background-orange: oklch(97% 0.02 70);
+  --solar-light-background-green: oklch(97% 0.02 160);
 
   --solar-light-highlight: oklch(91% 0 0);
   --solar-light-highlight-orange: oklch(91% 0.02 70);
@@ -45,14 +47,14 @@ html {
 }
 
 .dk-frame {
-  padding: 1rem;
+  padding: var(--dk-outer-padding);
   min-height: 100%;
 }
 
 .dk-sessions {
   background-color: oklch(92% 0 0);
-  border-radius: var(--dk-border-radius);
-  padding: 0.5rem;
+  border-radius: calc(var(--dk-small-radius) + var(--dk-small-padding));
+  padding: var(--dk-small-padding);
   display: grid;
   grid-template-rows: 3rem 1fr;
   min-height: 100%;
@@ -68,7 +70,7 @@ html {
   flex-direction: row;
   gap: 0.5rem;
   overflow-x: scroll;
-  padding: 0.25rem 0rem 0.75rem 0.25rem;
+  padding: 0 0 0.75rem 0;
 }
 
 .dk-tab {
@@ -95,13 +97,30 @@ html {
 
 .dk-tab-button {
   padding-left: 0.75rem;
-  border-radius: var(--dk-button-radius) 0 0 var(--dk-button-radius);
+  border-radius: var(--dk-small-radius) 0 0 var(--dk-small-radius);
   padding-right: 0rem;
 }
 
+.dk-tab-button.dk-tab-button-solo {
+  border-radius: var(--dk-small-radius);
+  padding-right: 0.75rem;
+}
+
 .dk-tab-close {
-  border-radius: 0 var(--dk-button-radius) var(--dk-button-radius) 0;
+  border-radius: 0 var(--dk-small-radius) var(--dk-small-radius) 0;
   padding: 0 0.75rem;
+}
+
+.dk-tab.dk-tab-active button.dk-tab-close {
+  color: black;
+}
+
+button.dk-tab-close {
+  color: transparent;
+}
+
+button.dk-tab-close:hover {
+  color: black;
 }
 
 .dk-logo {
@@ -120,7 +139,7 @@ html {
 .dk-edit {
   background-color: var(--solar-light-background);
   box-shadow: 0 0 0.3rem 0 var(--dk-bg-glow);
-  border-radius: 1.5rem;
+  border-radius: var(--dk-small-radius);
   padding: 1rem 1rem 1rem 0;
   display: grid;
   grid-template-columns: 1fr;
@@ -156,11 +175,6 @@ html {
 .dk-edit-menu button.dk-go:hover {
   background-color: var(--dk-emphasis-hover);
 }
-
-/*.dk-view {
-  max-height: calc(100vh - 6rem);
-  overflow-y: scroll;
-}*/
 
 .dk-view {
   background-color: oklch(92% 0 0);

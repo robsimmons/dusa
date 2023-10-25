@@ -57,6 +57,7 @@ export default function Editor() {
   const [programModified, setProgramModified] = React.useState<boolean>(true);
   const updateListener = React.useCallback(
     (update: ViewUpdate) => {
+      console.log(update);
       setProgramModified(true);
       // TODO: debounce this a little bit
       const contents = update.state.doc.toString();
