@@ -22,6 +22,8 @@
 
   --solar-light-active-orange: oklch(86% 0.02 70);
 
+
+  --solar-light-deemph: oklch(87% 0 0);
   --solar-light-text: oklch(58% 0 0);
   --solar-light-emph: oklch(44% 0 0);
   --solar-light-very-emph: oklch(29% 0 0);
@@ -179,8 +181,7 @@ button.dk-tab-close:hover {
 .dk-view {
   background-color: oklch(92% 0 0);
   box-shadow: 0 0 0.3rem 0 var(--dk-bg-glow);
-  border-radius: 1.5rem;
-  border-top-left-radius: 0;
+  border-radius: var(--dk-small-radius);
   display: grid;
   grid-template-rows: calc(2rem + 1px) 1fr;
 }
@@ -191,15 +192,24 @@ button.dk-tab-close:hover {
   display: flex;
   flex-direction: row;
   gap: 2px;
-  border-top-right-radius: 1.5rem;
+  border-top-right-radius: var(--dk-small-radius);
+  border-top-left-radius: var(--dk-small-radius);
 }
 
 .dk-view .dk-load-button {
-  background-color: var(--solar-light-yellow);
+  background-color: transparent;
   border: 0;
   width: 2rem;
   height: 2rem;
-  color: var(--solar-light-background);
+  color: var(--solar-light-text);
+}
+
+.dk-view .dk-load-button:hover {
+  color: var(--solar-light-very-emph);
+}
+
+.dk-view .dk-load-button:disabled {
+  color: var(--solar-light-deemph);
 }
 
 .dk-view .dk-view-stats {
@@ -217,6 +227,11 @@ button.dk-tab-close:hover {
   justify-content: right;
   align-items: center;
   flex-grow: 1;
+  color: var(--solar-light-text);
+}
+
+.dk-view .dk-view-status-unloaded {
+  background-color: var(--solar-light-background);
 }
 
 .dk-view .dk-view-status-error {
@@ -224,18 +239,21 @@ button.dk-tab-close:hover {
 }
 
 .dk-view .dk-view-status-ok {
-  background-color: var(--solar-light-background-green);
+  background-color: var(--solar-light-background);
 }
 
 .dk-view .dk-view-errors {
   background-color: var(--solar-light-background);
   padding: 1rem 1rem 1rem 1rem;
   color: var(--solar-light-red);
-  border-bottom-left-radius: 1.5rem;
-  border-bottom-right-radius: 1.5rem;
+  border-bottom-left-radius: var(--dk-small-radius);
+  border-bottom-right-radius: var(--dk-small-radius);
 }
 
 .dk-view .dk-view-solutions {
   background-color: var(--solar-light-background);
   padding: 1rem 1rem 1rem 1rem;
+  border-bottom-left-radius: var(--dk-small-radius);
+  border-bottom-right-radius: var(--dk-small-radius);
+  color: var(--solar-light-text)
 }

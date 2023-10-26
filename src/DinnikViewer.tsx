@@ -17,7 +17,7 @@ export default function DinnikViewer(props: DinnikViewerProps) {
   if (worker.status === 'unloaded') {
     return (
       <div className="dk-view">
-        <div className={`dk-view-header dk-view-status-unloaded'}`}>
+        <div className={`dk-view-header dk-view-status-unloaded`}>
           <button
             className="dk-load-button"
             title="Load program"
@@ -78,6 +78,11 @@ export default function DinnikViewer(props: DinnikViewerProps) {
             onClick={worker.stop}
           >
             <span className="fa-solid fa-pause"></span>
+          </button>
+        )}
+        {worker.status === 'done' && (
+          <button className="dk-load-button" title="No more solutions to find" disabled>
+            <span className="fa-solid fa-play"></span>
           </button>
         )}
         <div className="dk-view-status">
