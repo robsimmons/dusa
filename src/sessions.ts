@@ -119,7 +119,7 @@ class SessionTabs {
   }
 
   set list(list: string[]) {
-    for (let key of this.sessionList) {
+    for (const key of this.sessionList) {
       if (!list.some((newKey) => newKey === key)) {
         localStorage.removeItem(SessionTabs.LS_SESSION_TEXT(key));
         if (this.sessionData[key].worker) {

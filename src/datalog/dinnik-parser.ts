@@ -76,7 +76,7 @@ export function parseHeadValue(t: Istream<Token>): { values: Pattern[]; exhausti
   }
 
   if (chomp(t, '{')) {
-    let values = [forceFullTerm(t)];
+    const values = [forceFullTerm(t)];
     let exhaustive = true;
     while (!chomp(t, '}')) {
       if (chomp(t, ',')) {
@@ -124,7 +124,7 @@ export function forcePremise(t: Istream<Token>): Premise {
 }
 
 export function parseDecl(t: Istream<Token>): Declaration | null {
-  let tok = t.next();
+  const tok = t.next();
   if (tok === null) return null;
 
   let result: Declaration;
@@ -175,7 +175,7 @@ export function parseFullTerm(t: Istream<Token>): Pattern | null {
 }
 
 export function parseTerm(t: Istream<Token>): Pattern | null {
-  let tok = t.peek();
+  const tok = t.peek();
   if (tok === null) return null;
   if (tok.type === '(') {
     t.next();

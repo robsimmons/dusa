@@ -63,7 +63,7 @@ export function parseWithStreamParser<State, Tree>(
     } while (currentColumn <= line.length);
   }
 
-  while (true) {
+  for (;;) {
     const response = parser.handleEof(state);
     if (!response) {
       break;

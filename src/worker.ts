@@ -21,10 +21,10 @@ export type AppToWorker =
   | { type: 'start' }
   | { type: 'reset' };
 
+const CYCLE_STEP = 10000;
 let cycleCount = 0;
 let deadEndCount = 0;
 let dbStack: Database[] = [];
-let CYCLE_STEP = 10000;
 let program: Program | null = null;
 let queuedFacts: Fact[] | null = null;
 
@@ -61,7 +61,11 @@ function cycle(): boolean {
     // Take a step
     cycleCount += 1;
     const newDbs = step(program!, db);
-    dbStack.push(...newDbs);
+    if (newDbs.length === 0) {
+      deadEndCount += 1;
+    } else {
+      dbStack.push(...newDbs);
+    }
   }
 
   return true;
@@ -79,14 +83,20 @@ function liveLoop() {
 // Picking up where you left off
 function resume(state: 'paused' | 'done' | 'saturated' | 'running') {
   switch (state) {
-    case 'paused':
+    case 'paused': {
       return post({ type: 'paused', stats: stats() });
-    case 'done':
+    }
+
+    case 'done': {
       return post({ type: 'done', stats: stats() });
-    case 'running':
+    }
+
+    case 'running': {
       liveLoopHandle = setTimeout(liveLoop);
       return post({ type: 'running', stats: stats() });
-    case 'saturated':
+    }
+
+    case 'saturated': {
       const msg: WorkerToApp = {
         type: 'saturated',
         facts: queuedFacts!,
@@ -95,6 +105,7 @@ function resume(state: 'paused' | 'done' | 'saturated' | 'running') {
       };
       queuedFacts = null;
       return post(msg);
+    }
   }
 }
 

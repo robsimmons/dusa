@@ -147,7 +147,7 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
         };
     }
   },
-  handleEof: (_): ParserResponse<ParserState, Token> | null => {
+  handleEof: (): ParserResponse<ParserState, Token> | null => {
     return null;
   },
 };

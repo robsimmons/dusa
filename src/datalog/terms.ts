@@ -102,10 +102,11 @@ export function apply(substitution: Substitution, pattern: Pattern): Data {
     case 'triv':
     case 'int':
     case 'nat':
-    case 'string':
+    case 'string': {
       return pattern;
+    }
 
-    case 'const':
+    case 'const': {
       if (pattern.name === NAT_ZERO && pattern.args.length === 0) {
         return { type: 'nat', value: 0 };
       }
@@ -142,8 +143,8 @@ export function apply(substitution: Substitution, pattern: Pattern): Data {
         name: pattern.name,
         args: pattern.args.map((arg) => apply(substitution, arg)),
       };
-
-    case 'var':
+    }
+    case 'var': {
       const result = substitution[pattern.name];
       if (!result) {
         throw new Error(
@@ -151,6 +152,7 @@ export function apply(substitution: Substitution, pattern: Pattern): Data {
         );
       }
       return result;
+    }
   }
 }
 
@@ -213,7 +215,7 @@ export function parseTerm(s: string): { data: Pattern; rest: string } | null {
     if (s[1] === ')') {
       return { data: { type: 'triv' }, rest: s.slice(2).trimStart() };
     }
-    let next = parseTerm(s.slice(1));
+    const next = parseTerm(s.slice(1));
     if (next === null) {
       throw new Error('No term following an open parenthesis');
     }
@@ -280,7 +282,7 @@ function freeVarsAccum(s: Set<string>, p: Pattern) {
     case 'triv':
       return;
     case 'const':
-      for (let arg of p.args) {
+      for (const arg of p.args) {
         freeVarsAccum(s, arg);
       }
       return;
@@ -289,7 +291,7 @@ function freeVarsAccum(s: Set<string>, p: Pattern) {
 
 export function freeVars(...patterns: Pattern[]): Set<string> {
   const s = new Set<string>();
-  for (let pattern of patterns) {
+  for (const pattern of patterns) {
     freeVarsAccum(s, pattern);
   }
   return s;

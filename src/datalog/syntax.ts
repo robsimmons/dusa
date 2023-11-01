@@ -88,7 +88,7 @@ function checkPremises(premises: Premise[]): {
 } {
   const knownFreeVars = new Set<string>();
   const errors: string[] = [];
-  for (let premise of premises) {
+  for (const premise of premises) {
     switch (premise.type) {
       case 'Inequality': {
         const fv = freeVars(premise.a, premise.b);
@@ -114,12 +114,13 @@ function checkPremises(premises: Premise[]): {
         }
         break;
       }
-      case 'Proposition':
+      case 'Proposition': {
         const fv = freeVars(...premise.args);
         for (const v of fv) {
           knownFreeVars.add(v);
         }
         break;
+      }
     }
   }
 
@@ -129,7 +130,7 @@ function checkPremises(premises: Premise[]): {
 export function checkDecl(decl: Declaration): string[] {
   const { fv, errors } = checkPremises(decl.premises);
   switch (decl.type) {
-    case 'Rule':
+    case 'Rule': {
       const headVars = freeVars(...decl.conclusion.args, ...decl.conclusion.values);
       for (const v of headVars) {
         if (!fv.has(v)) {
@@ -137,15 +138,17 @@ export function checkDecl(decl: Declaration): string[] {
         }
       }
       break;
-    case 'Constraint':
+    }
+    case 'Constraint': {
       break;
+    }
   }
   return errors;
 }
 
 export function check(decls: Declaration[]) {
   const errors: string[] = [];
-  for (let decl of decls) {
+  for (const decl of decls) {
     errors.push(...checkDecl(decl));
   }
   return errors;
