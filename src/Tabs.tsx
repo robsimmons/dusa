@@ -1,4 +1,3 @@
-
 interface Props {
   activeSessionKey: string;
   sessions: { key: string; title: string | null }[];
