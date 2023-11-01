@@ -1,0 +1,52 @@
+.cm-editor.cm-focused {
+  outline: none;
+}
+
+.cm-editor .cm-scroller .cm-content {
+  caret-color: var(--solar-text-emph);
+}
+
+.cm-editor .cm-content {
+  font-family: var(--dk-mono);
+}
+
+.cm-editor .cm-gutters {
+  background: transparent;
+  width: 2rem;
+  border: none;
+  color: var(--solar-text-deemph);
+}
+
+.cm-gutter.cm-lineNumbers {
+  width: 100%;
+  font-family: var(--dk-condensed);
+}
+
+.cm-lintRange.cm-lintRange-error {
+  background-image: none;
+  text-decoration: var(--solar-red) wavy underline;
+  text-decoration-skip-ink: none;
+}
+
+.tok-variableName {
+  color: var(--solar-blue);
+}
+
+.tok-variableName2 {
+  color: var(--solar-violet);
+}
+
+.tok-comment {
+  color: var(--solar-text);
+  font-style: italic;
+}
+
+.tok-literal,
+.tok-number,
+.tok-string {
+  color: var(--solar-cyan);
+}
+
+.tok-invalid {
+  color: var(--solar-red);
+}

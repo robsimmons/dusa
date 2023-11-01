@@ -173,7 +173,7 @@ export function equal(t: Data, s: Data): boolean {
   }
 }
 
-export function termToString(t: Pattern): string {
+export function termToString(t: Pattern, needsParens = true): string {
   switch (t.type) {
     case 'triv':
       return `()`;
@@ -185,7 +185,9 @@ export function termToString(t: Pattern): string {
     case 'const':
       return t.args.length === 0
         ? t.name
-        : `(${t.name} ${t.args.map((arg) => termToString(arg)).join(' ')})`;
+        : needsParens
+        ? `(${t.name} ${t.args.map((arg) => termToString(arg)).join(' ')})`
+        : `${t.name} ${t.args.map((arg) => termToString(arg)).join(' ')}`;
     case 'var':
       return t.name;
   }

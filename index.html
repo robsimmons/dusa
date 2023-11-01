@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Dinnik Interpreter</title>
     <meta charset="UTF-8" />
+    <title>Dinnik Interpreter</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -10,10 +10,29 @@
       href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@500&family=Fira+Sans+Condensed&display=swap"
       rel="stylesheet"
     />
+    <link href="/src/reset.css" rel="stylesheet" />
+    <link href="/src/dinnik.css" rel="stylesheet" />
+    <link href="/src/codemirror.css" rel="stylesheet" />
     <script src="https://kit.fontawesome.com/de93d2f775.js" crossorigin="anonymous"></script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body id="root" class="theme-light">
+    <main>
+      <div class="dk-config">
+        <button id="themeswitcher"><span class="fa-solid fa-sun"></span></button>
+      </div>
+      <div class="dk-sessions">
+        <div class="dk-header">
+          <div id="dk-tabs" class="dk-tabs"></div>
+          <div class="dk-logo">Dinnik</div>
+        </div>
+        <div class="dk-session">
+          <div id="codemirror-root" class="dk-edit"></div>
+          <div class="dk-divider"></div>
+          <div id="react-root" class="dk-view"></div>
+        </div>
+      </div>
+    </main>
+    <script type="module" src="/src/theme.ts"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

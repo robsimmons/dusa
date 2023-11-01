@@ -1,39 +1,36 @@
 {
-  "name": "glitch-hello-react",
-  "version": "0.0.5",
-  "description": "A simple React single page app, built with Vite and React.",
+  "name": "dinnik",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "vite",
+    "dev": "vite",
     "build": "tsc && vite build",
-    "serve": "vite preview",
-    "watch": "tsc --noEmit --watch"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "test": "vitest"  
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^4.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@codemirror/commands": "^6.3.0",
-    "@codemirror/language": "^6.9.1",
+    "@codemirror/language": "^6.9.2",
     "@codemirror/lint": "^6.4.2",
     "@codemirror/state": "^6.3.1",
-    "@codemirror/view": "^6.21.3",
+    "@codemirror/view": "^6.21.4",
     "@lezer/highlight": "^1.1.6",
-    "@types/react": "^18.2.27",
-    "@types/react-dom": "^18.2.12",
-    "@vitejs/plugin-react-swc": "^3.4.0",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react-swc": "^3.3.2",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
     "typescript": "^5.0.2",
-    "vite": "^4.0.0"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead"
-  ],
-  "engines": {
-    "node": "14.x"
-  },
-  "glitch": {
-    "projectType": "generated_static"
+    "vite": "^4.4.5",
+    "vitest": "^0.34.6"
   }
 }

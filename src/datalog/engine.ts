@@ -278,9 +278,9 @@ ${Object.keys(db.factValues)
   .map((fact) => {
     const entry = db.factValues[fact];
     if (entry.type === 'is') {
-      return entry.value.type === 'triv' ? fact : `${fact} is ${termToString(entry.value)}`;
+      return entry.value.type === 'triv' ? fact : `${fact} is ${termToString(entry.value, false)}`;
     } else {
-      return `${fact} is not ${entry.value.map(termToString).join(' or ')}`;
+      return `${fact} is not ${entry.value.map((term) => termToString(term, false)).join(' or ')}`;
     }
   })
   .join('\n')}

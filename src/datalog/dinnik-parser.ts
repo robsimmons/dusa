@@ -1,14 +1,28 @@
-import { Token } from './dinnik-tokenizer';
-import { Pattern } from '../terms';
-import { Declaration, Premise } from '../syntax';
-import { Issue } from '../parsing/parser';
+import { Token, dinnikTokenizer } from './dinnik-tokenizer';
+import { Pattern } from './terms';
+import { Declaration, Premise } from './syntax';
+import { Issue, parseWithStreamParser } from './parsing/parser';
 
 interface Istream<T> {
   next(): T | null;
   peek(): T | null;
 }
 
-export function parse(tokens: Token[]): (Declaration | Issue)[] {
+export function parse(
+  str: string,
+): { errors: Issue[] } | { errors: null; document: Declaration[] } {
+  const tokens = parseWithStreamParser(dinnikTokenizer, str);
+  if (tokens.issues.length > 0) return { errors: tokens.issues };
+  const parseResult = parseTokens(tokens.document);
+  const parseIssues = parseResult.filter((decl): decl is Issue => decl.type === 'Issue');
+  const parseDecls = parseResult.filter((decl): decl is Declaration => decl.type !== 'Issue');
+  if (parseIssues.length > 0) {
+    return { errors: parseIssues };
+  }
+  return { errors: null, document: parseDecls };
+}
+
+export function parseTokens(tokens: Token[]): (Declaration | Issue)[] {
   const t = mkStream(tokens);
   const result: Declaration[] = [];
   let decl = parseDecl(t);
@@ -48,8 +62,8 @@ function chomp(t: Istream<Token>, type: string): Token | null {
   }
 }
 
-function forceTerm(t: Istream<Token>): Pattern {
-  const result = parseTerm(t);
+function forceFullTerm(t: Istream<Token>): Pattern {
+  const result = parseFullTerm(t);
   if (result === null) {
     throw new Error('Expected a term, but no term found');
   }
@@ -62,11 +76,11 @@ export function parseHeadValue(t: Istream<Token>): { values: Pattern[]; exhausti
   }
 
   if (chomp(t, '{')) {
-    let values = [forceTerm(t)];
+    let values = [forceFullTerm(t)];
     let exhaustive = true;
     while (!chomp(t, '}')) {
       if (chomp(t, ',')) {
-        values.push(forceTerm(t));
+        values.push(forceFullTerm(t));
       } else {
         force(t, '...');
         force(t, '}');
@@ -76,7 +90,7 @@ export function parseHeadValue(t: Istream<Token>): { values: Pattern[]; exhausti
     }
     return { values, exhaustive };
   } else {
-    const value = parseTerm(t);
+    const value = parseFullTerm(t);
     if (value === null) {
       throw new Error(`Did not find value after 'is'`);
     }
@@ -85,12 +99,12 @@ export function parseHeadValue(t: Istream<Token>): { values: Pattern[]; exhausti
 }
 
 export function forcePremise(t: Istream<Token>): Premise {
-  const pseudoTerm = forceTerm(t);
+  const pseudoTerm = forceFullTerm(t);
   if (chomp(t, '==')) {
-    return { type: 'Equality', a: pseudoTerm, b: forceTerm(t) };
+    return { type: 'Equality', a: pseudoTerm, b: forceFullTerm(t) };
   }
   if (chomp(t, '!=')) {
-    return { type: 'Inequality', a: pseudoTerm, b: forceTerm(t) };
+    return { type: 'Inequality', a: pseudoTerm, b: forceFullTerm(t) };
   }
   if (pseudoTerm.type !== 'const') {
     throw new Error(`Expected an attribute, found a '${pseudoTerm.type}'`);
@@ -99,7 +113,7 @@ export function forcePremise(t: Istream<Token>): Premise {
     return {
       type: 'Proposition',
       name: pseudoTerm.name,
-      args: [...pseudoTerm.args, forceTerm(t)],
+      args: [...pseudoTerm.args, forceFullTerm(t)],
     };
   }
   return {
@@ -144,12 +158,28 @@ export function parseDecl(t: Istream<Token>): Declaration | null {
   return result;
 }
 
+export function parseFullTerm(t: Istream<Token>): Pattern | null {
+  const tok = t.peek();
+  if (tok?.type === 'const') {
+    t.next();
+    const args: Pattern[] = [];
+    let next = parseTerm(t);
+    while (next !== null) {
+      args.push(next);
+      next = parseTerm(t);
+    }
+    return { type: 'const', name: tok.value, args };
+  }
+
+  return parseTerm(t);
+}
+
 export function parseTerm(t: Istream<Token>): Pattern | null {
   let tok = t.peek();
   if (tok === null) return null;
   if (tok.type === '(') {
     t.next();
-    const result = parseTerm(t);
+    const result = parseFullTerm(t);
     if (result === null) {
       throw new Error('No term following an open parenthesis');
     }
@@ -182,13 +212,7 @@ export function parseTerm(t: Istream<Token>): Pattern | null {
 
   if (tok.type === 'const') {
     t.next();
-    const args: Pattern[] = [];
-    let next = parseTerm(t);
-    while (next !== null) {
-      args.push(next);
-      next = parseTerm(t);
-    }
-    return { type: 'const', name: tok.value, args };
+    return { type: 'const', name: tok.value, args: [] };
   }
 
   return null;

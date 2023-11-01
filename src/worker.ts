@@ -2,6 +2,7 @@ import { Database, Fact, Program, step } from './datalog/engine';
 
 export interface WorkerStats {
   cycles: number;
+  deadEnds: number;
 }
 
 export type WorkerToApp =
@@ -21,10 +22,15 @@ export type AppToWorker =
   | { type: 'reset' };
 
 let cycleCount = 0;
+let deadEndCount = 0;
 let dbStack: Database[] = [];
 let CYCLE_STEP = 10000;
 let program: Program | null = null;
 let queuedFacts: Fact[] | null = null;
+
+function stats(): WorkerStats {
+  return { cycles: cycleCount, deadEnds: deadEndCount };
+}
 
 function post(message: WorkerToApp) {
   postMessage(message);
@@ -45,6 +51,7 @@ function cycle(): boolean {
             argses.map<Fact>((args) => ({ type: 'Fact', name, args: args })),
           ),
         );
+        console.log(queuedFacts);
         return false;
       }
       // Throw this solution away, it has 'is not' constraints
@@ -60,7 +67,7 @@ function cycle(): boolean {
   return true;
 }
 
-let liveLoopHandle: null | number = null;
+let liveLoopHandle: null | ReturnType<typeof setTimeout> = null;
 function liveLoop() {
   if (cycle()) {
     liveLoopHandle = setTimeout(liveLoop);
@@ -69,47 +76,44 @@ function liveLoop() {
   }
 }
 
-function stats(): WorkerStats {
-  return { cycles: cycleCount };
+// Picking up where you left off
+function resume(state: 'paused' | 'done' | 'saturated' | 'running') {
+  switch (state) {
+    case 'paused':
+      return post({ type: 'paused', stats: stats() });
+    case 'done':
+      return post({ type: 'done', stats: stats() });
+    case 'running':
+      liveLoopHandle = setTimeout(liveLoop);
+      return post({ type: 'running', stats: stats() });
+    case 'saturated':
+      const msg: WorkerToApp = {
+        type: 'saturated',
+        facts: queuedFacts!,
+        last: dbStack.length === 0,
+        stats: stats(),
+      };
+      queuedFacts = null;
+      return post(msg);
+  }
 }
 
 onmessage = (event: MessageEvent<AppToWorker>) => {
   // What state are we actually in?
-  let state: 'paused' | 'done' | 'saturated' | 'running' =
+  const state: 'paused' | 'done' | 'saturated' | 'running' =
     liveLoopHandle !== null
       ? 'running'
-      : dbStack.length === 0
-      ? 'done'
       : queuedFacts !== null
       ? 'saturated'
+      : dbStack.length === 0
+      ? 'done'
       : 'paused';
+  console.log(state);
 
   // Pause
   if (liveLoopHandle !== null) {
     clearTimeout(liveLoopHandle);
     liveLoopHandle = null;
-  }
-
-  // Picking up where we left off
-  function resume() {
-    switch (state) {
-      case 'paused':
-        return post({ type: 'paused', stats: stats() });
-      case 'done':
-        return post({ type: 'done', stats: stats() });
-      case 'running':
-        liveLoopHandle = setTimeout(liveLoop);
-        return post({ type: 'running', stats: stats() });
-      case 'saturated':
-        const msg: WorkerToApp = {
-          type: 'saturated',
-          facts: queuedFacts!,
-          last: dbStack.length === 0,
-          stats: stats(),
-        };
-        queuedFacts = null;
-        return post(msg);
-    }
   }
 
   switch (event.data.type) {
@@ -118,17 +122,17 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       dbStack = [event.data.db];
       program = event.data.program;
       queuedFacts = null;
-      return post({ type: 'paused', stats: stats() });
+      return resume('paused');
     case 'start':
       if (state === 'paused') {
-        state = 'running';
+        return resume('running');
       }
-      return resume();
+      return resume(state);
     case 'stop':
       if (state === 'running') {
-        state = 'paused';
+        return resume('paused');
       }
-      return resume();
+      return resume(state);
     case 'reset':
       cycleCount = 0;
       dbStack = [];
@@ -136,7 +140,7 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       queuedFacts = null;
       return post({ type: 'reset', stats: stats() });
     case 'status':
-      return resume();
+      return resume(state);
   }
 };
 

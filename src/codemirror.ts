@@ -1,8 +1,7 @@
-import React from 'react';
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView, ViewUpdate, keymap, lineNumbers, tooltips } from '@codemirror/view';
-import { ParserState, dinnikTokenizer } from './datalog/parser/dinnik-tokenizer';
+import { ParserState, dinnikTokenizer } from './datalog/dinnik-tokenizer';
 import { StringStream } from './datalog/parsing/string-stream';
 import { classHighlighter, tags } from '@lezer/highlight';
 import { Diagnostic, linter } from '@codemirror/lint';
@@ -98,50 +97,36 @@ function dinnikLinter(view: EditorView): readonly Diagnostic[] {
   });
 }
 
-export default function CodeEditor(props: CodeEditorProps) {
-  const editorDiv = React.useRef<HTMLDivElement | null>(null);
-  const editorView = React.useRef<EditorView | null>(null);
+export const editorChangeListener: { current: null | ((update: ViewUpdate) => void) } = {
+  current: null,
+};
 
-  React.useEffect(() => {
-    const state = EditorState.create({
-      doc: props.contents,
-      extensions: [
-        parser,
-        syntaxHighlighting(classHighlighter),
-        lineNumbers(),
-        history(),
-        EditorView.lineWrapping,
-        EditorView.updateListener.of(props.updateListener),
-        linter(dinnikLinter),
-        tooltips({ parent: document.body }),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
-      ],
-    });
-    const view = new EditorView({ state, parent: editorDiv.current ?? undefined });
-    props.getContents.current = () => {
-      return view.state.doc.toString();
-    };
-    editorView.current = view;
-    return () => {
-      editorView.current = null;
-      view.destroy();
-      props.getContents.current = null;
-    };
-  }, [editorView]);
+const state = EditorState.create({
+  doc: '',
+  extensions: [
+    parser,
+    syntaxHighlighting(classHighlighter),
+    lineNumbers(),
+    history(),
+    EditorView.lineWrapping,
+    EditorView.updateListener.of((update) => {
+      if (editorChangeListener.current !== null) {
+        editorChangeListener.current(update);
+      }
+    }),
+    linter(dinnikLinter),
+    tooltips({ parent: document.body }),
+    keymap.of([...defaultKeymap, ...historyKeymap]),
+  ],
+});
+const view = new EditorView({ state, parent: document.getElementById('codemirror-root')! });
 
-  React.useEffect(() => {
-    if (!editorView.current) {
-      console.error('Cannot set contents, no editor view');
-      return;
-    }
-    editorView.current.state.update({
-      changes: {
-        from: 0,
-        to: editorView.current.state.doc.length,
-        insert: 'a' + props.contents,
-      },
-    });
-  }, [props.contents]);
+export function setEditorContents(contents: string) {
+  view.dispatch({
+    changes: { from: 0, to: view.state.doc.length, insert: contents },
+  });
+}
 
-  return <div className="dk-editor-parent" ref={editorDiv}></div>;
+export function getEditorContents() {
+  return view.state.doc.toString();
 }

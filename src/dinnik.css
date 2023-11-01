@@ -1,68 +1,102 @@
-:root {
-  --dk-bg-glow: oklch(80% 0 0);
-  --dk-tab-hover: oklch(93% 0 0);
+body {
   --dk-mono: 'Fira Mono', monospace;
   --dk-condensed: 'Fira Sans Condensed', sans-serif;
-  --dk-emphasis: oklch(72% 0.19 320);
-  --dk-emphasis-hover: oklch(75% 0.19 320);
+  font-family: var(--dk-condensed);
 
   --dk-outer-padding: 12px;
   --dk-small-padding: 8px;
   --dk-small-radius: 8px;
+  --dk-medium-padding: 12px;
 
-  --dk-text-deemph: oklch(75% 0 0);
+  --solar-background: oklch(97% 0 0);
+  --solar-background-red: oklch(97% 0.02 25);
+  --solar-background-hover: oklch(93% 0 0);
+  --solar-background-deemph: oklch(89% 0 0);
+  --solar-background-deemph-hover: oklch(85% 0 0);
+  --solar-background-deemph-2: oklch(75% 0 0);
 
-  --solar-light-background: oklch(97% 0 0);
-  --solar-light-background-red: oklch(97% 0.02 25);
-  --solar-light-background-orange: oklch(97% 0.02 70);
-  --solar-light-background-green: oklch(97% 0.02 160);
+  --solar-text-emph-2: oklch(29% 0 0);
+  --solar-text-emph: oklch(44% 0 0);
+  --solar-text: oklch(58% 0 0);
+  --solar-text-deemph: oklch(76% 0 0);
 
-  --solar-light-highlight: oklch(91% 0 0);
-  --solar-light-highlight-orange: oklch(91% 0.02 70);
-
-  --solar-light-active-orange: oklch(86% 0.02 70);
-
-
-  --solar-light-deemph: oklch(87% 0 0);
-  --solar-light-text: oklch(58% 0 0);
-  --solar-light-emph: oklch(44% 0 0);
-  --solar-light-very-emph: oklch(29% 0 0);
-
-  --solar-light-yellow: oklch(58% 0.13 115);
-  --solar-light-green: oklch(58% 0.13 160);
-  --solar-light-cyan: oklch(58% 0.13 205);
-  --solar-light-blue: oklch(58% 0.13 250);
-  --solar-light-violet: oklch(58% 0.13 295);
-  --solar-light-magenta: oklch(58% 0.13 340);
-  --solar-light-red: oklch(58% 0.13 25);
-  --solar-light-highlight-red: oklch(% 0.13 25);
-  --solar-light-orange: oklch(58% 0.13 70);
+  --solar-yellow: oklch(58% 0.13 115);
+  --solar-green: oklch(58% 0.13 160);
+  --solar-cyan: oklch(58% 0.13 205);
+  --solar-blue: oklch(58% 0.13 250);
+  --solar-violet: oklch(58% 0.13 295);
+  --solar-magenta: oklch(58% 0.13 340);
+  --solar-red: oklch(58% 0.13 25);
+  --solar-orange: oklch(58% 0.13 70);
 }
 
-html {
-  font-family: var(--dk-condensed);
+body.theme-dark {
+  --solar-background: oklch(23% 0 0);
+  --solar-background-red: oklch(23% 0.02 25);
+  --solar-background-hover: oklch(27% 0 0);
+  --solar-background-deemph: oklch(31% 0 0);
+  --solar-background-deemph-hover: oklch(35% 0 0);
+  --solar-background-deemph-2: oklch(45% 0 0);
+
+  --solar-text-emph-2: oklch(91% 0 0);
+  --solar-text-emph: oklch(76% 0 0);
+  --solar-text: oklch(66% 0 0);
+  --solar-text-deemph: oklch(44% 0 0);
+
+  --solar-yellow: oklch(66% 0.13 115);
+  --solar-green: oklch(66% 0.13 160);
+  --solar-cyan: oklch(66% 0.13 205);
+  --solar-blue: oklch(66% 0.13 250);
+  --solar-violet: oklch(66% 0.13 295);
+  --solar-magenta: oklch(66% 0.13 340);
+  --solar-red: oklch(66% 0.13 25);
+  --solar-orange: oklch(66% 0.13 70);
 }
 
-.dk-main {
-  min-height: 100vh;
-  display: grid;
-}
-
-.dk-frame {
-  padding: var(--dk-outer-padding);
+main {
+  width: 100%;
   min-height: 100%;
+  display: grid;
+  grid-template-columns: calc(2rem + var(--dk-outer-padding) * 2) 1fr;
+  margin: 0;
+  padding: 0;
+  background: var(--solar-background);
+  color: var(--solar-text);
+  caret-color: var(--solar-text-emph);
+}
+
+.dk-config {
+  display: grid;
+  align-items: end;
+  padding: var(--dk-outer-padding);
+}
+
+.dk-config button {
+  height: 2rem;
+  border: 0;
+  background: var(--solar-background);
+  color: var(--solar-text);
+  border-radius: var(--dk-small-radius);
+}
+
+.dk-config button:hover {
+  color: var(--solar-text-emph);
+  background-color: var(--solar-background-hover);
 }
 
 .dk-sessions {
-  background-color: oklch(92% 0 0);
+  background-color: var(--solar-background-deemph);
   border-radius: calc(var(--dk-small-radius) + var(--dk-small-padding));
   padding: var(--dk-small-padding);
+  margin: var(--dk-outer-padding);
+  margin-left: 0;
   display: grid;
   grid-template-rows: 3rem 1fr;
-  min-height: 100%;
+  height: calc(100vh - 2 * var(--dk-outer-padding));
 }
 
 .dk-header {
+  color: var(--solar-text-emph);
   display: grid;
   grid-template-columns: 1fr auto;
 }
@@ -70,67 +104,14 @@ html {
 .dk-tabs {
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
+  gap: var(--dk-small-padding);
   overflow-x: scroll;
-  padding: 0 0 0.75rem 0;
-}
-
-.dk-tab {
-  display: flex;
-  flex-direction: row;
-}
-
-.dk-tab button {
-  white-space: nowrap;
-  background-color: transparent;
-  border: none;
-}
-.dk-tab button:hover {
-  background-color: oklch(89% 0 0);
-}
-
-.dk-tab.dk-tab-active button {
-  background-color: oklch(84% 0 0);
-}
-
-.dk-tab.dk-tab-active button:hover {
-  background-color: oklch(87% 0 0);
-}
-
-.dk-tab-button {
-  padding-left: 0.75rem;
-  border-radius: var(--dk-small-radius) 0 0 var(--dk-small-radius);
-  padding-right: 0rem;
-}
-
-.dk-tab-button.dk-tab-button-solo {
-  border-radius: var(--dk-small-radius);
-  padding-right: 0.75rem;
-}
-
-.dk-tab-close {
-  border-radius: 0 var(--dk-small-radius) var(--dk-small-radius) 0;
-  padding: 0 0.75rem;
-}
-
-.dk-tab.dk-tab-active button.dk-tab-close {
-  color: black;
-}
-
-button.dk-tab-close {
-  color: transparent;
-}
-
-button.dk-tab-close:hover {
-  color: black;
+  padding: 0 0 10px 0;
 }
 
 .dk-logo {
-  display: grid;
-  align-items: center;
-  justify-content: center;
   font-size: 1.5rem;
-  padding: 0 0.75rem 0.5rem 0.5rem;
+  padding-right: var(--dk-medium-padding);
 }
 
 .dk-session {
@@ -138,122 +119,154 @@ button.dk-tab-close:hover {
   grid-template-columns: 1fr 10px 1fr;
 }
 
-.dk-edit {
-  background-color: var(--solar-light-background);
-  box-shadow: 0 0 0.3rem 0 var(--dk-bg-glow);
-  border-radius: var(--dk-small-radius);
-  padding: 1rem 1rem 1rem 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  column-gap: 1rem;
-}
-
-.dk-edit textarea {
-  font-family: var(--dk-mono);
-  resize: none;
-  border: none;
-}
-
-.dk-edit-menu {
+.dk-tab {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-direction: row;
 }
 
-.dk-edit-menu button {
-  border-radius: var(--dk-button-radius);
-  height: 2.5rem;
+.dk-tab button,
+.dk-new-tab {
+  white-space: nowrap;
+  background-color: transparent;
   border: none;
+  color: var(--solar-text-emph);
 }
 
-.dk-edit-menu button.dk-go {
-  background-color: var(--dk-emphasis);
+.dk-tab button:hover,
+.dk-new-tab:hover {
+  background-color: var(--solar-background-deemph-hover);
+  color: var(--solar-text-emph-2);
+}
+
+.dk-tab-select-solo,
+.dk-new-tab {
+  border-radius: var(--dk-small-radius);
+  padding-inline: var(--dk-medium-padding);
+}
+
+.dk-tab-select {
+  border-top-left-radius: var(--dk-small-radius);
+  border-bottom-left-radius: var(--dk-small-radius);
+  padding-left: var(--dk-medium-padding);
+}
+
+.dk-tab button.dk-tab-close {
+  border-top-right-radius: var(--dk-small-radius);
+  border-bottom-right-radius: var(--dk-small-radius);
+  padding-right: var(--dk-medium-padding);
+  color: var(--solar-background-deemph);
+}
+
+.dk-tab.dk-tab-active button.dk-tab-close {
+  color: var(--solar-text-emph);
+}
+
+.dk-tab.dk-tab-active {
+  box-shadow: 0 0 0.3rem 0 var(--solar-background-deemph-2);
+  background-color: var(--solar-background);
+  border-radius: var(--dk-small-radius);
+  color: var(--solar-text-emph);
+}
+
+.dk-tab button:hover {
+  color: var(--solar-text-emph-2);
+}
+
+.dk-tab.dk-tab-active button:hover {
+  background-color: var(--solar-background-hover);
+  color: var(--solar-text-emph-2);
+}
+
+.dk-edit {
+  background-color: var(--solar-background);
+  box-shadow: 0 0 0.3rem 0 var(--solar-background-deemph-2);
+  border-radius: var(--dk-small-radius);
+  padding: var(--dk-medium-padding);
+  padding-left: var(--dk-small-padding);
+  padding-right: 0;
   display: grid;
-  align-items: center;
-  justify-content: center;
-  color: white;
 }
 
-.dk-edit-menu button.dk-go:hover {
-  background-color: var(--dk-emphasis-hover);
+#codemirror-root.dk-edit .cm-editor {
+  height: calc(
+    100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 2 * var(--dk-medium-padding) -
+      3rem
+  );
 }
 
 .dk-view {
-  background-color: oklch(92% 0 0);
-  box-shadow: 0 0 0.3rem 0 var(--dk-bg-glow);
+  box-shadow: 0 0 0.3rem 0 var(--solar-background-deemph-2);
   border-radius: var(--dk-small-radius);
   display: grid;
-  grid-template-rows: calc(2rem + 1px) 1fr;
+  grid-template-rows: calc(2rem + 1px) min-content 1fr;
+  height: calc(100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 3rem);
 }
 
-.dk-view .dk-view-header {
-  height: calc(2rem + 1px);
-  border-bottom: 1px solid oklch(80% 0 0);
-  display: flex;
-  flex-direction: row;
-  gap: 2px;
+.dk-view-header {
+  background-color: var(--solar-background);
+  display: grid;
   border-top-right-radius: var(--dk-small-radius);
   border-top-left-radius: var(--dk-small-radius);
+  justify-items: left;
+  border-bottom: solid 1px var(--solar-background-deemph-2);
+  display: flex;
+  flex-direction: row;
 }
 
-.dk-view .dk-load-button {
-  background-color: transparent;
-  border: 0;
+.dk-view-header button {
   width: 2rem;
   height: 2rem;
-  color: var(--solar-light-text);
-}
-
-.dk-view .dk-load-button:hover {
-  color: var(--solar-light-very-emph);
-}
-
-.dk-view .dk-load-button:disabled {
-  color: var(--solar-light-deemph);
-}
-
-.dk-view .dk-view-stats {
-  padding-left: 0.5rem;
+  border: none;
+  border-radius: var(--dk-small-radius);
+  background-color: transparent;
+  color: var(--solar-text);
   display: grid;
-  height: 2rem;
-  justify-content: left;
   align-items: center;
+  justify-content: center;
 }
 
-.dk-view .dk-view-status {
-  display: grid;
-  height: 2rem;
-  padding-right: 0.75rem;
-  justify-content: right;
-  align-items: center;
+.dk-view-header button:hover {
+  color: var(--solar-text-emph);
+  background-color: var(--solar-background-hover);
+}
+
+.dk-view-status {
   flex-grow: 1;
-  color: var(--solar-light-text);
+  display: grid;
+  align-items: center;
+  justify-content: right;
+  padding-right: var(--dk-medium-padding);
 }
 
-.dk-view .dk-view-status-unloaded {
-  background-color: var(--solar-light-background);
-}
-
-.dk-view .dk-view-status-error {
-  background-color: var(--solar-light-background-red);
-}
-
-.dk-view .dk-view-status-ok {
-  background-color: var(--solar-light-background);
-}
-
-.dk-view .dk-view-errors {
-  background-color: var(--solar-light-background);
-  padding: 1rem 1rem 1rem 1rem;
-  color: var(--solar-light-red);
+.dk-view-errors {
+  background-color: var(--solar-background-red);
   border-bottom-left-radius: var(--dk-small-radius);
   border-bottom-right-radius: var(--dk-small-radius);
+  padding: var(--dk-medium-padding);
+  padding-top: var(--dk-small-padding);
+  color: var(--solar-red);
+  overflow-y: scroll;
 }
 
-.dk-view .dk-view-solutions {
-  background-color: var(--solar-light-background);
-  padding: 1rem 1rem 1rem 1rem;
+.dk-view-edit-warning {
+  border-bottom: 1px solid var(--solar-background-deemph-2);
+  text-align: center;
+  color: var(--solar-red);
+  background-color: var(--solar-background-red);
+}
+
+.dk-view-edit-warning a {
+  text-decoration: solid underline var(--solar-text-emph);
+  color: var(--solar-text-emph);
+}
+
+.dk-view-solutions {
+  display: grid;
+  background-color: var(--solar-background);
   border-bottom-left-radius: var(--dk-small-radius);
   border-bottom-right-radius: var(--dk-small-radius);
-  color: var(--solar-light-text)
+  padding: var(--dk-medium-padding);
+  padding-top: var(--dk-small-padding);
+  padding-bottom: var(--dk-medium-padding);
+  overflow-y: scroll;
 }

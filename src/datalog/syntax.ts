@@ -47,13 +47,13 @@ export function propToString(p: Proposition) {
 function headToString(head: Conclusion) {
   const args = head.args.map((arg) => ` ${termToString(arg)}`).join('');
   if (head.values.length !== 1 || !head.exhaustive) {
-    return `${head.name}${args} is { ${head.values.map(termToString).join(', ')}${
-      head.exhaustive ? '' : ', ...'
-    } }`;
+    return `${head.name}${args} is { ${head.values
+      .map((term) => termToString(term, false))
+      .join(', ')}${head.exhaustive ? '' : '...'} }`;
   } else if (head.values[0].type === 'triv') {
     return `${head.name}${args}`;
   } else {
-    return `${head.name}${args} is ${termToString(head.values[0])}`;
+    return `${head.name}${args} is ${termToString(head.values[0], false)}`;
   }
 }
 
@@ -146,7 +146,7 @@ export function checkDecl(decl: Declaration): string[] {
 export function check(decls: Declaration[]) {
   const errors: string[] = [];
   for (let decl of decls) {
-    errors.push(...checkDecl(decl))
+    errors.push(...checkDecl(decl));
   }
   return errors;
 }

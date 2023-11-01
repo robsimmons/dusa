@@ -1,6 +1,6 @@
-import { Issue, ParserResponse, StreamParser } from '../parsing/parser';
-import { SourceLocation } from '../parsing/source-location';
-import { StringStream } from '../parsing/string-stream';
+import { Issue, ParserResponse, StreamParser } from './parsing/parser';
+import { SourceLocation } from './parsing/source-location';
+import { StringStream } from './parsing/string-stream';
 
 interface StateRoot {
   type: 'Root';
