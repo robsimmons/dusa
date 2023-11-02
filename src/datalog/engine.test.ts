@@ -111,3 +111,25 @@ test('Non-exhaustive choice', () => {
     .sort();
   expect(facts).toEqual(['', 'a is false, b is false', 'a is false, b is true']);
 });
+
+test('Plus is okay if grounded by previous rules', () => {
+  const decls: Declaration[] = [
+    rule(conc('a', ['12'])),
+    rule(conc('a', ['7'])),
+    rule(conc('a', ['2'])),
+    rule(conc('d', ['9'])),
+    rule(conc('d', ['19'])),
+    rule(conc('d', ['6'])),
+    rule(conc('e', ['X', 'Y']), prop('a', ['X']), prop('a', ['Y']), prop('d', ['plus X Y'])),
+  ];
+  const { program, initialDb } = compile(decls);
+  const { solutions, deadEnds, splits, highWater } = execute(program, initialDb);
+  expect(solutions.length).toEqual(1);
+  expect(deadEnds).toEqual(0);
+  expect(splits).toEqual(0);
+  expect(highWater).toEqual(1);
+  const facts = solutions
+    .map((solution) => solution.facts.map(factToString).sort().join(', '))
+    .sort();
+  expect(facts).toEqual(['a 12, a 2, a 7, d 19, d 6, d 9, e 12 7, e 2 7, e 7 12, e 7 2']);
+});
