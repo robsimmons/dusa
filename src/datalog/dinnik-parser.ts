@@ -40,7 +40,7 @@ function parseDeclOrIssue(t: Istream<Token>): Declaration | Issue | null {
   } catch (e) {
     if (e instanceof DinnikSyntaxError) {
       let next: Token | null;
-      while ((next = t.next()) !== null && next.type !== '.') {}
+      while ((next = t.next()) !== null && next.type !== '.');
       return { type: 'Issue', msg: e.message, loc: e.loc };
     } else {
       throw e;
@@ -99,7 +99,7 @@ function forceFullTerm(t: Istream<Token>): ParsedPattern {
 }
 
 export function parseHeadValue(t: Istream<Token>): { values: Pattern[]; exhaustive: boolean } {
-  let istok = chomp(t, 'is');
+  const istok = chomp(t, 'is');
   if (!istok) {
     return { values: [{ type: 'triv' }], exhaustive: true };
   }

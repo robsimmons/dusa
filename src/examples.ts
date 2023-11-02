@@ -1,4 +1,4 @@
-export const EXAMPLE_PROGRAM = `
+export const CHARACTER_CREATION_EXAMPLE = `
 # Character creation
 
 character celeste.
@@ -43,4 +43,48 @@ species celeste is S :- species nimbus is S.
 
 # Only room for one in the doghouse
 :- home C1 is doghouse, home C2 is doghouse, C1 != C2.
+`.trim();
+
+export const CKY_PARSING_EXAMPLE = `
+# CKY Parsing
+
+token "Mary" 1.
+token "saw" 2.
+token "Bob" 3.
+token "with" 4. 
+token "binoculars" 5.  
+
+word "Bob" noun.
+word "Mary" noun.
+word "binoculars" noun.  
+word "saw" verb.
+word "with" prep.
+
+unary  nounPh noun.          # nounPh <- noun
+binary senten nounPh verbPh. # senten <- nounPh verbPh
+binary verbPh verb   nounPh. # verbPh <- verb nounPh
+binary verbPh verbPh prepPh. # etc.
+binary prepPh prep   nounPh.
+binary nounPh nounPh prepPh.
+
+parse X (t W) I (s I) :-
+  token W I, 
+  word W X.
+
+parse X T I J :- 
+  unary X Y,
+  parse W T I J.
+
+parse X (cons T1 T2) I K :-
+  binary X Y Z,
+  parse Y T1 I J,
+  parse Z T2 J K.
+
+goal T :- parse senten T 1 6.
+
+# Mary sees the Bob that has binoculars
+# goal (cons (t "Mary") (cons (t "saw") (cons (t "Bob") (cons (t "with") (t "binoculars")))))
+#
+# Mary, using binoculars, sees Bob
+# goal (cons (t "Mary") (cons (cons (t "saw") (t "Bob")) (cons (t "with") (t "binoculars"))))
 `.trim();

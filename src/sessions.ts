@@ -1,7 +1,7 @@
 import { parse } from './datalog/dinnik-parser';
 import { Fact } from './datalog/engine';
 import { SourceLocation } from './datalog/parsing/source-location';
-import { EXAMPLE_PROGRAM } from './examples';
+import { CHARACTER_CREATION_EXAMPLE, CKY_PARSING_EXAMPLE } from './examples';
 import { check } from './datalog/syntax';
 import { compile } from './datalog/compile';
 import { AppToWorker, WorkerStats, WorkerToApp } from './worker';
@@ -85,9 +85,11 @@ class SessionTabs {
 
   private constructor() {
     if (localStorage.getItem(SessionTabs.LS_SESSION_LIST) === null) {
-      const uuid = crypto.randomUUID();
-      localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid), EXAMPLE_PROGRAM);
-      localStorage.setItem(SessionTabs.LS_SESSION_LIST, uuid);
+      const uuid1 = crypto.randomUUID();
+      const uuid2 = crypto.randomUUID();
+      localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid1), CHARACTER_CREATION_EXAMPLE);
+      localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid2), CKY_PARSING_EXAMPLE);
+      localStorage.setItem(SessionTabs.LS_SESSION_LIST, `${uuid1},${uuid2}`);
     }
     this.sessionList = localStorage.getItem(SessionTabs.LS_SESSION_LIST)!.split(',');
     this.activeSession = localStorage.getItem(SessionTabs.LS_SESSION_ACTIVE) ?? this.sessionList[0];
