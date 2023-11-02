@@ -117,6 +117,11 @@ class SessionTabs {
   add(): Promise<void> {
     const uuid = crypto.randomUUID();
     this.list = [...this.list, uuid];
+    this.sessionData[uuid] = {
+      status: 'unconnected',
+      text: '',
+      worker: null,
+    };
     return this.setActiveKey(uuid);
   }
 
