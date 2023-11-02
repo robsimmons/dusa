@@ -214,18 +214,16 @@ function stepFact(
   for (const ruleName of Object.keys(rules)) {
     const rule = rules[ruleName];
     if (rule.premise.type === 'Proposition') {
-      const substitution = matchFact({}, rule.premise, fact);
-      if (substitution !== null) {
-        for (const item of db.prefixes[ruleName] || []) {
-          if (rule.shared.every((varName) => equal(substitution[varName], item[varName]))) {
-            newPrefixes.push(
-              ...rule.next.map<Prefix>((next) => ({
-                type: 'Prefix',
-                name: next,
-                args: { ...substitution, ...item },
-              })),
-            );
-          }
+      for (const prefixSubst of db.prefixes[ruleName] || []) {
+        const substitution = matchFact(prefixSubst, rule.premise, fact);
+        if (substitution !== null) {
+          newPrefixes.push(
+            ...rule.next.map<Prefix>((next) => ({
+              type: 'Prefix',
+              name: next,
+              args: { ...substitution, ...prefixSubst },
+            })),
+          );
         }
       }
     }
