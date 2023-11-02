@@ -327,7 +327,6 @@ class SessionTabs {
       const session = this.sessionData[this.activeSession];
       if (session.status === 'running') {
         return this.messageWorker(session.worker, { type: 'status' }).then((msg) => {
-          console.log(msg);
           didQuery = true;
           this.handleMessageResponse(activeSession, msg);
         });
@@ -381,7 +380,7 @@ class SessionTabs {
         if (ast.errors !== null) {
           issues = ast.errors;
         } else {
-          issues = check(ast.document).map((msg) => ({ msg }));
+          issues = check(ast.document);
         }
 
         if (issues.length > 0 || ast.errors !== null) {
@@ -399,8 +398,6 @@ class SessionTabs {
         }
 
         const { program, initialDb } = compile(ast.document);
-
-        console.log('loading');
 
         return this.messageWorker(worker, { type: 'load', program, db: initialDb }).then(
           ({ stats }) => {

@@ -51,7 +51,6 @@ function cycle(): boolean {
             argses.map<Fact>((args) => ({ type: 'Fact', name, args: args })),
           ),
         );
-        console.log(queuedFacts);
         return false;
       }
       // Throw this solution away, it has 'is not' constraints
@@ -119,7 +118,6 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       : dbStack.length === 0
       ? 'done'
       : 'paused';
-  console.log(state);
 
   // Pause
   if (liveLoopHandle !== null) {

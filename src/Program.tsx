@@ -22,6 +22,7 @@ export default function Program({ load, run, pause, session }: Props) {
           >
             <span className="fa-solid fa-right-to-bracket" />
           </button>
+          <span className="dk-view-status">program not loaded</span>
         </div>
       </>
     );
@@ -56,12 +57,34 @@ export default function Program({ load, run, pause, session }: Props) {
     <div></div>
   );
 
+  const stats = (
+    <div className="dk-view-status">
+      {session.status === 'error' ? (
+        session.errorMessage
+      ) : session.stats === null ? (
+        'ready'
+      ) : (
+        <span>
+          <span className="fa-solid fa-worm" /> {session.stats.cycles} step
+          {session.stats.cycles !== 1 && 's'} <span className="fa-solid fa-lightbulb" />{' '}
+          {session.facts.length} solution{session.facts.length !== 1 && 's'}{' '}
+          {session.stats.deadEnds > 0 && (
+            <>
+              <span className="fa-solid fa-broom" /> {session.stats.deadEnds} backtrack
+              {session.stats.deadEnds !== 1 && 's'}
+            </>
+          )}
+        </span>
+      )}
+    </div>
+  );
+
   if (session.status === 'error') {
     return (
       <>
         <div className="dk-view-header">
           {loadButton}
-          <div className="dk-view-status">{session.errorMessage}</div>
+          {stats}
         </div>
         {reloadBar}
         <div className="dk-view-errors">
@@ -95,8 +118,7 @@ export default function Program({ load, run, pause, session }: Props) {
             <span className="fa-solid fa-play" />
           </button>
         )}
-        {session.status}
-        {session.facts.length}
+        {stats}
       </div>
       {reloadBar}
       {session.facts.length > 0 && (

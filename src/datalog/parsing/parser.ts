@@ -23,7 +23,7 @@ export type Tag = string;
 export interface Issue {
   type: 'Issue';
   msg: string;
-  loc: SourceLocation;
+  loc?: SourceLocation;
 }
 
 export interface ParserResponse<State, Tree> {

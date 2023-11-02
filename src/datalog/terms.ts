@@ -1,3 +1,5 @@
+import { SourceLocation } from './parsing/source-location';
+
 export type Pattern =
   | { type: 'triv' }
   | { type: 'int'; value: number }
@@ -12,6 +14,14 @@ export type Data =
   | { type: 'nat'; value: number }
   | { type: 'string'; value: string }
   | { type: 'const'; name: string; args: Data[] };
+
+export type ParsedPattern =
+  | { type: 'triv'; loc: SourceLocation }
+  | { type: 'int'; value: number; loc: SourceLocation }
+  | { type: 'nat'; value: number; loc: SourceLocation }
+  | { type: 'string'; value: string; loc: SourceLocation }
+  | { type: 'const'; name: string; args: Pattern[]; loc: SourceLocation }
+  | { type: 'var'; name: string; loc: SourceLocation };
 
 export type Substitution = { [varName: string]: Data };
 

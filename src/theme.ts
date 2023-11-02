@@ -1,7 +1,6 @@
 const themeswitcher = document.getElementById('themeswitcher')!;
 themeswitcher.onclick = () => {
   const root = document.getElementById('root')!;
-  console.log(root);
   if (root.className === 'theme-dark') {
     root.className = 'theme-light';
     themeswitcher.innerHTML = '<span class="fa-solid fa-sun"></span>';

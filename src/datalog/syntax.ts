@@ -1,21 +1,26 @@
+import { Issue } from './parsing/parser';
+import { SourceLocation } from './parsing/source-location';
 import { Pattern, freeVars, termToString } from './terms';
 
 export interface Proposition {
   type: 'Proposition';
   name: string;
   args: Pattern[];
+  loc?: SourceLocation;
 }
 
 export interface Equality {
   type: 'Equality';
   a: Pattern;
   b: Pattern;
+  loc?: SourceLocation;
 }
 
 export interface Inequality {
   type: 'Inequality';
   a: Pattern;
   b: Pattern;
+  loc?: SourceLocation;
 }
 
 export type Premise = Proposition | Equality | Inequality;
@@ -25,14 +30,16 @@ export interface Conclusion {
   args: Pattern[];
   values: Pattern[];
   exhaustive: boolean;
+  loc?: SourceLocation;
 }
 
 export type Declaration =
-  | { type: 'Constraint'; premises: Premise[] }
+  | { type: 'Constraint'; premises: Premise[]; loc?: SourceLocation }
   | {
       type: 'Rule';
       premises: Premise[];
       conclusion: Conclusion;
+      loc?: SourceLocation;
     };
 
 export function propToString(p: Proposition) {
@@ -84,17 +91,20 @@ export function declToString(decl: Declaration): string {
 
 function checkPremises(premises: Premise[]): {
   fv: Set<string>;
-  errors: string[];
+  errors: Issue[];
 } {
   const knownFreeVars = new Set<string>();
-  const errors: string[] = [];
+  const errors: Issue[] = [];
   for (const premise of premises) {
     switch (premise.type) {
       case 'Inequality': {
         const fv = freeVars(premise.a, premise.b);
         for (const v of fv) {
           if (!knownFreeVars.has(v)) {
-            errors.push(`Variable '${v}' not defined before being used in an inequality.`);
+            errors.push({
+              type: 'Issue',
+              msg: `Variable '${v}' not defined before being used in an inequality.`,
+            });
           }
         }
         break;
@@ -104,9 +114,10 @@ function checkPremises(premises: Premise[]): {
         const fvB = freeVars(premise.b);
         for (const v of fvA) {
           if (!knownFreeVars.has(v)) {
-            errors.push(
-              `The left side of an equality premise must include only previously ground variables`,
-            );
+            errors.push({
+              type: 'Issue',
+              msg: `The left side of an equality premise must include only previously ground variables`,
+            });
           }
         }
         for (const v of fvB) {
@@ -127,14 +138,17 @@ function checkPremises(premises: Premise[]): {
   return { fv: knownFreeVars, errors };
 }
 
-export function checkDecl(decl: Declaration): string[] {
+export function checkDecl(decl: Declaration): Issue[] {
   const { fv, errors } = checkPremises(decl.premises);
   switch (decl.type) {
     case 'Rule': {
       const headVars = freeVars(...decl.conclusion.args, ...decl.conclusion.values);
       for (const v of headVars) {
         if (!fv.has(v)) {
-          errors.push(`Variable '${v}' used in head of rule but not defined in a premise.`);
+          errors.push({
+            type: 'Issue',
+            msg: `Variable '${v}' used in head of rule but not defined in a premise.`,
+          });
         }
       }
       break;
@@ -147,7 +161,7 @@ export function checkDecl(decl: Declaration): string[] {
 }
 
 export function check(decls: Declaration[]) {
-  const errors: string[] = [];
+  const errors: Issue[] = [];
   for (const decl of decls) {
     errors.push(...checkDecl(decl));
   }

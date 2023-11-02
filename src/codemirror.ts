@@ -6,8 +6,9 @@ import { StringStream } from './datalog/parsing/string-stream';
 import { classHighlighter, tags } from '@lezer/highlight';
 import { Diagnostic, linter } from '@codemirror/lint';
 import { Position } from './datalog/parsing/source-location';
-import { parseWithStreamParser } from './datalog/parsing/parser';
+import { Issue, parseWithStreamParser } from './datalog/parsing/parser';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { parseTokens } from './datalog/dinnik-parser';
 
 const bogusPosition = {
   start: { line: 1, column: 1 },
@@ -84,17 +85,29 @@ function position(state: EditorState, pos: Position) {
   return state.doc.line(pos.line).from + pos.column - 1;
 }
 
+function issueToDiagnostic(issues: Issue[]): readonly Diagnostic[] {
+  return issues
+    .map((issue) => {
+      if (!issue.loc) return null;
+      return {
+        from: position(view.state, issue.loc.start),
+        to: position(view.state, issue.loc.end),
+        severity: 'error',
+        message: issue.msg,
+      };
+    })
+    .filter((issue): issue is Diagnostic => issue !== null);
+}
+
 function dinnikLinter(view: EditorView): readonly Diagnostic[] {
   const contents = view.state.doc.toString();
   const tokens = parseWithStreamParser(dinnikTokenizer, contents);
-  return tokens.issues.map((issue) => {
-    return {
-      from: position(view.state, issue.loc.start),
-      to: position(view.state, issue.loc.end),
-      severity: 'error',
-      message: issue.msg,
-    };
-  });
+  if (tokens.issues.length > 0) {
+    return issueToDiagnostic(tokens.issues);
+  }
+  return issueToDiagnostic(
+    parseTokens(tokens.document).filter((decl): decl is Issue => decl.type === 'Issue'),
+  );
 }
 
 export const editorChangeListener: { current: null | ((update: ViewUpdate) => void) } = {

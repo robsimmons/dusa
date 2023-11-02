@@ -66,7 +66,6 @@ function renderView() {
         load={() => {
           syncronizeCodeMirror();
           sessionManager.loadProgram().then(() => {
-            console.log('load complete');
             renderView();
           });
         }}
@@ -94,7 +93,7 @@ function inspectionLoop() {
 }
 inspectionLoop();
 
-const EDITOR_SYNC_DEBOUNCE_MS = 100;
+const EDITOR_SYNC_DEBOUNCE_MS = 10;
 let currentSyncTimeout: ReturnType<typeof setTimeout> | null = null;
 editorChangeListener.current = () => {
   if (currentSyncTimeout !== null) {
