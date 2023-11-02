@@ -21,7 +21,8 @@ export type AppToWorker =
   | { type: 'start' }
   | { type: 'reset' };
 
-const CYCLE_STEP = 10000;
+const CYCLE_LIMIT = 10000;
+const TIME_LIMIT = 500;
 let cycleCount = 0;
 let deadEndCount = 0;
 let dbStack: Database[] = [];
@@ -37,8 +38,9 @@ function post(message: WorkerToApp) {
 }
 
 function cycle(): boolean {
-  const limit = cycleCount + CYCLE_STEP + Math.random() * CYCLE_STEP;
-  while (cycleCount < limit) {
+  const limit = cycleCount + CYCLE_LIMIT + Math.random() * CYCLE_LIMIT;
+  const start = performance.now();
+  while (cycleCount < limit && start + TIME_LIMIT > performance.now()) {
     const db = dbStack.pop()!;
     if (!db) return false;
 

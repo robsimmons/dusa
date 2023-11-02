@@ -17,7 +17,8 @@ export type Token =
   | { loc: SourceLocation; type: 'var'; value: string }
   | { loc: SourceLocation; type: 'triv' }
   | { loc: SourceLocation; type: 'int'; value: number }
-  | { loc: SourceLocation; type: 'string'; value: string };
+  | { loc: SourceLocation; type: 'string'; value: string }
+  | { loc: SourceLocation; type: 'hashcommand'; value: string };
 
 export type ParserState = StateRoot;
 
@@ -25,9 +26,9 @@ const META_TOKEN = /^[0-9+\-A-Za-z_][A-Za-z0-9+\-_]*/;
 const CONST_TOKEN = /^[a-z][a-zA-Z0-9_]*$/;
 const VAR_TOKEN = /^[A-Z][a-zA-Z0-9_]*$/;
 const INT_TOKEN = /^-?(0|[1-9][0-9]*)$/;
-//const NUM_TOKEN = /^[+-]?(([0-9]+(\.[0-9])?)|([0-9]*\.[0-9]+))$/;
 const STRING_CONTENTS = /^[a-zA-Z0-9`~!@#$%^&*()\-_+=,<.>?;:'{[}\]| ]*/;
 const TRIV_TOKEN = /^\(\)/;
+const DIRECTIVES = ['demand', 'require'];
 
 function issue(stream: StringStream, msg: string): Issue {
   return {
@@ -53,6 +54,24 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
 
         if (stream.eat(/^#(| .*)$/)) {
           return { state, tag: 'comment' };
+        }
+
+        if ((tok = stream.eat('#'))) {
+          const value = stream.eat(CONST_TOKEN);
+          if (!value) {
+            stream.eat(/^.*$/);
+            return {
+              state,
+              issues: [
+                issue(
+                  stream,
+                  `Expect # to be followed by a constant (directive) or space (comment)`,
+                ),
+              ],
+            };
+          }
+          if (!DIRECTIVES.some((directive) => directive === value)) {
+          }
         }
 
         if (stream.eat(TRIV_TOKEN)) {
