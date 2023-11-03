@@ -47,6 +47,7 @@ species celeste is S :- species nimbus is S.
 
 export const CKY_PARSING_EXAMPLE = `
 # CKY Parsing
+#builtin INT_PLUS plus.
 
 token "Mary" 1.
 token "saw" 2.
@@ -67,7 +68,7 @@ binary verbPh verbPh prepPh. # etc.
 binary prepPh prep   nounPh.
 binary nounPh nounPh prepPh.
 
-parse X (t W) I (s I) :-
+parse X (t W) I (plus 1 I) :-
   token W I, 
   word W X.
 

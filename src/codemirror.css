@@ -43,8 +43,9 @@
 
 .tok-literal,
 .tok-number,
-.tok-string {
-  color: var(--solar-cyan);
+.tok-string,
+.tok-macroName {
+  color: var(--solar-green);
 }
 
 .tok-invalid {
@@ -53,8 +54,4 @@
 
 .tok-meta {
   color: var(--solar-yellow);
-}
-
-.tok-macroName {
-  color: var(--solar-green);
 }
