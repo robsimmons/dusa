@@ -50,7 +50,12 @@ function cycle(): boolean {
         // We've found a proper solution here
         queuedFacts = ([] as Fact[]).concat(
           ...Object.entries(db.facts).map(([name, argses]) =>
-            argses.map<Fact>((args) => ({ type: 'Fact', name, args: args })),
+            argses.map<Fact>(([args, value]) => ({
+              type: 'Fact',
+              name,
+              args,
+              value,
+            })),
           ),
         );
         return false;
@@ -133,6 +138,7 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       dbStack = [event.data.db];
       program = event.data.program;
       queuedFacts = null;
+      console.log(event.data);
       return resume('paused');
     case 'start':
       if (state === 'paused') {

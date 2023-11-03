@@ -30,6 +30,7 @@ export type Token =
   | { loc: SourceLocation; type: 'const'; value: string }
   | { loc: SourceLocation; type: 'builtin'; value: string; builtin: keyof typeof SPECIAL_DEFAULTS }
   | { loc: SourceLocation; type: 'var'; value: string }
+  | { loc: SourceLocation; type: 'wildcard'; value: string }
   | { loc: SourceLocation; type: 'triv' }
   | { loc: SourceLocation; type: 'int'; value: number }
   | { loc: SourceLocation; type: 'string'; value: string }
@@ -39,6 +40,7 @@ export type ParserState = StateRoot;
 
 const META_TOKEN = /^[0-9+\-A-Za-z_][A-Za-z0-9+\-_]*/;
 const CONST_TOKEN = /^[a-z][a-zA-Z0-9_]*$/;
+const WILDCARD_TOKEN = /^_[a-zA-Z0-9_]*$/;
 const VAR_TOKEN = /^[A-Z][a-zA-Z0-9_]*$/;
 const INT_TOKEN = /^-?(0|[1-9][0-9]*)$/;
 const STRING_CONTENTS = /^[a-zA-Z0-9`~!@#$%^&*()\-_+=,<.>?;:'{[}\]| ]*/;
@@ -110,8 +112,6 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
       case 'Builtin1':
         tok = stream.eat(META_TOKEN);
         if (!Object.keys(SPECIAL_DEFAULTS).some((name) => name === tok)) {
-          console.log(Object.keys(SPECIAL_DEFAULTS));
-          console.log(tok);
           return {
             state: { type: 'Normal', defaults: state.defaults },
             issues: [
@@ -250,6 +250,14 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
               state,
               tag: 'variableName',
               tree: { type: 'const', value: tok, loc: stream.matchedLocation() },
+            };
+          }
+
+          if (tok.match(WILDCARD_TOKEN)) {
+            return {
+              state,
+              tag: 'variableName.local',
+              tree: { type: 'wildcard', value: tok, loc: stream.matchedLocation() },
             };
           }
           return {

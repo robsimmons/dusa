@@ -36,6 +36,10 @@
   color: var(--solar-violet);
 }
 
+.tok-variableName.tok-local {
+  color: var(--solar-text-deemph);
+}
+
 .tok-comment {
   color: var(--solar-text);
   font-style: italic;

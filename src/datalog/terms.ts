@@ -14,6 +14,7 @@ export type Pattern =
       args: Pattern[];
       nonground?: number;
     }
+  | { type: 'wildcard'; name: null | string }
   | { type: 'var'; name: string };
 
 export type Data =
@@ -28,14 +29,15 @@ export type ParsedPattern =
   | { type: 'int'; value: number; loc: SourceLocation }
   | { type: 'nat'; value: number; loc: SourceLocation }
   | { type: 'string'; value: string; loc: SourceLocation }
-  | { type: 'const'; name: string; args: Pattern[]; loc: SourceLocation }
+  | { type: 'const'; name: string; args: ParsedPattern[]; loc: SourceLocation }
   | {
       type: 'special';
       name: keyof typeof SPECIAL_DEFAULTS;
       symbol: string;
-      args: Pattern[];
+      args: ParsedPattern[];
       loc: SourceLocation;
     }
+  | { type: 'wildcard'; name: null | string; loc: SourceLocation }
   | { type: 'var'; name: string; loc: SourceLocation };
 
 export type Substitution = { [varName: string]: Data };
@@ -158,6 +160,10 @@ export function match(
         substitution = candidate;
       }
       return substitution;
+
+    case 'wildcard':
+      return substitution;
+
     case 'var':
       if (substitution[pattern.name]) {
         return equal(substitution[pattern.name], data) ? substitution : null;
@@ -231,6 +237,10 @@ export function apply(substitution: Substitution, pattern: Pattern): Data {
       };
     }
 
+    case 'wildcard': {
+      throw new Error(`Cannot match apply a substitution to a pattern containing the wildcard '_'`);
+    }
+
     case 'var': {
       const result = substitution[pattern.name];
       if (!result) {
@@ -266,6 +276,8 @@ export function termToString(t: Pattern, needsParens = true): string {
   switch (t.type) {
     case 'triv':
       return `()`;
+    case 'wildcard':
+      return `_`;
     case 'int':
     case 'nat':
       return `${t.value}`;
@@ -360,6 +372,43 @@ export function parseData(s: string): Data {
   return assertData(parsePattern(s));
 }
 
+function repeatedWildcardsAccum(
+  wildcards: Set<string>,
+  repeatedWildcards: Map<string, SourceLocation>,
+  p: ParsedPattern,
+) {
+  switch (p.type) {
+    case 'wildcard':
+      if (p.name !== null && wildcards.has(p.name)) {
+        repeatedWildcards.set(p.name, p.loc);
+      }
+      wildcards.add(p.name ?? '_');
+      return;
+    case 'int':
+    case 'string':
+    case 'triv':
+    case 'var':
+      return;
+    case 'const':
+    case 'special':
+      for (const arg of p.args) {
+        repeatedWildcardsAccum(wildcards, repeatedWildcards, arg);
+      }
+      return;
+  }
+}
+
+export function repeatedWildcards(
+  knownWildcards: Set<string>,
+  ...patterns: ParsedPattern[]
+): [string, SourceLocation][] {
+  const repeatedWildcards = new Map<string, SourceLocation>();
+  for (const pattern of patterns) {
+    repeatedWildcardsAccum(knownWildcards, repeatedWildcards, pattern);
+  }
+  return [...repeatedWildcards.entries()];
+}
+
 function freeVarsAccum(s: Set<string>, p: Pattern) {
   switch (p.type) {
     case 'var':
@@ -368,8 +417,10 @@ function freeVarsAccum(s: Set<string>, p: Pattern) {
     case 'int':
     case 'string':
     case 'triv':
+    case 'wildcard':
       return;
     case 'const':
+    case 'special':
       for (const arg of p.args) {
         freeVarsAccum(s, arg);
       }
@@ -381,6 +432,33 @@ export function freeVars(...patterns: Pattern[]): Set<string> {
   const s = new Set<string>();
   for (const pattern of patterns) {
     freeVarsAccum(s, pattern);
+  }
+  return s;
+}
+
+function freeParsedVarsAccum(s: Map<string, SourceLocation>, p: ParsedPattern) {
+  switch (p.type) {
+    case 'var':
+      s.set(p.name, p.loc);
+      return;
+    case 'int':
+    case 'string':
+    case 'triv':
+    case 'wildcard':
+      return;
+    case 'const':
+    case 'special':
+      for (const arg of p.args) {
+        freeParsedVarsAccum(s, arg);
+      }
+      return;
+  }
+}
+
+export function freeParsedVars(...patterns: ParsedPattern[]): Map<string, SourceLocation> {
+  const s = new Map<string, SourceLocation>();
+  for (const pattern of patterns) {
+    freeParsedVarsAccum(s, pattern);
   }
   return s;
 }

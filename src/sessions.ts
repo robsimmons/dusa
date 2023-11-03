@@ -2,7 +2,7 @@ import { parse } from './datalog/dinnik-parser';
 import { Fact } from './datalog/engine';
 import { SourceLocation } from './datalog/parsing/source-location';
 import { CHARACTER_CREATION_EXAMPLE, CKY_PARSING_EXAMPLE } from './examples';
-import { check } from './datalog/syntax';
+import { Declaration, check } from './datalog/syntax';
 import { compile } from './datalog/compile';
 import { AppToWorker, WorkerStats, WorkerToApp } from './worker';
 
@@ -383,14 +383,20 @@ class SessionTabs {
       })
       .then(({ worker, activeSession, text }) => {
         const ast = parse(text);
+        let decls: Declaration[] | null = null;
         let issues: { msg: string; loc?: SourceLocation }[] = [];
         if (ast.errors !== null) {
           issues = ast.errors;
         } else {
-          issues = check(ast.document);
+          const result = check(ast.document);
+          if (result.errors !== null) {
+            issues = result.errors;
+          } else {
+            decls = result.decls;
+          }
         }
 
-        if (issues.length > 0 || ast.errors !== null) {
+        if (issues.length > 0 || decls === null) {
           this.sessionData[activeSession] = {
             status: 'error',
             text,
@@ -404,7 +410,7 @@ class SessionTabs {
           return Promise.resolve();
         }
 
-        const { program, initialDb } = compile(ast.document);
+        const { program, initialDb } = compile(decls);
 
         return this.messageWorker(worker, { type: 'load', program, db: initialDb }).then(
           ({ stats }) => {

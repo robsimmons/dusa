@@ -1,4 +1,4 @@
-import { Database, InternalPartialRule, Program, insertFact } from './engine';
+import { Database, InternalPartialRule, InternalPremise, Program, insertFact } from './engine';
 import { Declaration, Premise } from './syntax';
 import { assertData, freeVars } from './terms';
 
@@ -47,7 +47,11 @@ export function compilePremises(
       }
 
       case 'Proposition': {
-        const fv = freeVars(...premise.args);
+        const newPremise: InternalPremise = {
+          ...premise,
+          value: premise.value ?? { type: 'triv' },
+        };
+        const fv = freeVars(...newPremise.args, newPremise.value);
         const shared = [];
         for (const v of fv) {
           if (knownFreeVars.has(v)) {
@@ -56,7 +60,7 @@ export function compilePremises(
             knownFreeVars.add(v);
           }
         }
-        return [thisPartial, { next: [nextPartial], shared, premise }];
+        return [thisPartial, { next: [nextPartial], shared, premise: newPremise }];
       }
     }
   });
@@ -78,7 +82,7 @@ export function compile(decls: Declaration[]): { program: Program; initialDb: Da
   let ruleNum = 0;
   for (const decl of decls) {
     switch (decl.type) {
-      case 'Constraint': {
+      case 'Forbid': {
         const { seed, rules, conclusion } = compilePremises(
           indexToRuleName(ruleNum++),
           decl.premises,
@@ -92,17 +96,21 @@ export function compile(decls: Declaration[]): { program: Program; initialDb: Da
         break;
       }
 
+      case 'Demand': {
+        throw new Error('todo');
+      }
+
       case 'Rule': {
         if (
           decl.premises.length === 0 &&
-          decl.conclusion.values.length === 1 &&
+          (decl.conclusion.values === null || decl.conclusion.values.length) === 1 &&
           decl.conclusion.exhaustive
         ) {
           // This is just a fact
           initialDb = insertFact(
             decl.conclusion.name,
             decl.conclusion.args.map(assertData),
-            assertData(decl.conclusion.values[0]),
+            assertData(decl.conclusion.values?.[0] ?? { type: 'triv' }),
             initialDb,
           );
         }
@@ -122,7 +130,7 @@ export function compile(decls: Declaration[]): { program: Program; initialDb: Da
           name: decl.conclusion.name,
           args: decl.conclusion.args,
           exhaustive: decl.conclusion.exhaustive,
-          values: decl.conclusion.values,
+          values: decl.conclusion.values ?? [{ type: 'triv' }],
         };
         break;
       }

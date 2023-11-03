@@ -1,4 +1,4 @@
-import { Premise, Proposition, propToString } from './syntax';
+import { Proposition, propToString } from './syntax';
 import { Substitution, Pattern, Data, match, apply, equal, termToString } from './terms';
 
 export interface Program {
@@ -6,10 +6,23 @@ export interface Program {
   conclusions: { [r: string]: InternalConclusion };
 }
 
+export type InternalPremise =
+  | {
+      type: 'Proposition';
+      name: string;
+      args: Pattern[];
+      value: Pattern;
+    }
+  | {
+      type: 'Equality' | 'Inequality';
+      a: Pattern; // Must have no new free variables
+      b: Pattern; // May have new free variables
+    };
+
 export type InternalPartialRule = {
   next: string[];
   shared: string[];
-  premise: Premise;
+  premise: InternalPremise;
 };
 
 export type InternalConclusion =
@@ -26,6 +39,7 @@ export interface Fact {
   type: 'Fact';
   name: string;
   args: Data[];
+  value: Data;
 }
 
 export interface Prefix {
@@ -35,7 +49,7 @@ export interface Prefix {
 }
 
 export interface Database {
-  facts: { [predicate: string]: Data[][] };
+  facts: { [predicate: string]: [Data[], Data][] };
   factValues: { [prop: string]: { type: 'is'; value: Data } | { type: 'is not'; value: Data[] } };
   prefixes: { [name: string]: Substitution[] };
   queue: (Fact | Prefix)[];
@@ -63,7 +77,11 @@ function matchFact(substitution: Substitution, proposition: Proposition, fact: F
   if (proposition.name !== fact.name) {
     return null;
   }
-  return matchPatterns(substitution, proposition.args, fact.args);
+  return matchPatterns(
+    substitution,
+    [...proposition.args, proposition.value ?? { type: 'triv' }],
+    [...fact.args, fact.value],
+  );
 }
 
 export function factToString(fact: Fact): string {
@@ -123,9 +141,9 @@ function stepConclusion(conclusion: InternalConclusion, prefix: Prefix, db: Data
     return nonExhaustive.concat(
       values.map<Database>((value) => ({
         ...db,
-        facts: { ...db.facts, [conclusion.name]: [...existingFacts, [...args, value]] },
+        facts: { ...db.facts, [conclusion.name]: [...existingFacts, [args, value]] },
         factValues: { ...db.factValues, [key]: { type: 'is', value } },
-        queue: [...db.queue, { type: 'Fact', name: conclusion.name, args: [...args, value] }],
+        queue: [...db.queue, { type: 'Fact', name: conclusion.name, args, value }],
       })),
     );
   }
@@ -136,9 +154,9 @@ export function insertFact(name: string, args: Data[], value: Data, db: Database
   const existingFacts = db.facts[name] || [];
   return {
     ...db,
-    facts: { ...db.facts, [name]: [...existingFacts, [...args, value]] },
+    facts: { ...db.facts, [name]: [...existingFacts, [args, value]] },
     factValues: { ...db.factValues, [key]: { type: 'is', value } },
-    queue: [...db.queue, { type: 'Fact', name, args: [...args, value] }],
+    queue: [...db.queue, { type: 'Fact', name, args, value }],
   };
 }
 
@@ -156,9 +174,8 @@ function stepPrefix(
 
   if (rule.premise.type === 'Inequality') {
     const a = apply(prefix.args, rule.premise.a);
-    const b = apply(prefix.args, rule.premise.b);
 
-    if (!equal(a, b)) {
+    if (matchPatterns(prefix.args, [rule.premise.b], [a]) === null) {
       newPrefixes.push(
         ...rule.next.map<Prefix>((next) => ({
           type: 'Prefix',
@@ -187,17 +204,19 @@ function stepPrefix(
   if (rule.premise.type === 'Proposition') {
     const knownFacts = db.facts[rule.premise.name] || [];
 
-    for (const fact of knownFacts) {
-      const candidate = matchPatterns(prefix.args, rule.premise.args, fact);
-
-      if (candidate !== null) {
-        newPrefixes.push(
-          ...rule.next.map<Prefix>((next) => ({
-            type: 'Prefix',
-            name: next,
-            args: candidate,
-          })),
-        );
+    for (const [factArgs, factValue] of knownFacts) {
+      const candidate1 = matchPatterns(prefix.args, rule.premise.args, factArgs);
+      if (candidate1 !== null) {
+        const candidate2 = matchPatterns(candidate1, [rule.premise.value], [factValue]);
+        if (candidate2 !== null) {
+          newPrefixes.push(
+            ...rule.next.map<Prefix>((next) => ({
+              type: 'Prefix',
+              name: next,
+              args: candidate2,
+            })),
+          );
+        }
       }
     }
   }
@@ -320,7 +339,12 @@ export function execute(
       solutions.push({
         facts: ([] as Fact[]).concat(
           ...Object.entries(db.facts).map(([name, argses]) =>
-            argses.map<Fact>((args) => ({ type: 'Fact', name: name, args })),
+            argses.map<Fact>(([args, value]) => ({
+              type: 'Fact',
+              name: name,
+              args,
+              value,
+            })),
           ),
         ),
         unfacts: Object.entries(db.factValues)

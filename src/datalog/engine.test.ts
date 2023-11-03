@@ -1,52 +1,43 @@
 import { compile } from './compile';
 import { parse } from './dinnik-parser';
-import { execute, factToString } from './engine';
-import { Conclusion, Declaration, Equality, Inequality, Premise, Proposition, check } from './syntax';
-import { parsePattern, termToString } from './terms';
+import { Solution, execute, factToString } from './engine';
+import { check } from './syntax';
+import { termToString } from './terms';
 import { test, expect } from 'vitest';
 
-/* helper functions */
-function prop(name: string, args: string[], value: string = '()'): Proposition {
-  return { type: 'Proposition', name, args: [...args.map(parsePattern), parsePattern(value)] };
+function testExecution(prog: string) {
+  const parsed = parse(prog);
+  if (parsed.errors !== null) {
+    throw parsed.errors;
+  }
+
+  const checked = check(parsed.document);
+  if (checked.errors !== null) {
+    throw checked.errors;
+  }
+
+  const { program, initialDb } = compile(checked.decls);
+  return execute(program, initialDb);
 }
 
-function neq(a: string, b: string): Inequality {
-  return { type: 'Inequality', a: parsePattern(a), b: parsePattern(b) };
+function solutionsToStrings(solutions: Solution[]) {
+  return solutions.map((solution) => solution.facts.map(factToString).sort().join(', ')).sort();
 }
 
-function eq(a: string, b: string): Equality {
-  return { type: 'Equality', a: parsePattern(a), b: parsePattern(b) };
-}
+test('Multi-step declaration, basic nat (in)equality', () => {
+  const { solutions, deadEnds, splits, highWater } = testExecution(`
+  #builtin NAT_ZERO z
+  #builtin NAT_SUCC s
 
-function conc(
-  name: string,
-  args: string[],
-  values: string[] = ['()'],
-  isThereMore: null | '...' = null,
-): Conclusion {
-  return {
-    name,
-    args: args.map(parsePattern),
-    values: values.map(parsePattern),
-    exhaustive: isThereMore === null,
-  };
-}
-
-function rule(conclusion: Conclusion, ...premises: Premise[]): Declaration {
-  return { type: 'Rule', premises, conclusion };
-}
-
-test('Multi-step deducation', () => {
-  const decls: Declaration[] = [
-    rule(conc('a', []), eq('1', '1'), neq('0', 's z')),
-    rule(conc('b', []), prop('a', []), prop('a', [])),
-    rule(conc('c', []), prop('b', [])),
-    rule(conc('d', []), prop('c', []), eq('z', '1')),
-    rule(conc('e', []), prop('d', [])),
-  ];
-
-  const { program, initialDb } = compile(decls);
-  const { solutions, deadEnds, splits, highWater } = execute(program, initialDb);
+  a :- 1 == 1, 0 != s z, 1 == s z, 0 == z, 1 == s 0, 2 == s _, s _Y != 0.
+  b :- a, a.
+  c :- b.
+  d :- c, z == 1.
+  d :- c, s z == 0.
+  d :- c, z != 0.
+  d :- c, s z != 1.
+  e :- d.
+  `);
   expect(solutions.length).toEqual(1);
   expect(deadEnds).toEqual(0);
   expect(splits).toEqual(0);
@@ -61,13 +52,10 @@ test('Multi-step deducation', () => {
 });
 
 test('Exhaustive choices', () => {
-  const decls: Declaration[] = [
-    rule(conc('a', [], ['true', 'false'])),
-    rule(conc('b', [], ['true', 'false'])),
-  ];
-
-  const { program, initialDb } = compile(decls);
-  const { solutions, deadEnds, splits, highWater } = execute(program, initialDb);
+  const { solutions, deadEnds, splits, highWater } = testExecution(`
+  a is { true, false }.
+  b is { true, false }.
+  `);
   expect(solutions.length).toEqual(4);
   expect(deadEnds).toEqual(0);
   expect(splits).toEqual(3);
@@ -86,13 +74,10 @@ test('Exhaustive choices', () => {
 });
 
 test('Non-exhaustive choice', () => {
-  const decls: Declaration[] = [
-    rule(conc('a', [], ['false'], '...')),
-    rule(conc('b', [], ['true', 'false']), prop('a', [], 'false')),
-  ];
-
-  const { program, initialDb } = compile(decls);
-  const { solutions, deadEnds, splits, highWater } = execute(program, initialDb);
+  const { solutions, deadEnds, splits, highWater } = testExecution(`
+  a is { false... }.
+  b is { true, false } :- a is false.
+  `);
   expect(solutions.length).toEqual(3);
   expect(deadEnds).toEqual(0);
   expect(splits).toEqual(2);
@@ -114,8 +99,7 @@ test('Non-exhaustive choice', () => {
 });
 
 test('Plus is okay if grounded by previous rules', () => {
-  check
-  const parsed = parse(`
+  const { solutions, deadEnds, splits, highWater } = testExecution(`
   #builtin INT_PLUS plus
 
   a 2.
@@ -124,21 +108,28 @@ test('Plus is okay if grounded by previous rules', () => {
   d 9.
   d 19.
   d 6.
-  e X Y :- a X, a Y, d (plus X Y).
-  `);
+  e X Y :- a X, a Y, d (plus X Y).`);
 
-  if (parsed.errors !== null) {
-    expect(parsed.errors).toEqual(null);
-  } else {
-    const { program, initialDb } = compile(parsed.document);
-    const { solutions, deadEnds, splits, highWater } = execute(program, initialDb);
-    expect(solutions.length).toEqual(1);
-    expect(deadEnds).toEqual(0);
-    expect(splits).toEqual(0);
+  expect(solutions.length).toEqual(1);
+  expect(deadEnds).toEqual(0);
+  expect(splits).toEqual(0);
   expect(highWater).toEqual(1);
-    const facts = solutions
-      .map((solution) => solution.facts.map(factToString).sort().join(', '))
-      .sort();
-    expect(facts).toEqual(['a 12, a 2, a 7, d 19, d 6, d 9, e 12 7, e 2 7, e 7 12, e 7 2']);
-  }
+  expect(solutionsToStrings(solutions)).toEqual([
+    'a 12, a 2, a 7, d 19, d 6, d 9, e 12 7, e 2 7, e 7 12, e 7 2',
+  ]);
+});
+
+test('Matching nats', () => {
+  const { solutions } = testExecution(`
+  #builtin NAT_SUCC s
+
+  a 2.
+  a 4.
+  b X :- a Y, Y == s X.
+  c X :- a Y, X == s Y.
+  d X :- b X, X != s (s Y).
+  e (s (s X)) :- a X, s (s (s _)) != X.
+  e (s X) :- a X, X != s (s (s _Y)).`);
+
+  expect(solutionsToStrings(solutions)).toEqual(['a 2, a 4, b 1, b 3, c 3, c 5, d 1, e 3, e 4']);
 });
