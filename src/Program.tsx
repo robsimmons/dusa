@@ -115,7 +115,7 @@ export default function Program({ load, run, pause, session }: Props) {
         )}
         {session.status === 'running' && (
           <button title="Pause searching for solutions" onClick={() => pause()}>
-            <span className="fa-solid fa-play" />
+            <span className="fa-solid fa-pause" />
           </button>
         )}
         {stats}

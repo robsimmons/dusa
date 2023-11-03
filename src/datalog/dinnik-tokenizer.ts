@@ -1,10 +1,24 @@
+import { SPECIAL_DEFAULTS } from './dinnik-special';
 import { Issue, ParserResponse, StreamParser } from './parsing/parser';
 import { SourceLocation } from './parsing/source-location';
 import { StringStream } from './parsing/string-stream';
 
-interface StateRoot {
-  type: 'Root';
-}
+type StateRoot =
+  | {
+      type: 'Normal' | 'Beginning' | 'Builtin3';
+      defaults: typeof SPECIAL_DEFAULTS;
+    }
+  | {
+      type: 'Builtin1';
+      hashloc: SourceLocation;
+      defaults: typeof SPECIAL_DEFAULTS;
+    }
+  | {
+      type: 'Builtin2';
+      hashloc: SourceLocation;
+      defaults: typeof SPECIAL_DEFAULTS;
+      builtin: keyof typeof SPECIAL_DEFAULTS;
+    };
 
 const punct = ['...', ',', '.', '{', '}', '(', ')', ':-', '!=', '=='] as const;
 type PUNCT = (typeof punct)[number];
@@ -14,11 +28,12 @@ export type Token =
   | { loc: SourceLocation; type: 'is' }
   | { loc: SourceLocation; type: 'in' }
   | { loc: SourceLocation; type: 'const'; value: string }
+  | { loc: SourceLocation; type: 'builtin'; value: string; builtin: keyof typeof SPECIAL_DEFAULTS }
   | { loc: SourceLocation; type: 'var'; value: string }
   | { loc: SourceLocation; type: 'triv' }
   | { loc: SourceLocation; type: 'int'; value: number }
   | { loc: SourceLocation; type: 'string'; value: string }
-  | { loc: SourceLocation; type: 'hashcommand'; value: string };
+  | { loc: SourceLocation; type: 'hashdirective'; value: string };
 
 export type ParserState = StateRoot;
 
@@ -28,7 +43,6 @@ const VAR_TOKEN = /^[A-Z][a-zA-Z0-9_]*$/;
 const INT_TOKEN = /^-?(0|[1-9][0-9]*)$/;
 const STRING_CONTENTS = /^[a-zA-Z0-9`~!@#$%^&*()\-_+=,<.>?;:'{[}\]| ]*/;
 const TRIV_TOKEN = /^\(\)/;
-const DIRECTIVES = ['demand', 'require'];
 
 function issue(stream: StringStream, msg: string): Issue {
   return {
@@ -39,41 +53,113 @@ function issue(stream: StringStream, msg: string): Issue {
 }
 
 export const dinnikTokenizer: StreamParser<ParserState, Token> = {
-  startState: { type: 'Root' },
+  startState: { type: 'Beginning', defaults: SPECIAL_DEFAULTS },
   advance: (stream, state): ParserResponse<ParserState, Token> => {
-    let tok;
+    let tok: string | null;
+
+    if (stream.eol()) {
+      return { state };
+    }
+
+    if (stream.eat(/^\s+/)) {
+      return { state };
+    }
+
+    if (stream.eat(/^#(| .*)$/)) {
+      return { state, tag: 'comment' };
+    }
+
     switch (state.type) {
-      case 'Root':
-        if (stream.eol()) {
-          return { state };
-        }
-
-        if (stream.eat(/^\s+/)) {
-          return { state };
-        }
-
+      case 'Beginning':
         if (stream.eat(/^#(| .*)$/)) {
           return { state, tag: 'comment' };
         }
 
         if ((tok = stream.eat('#'))) {
-          const value = stream.eat(CONST_TOKEN);
-          if (!value) {
+          tok = stream.eat(META_TOKEN);
+          if (!tok) {
             stream.eat(/^.*$/);
             return {
-              state,
+              state: state,
               issues: [
                 issue(
                   stream,
                   `Expect # to be followed by a constant (directive) or space (comment)`,
                 ),
               ],
+              tag: 'invalid',
             };
           }
-          if (!DIRECTIVES.some((directive) => directive === value)) {
+
+          if (tok === 'builtin') {
+            return {
+              state: { ...state, type: 'Builtin1', hashloc: stream.matchedLocation() },
+              tag: 'meta',
+            };
           }
+
+          return {
+            state: { ...state, type: 'Normal' },
+            tag: 'meta',
+            tree: { type: 'hashdirective', value: tok, loc: stream.matchedLocation() },
+          };
         }
 
+        return { state: { ...state, type: 'Normal' } };
+
+      case 'Builtin1':
+        tok = stream.eat(META_TOKEN);
+        if (!Object.keys(SPECIAL_DEFAULTS).some((name) => name === tok)) {
+          console.log(Object.keys(SPECIAL_DEFAULTS));
+          console.log(tok);
+          return {
+            state: { type: 'Normal', defaults: state.defaults },
+            issues: [
+              {
+                type: 'Issue',
+                msg: `Expected token following #builtin to be one of ${Object.keys(
+                  SPECIAL_DEFAULTS,
+                ).join(', ')}`,
+                loc: { start: state.hashloc.start, end: stream.matchedLocation().end },
+              },
+            ],
+            tag: 'invalid',
+          };
+        }
+
+        return {
+          state: { ...state, type: 'Builtin2', builtin: tok as keyof typeof SPECIAL_DEFAULTS },
+          tag: 'meta',
+        };
+
+      case 'Builtin2':
+        tok = stream.eat(META_TOKEN);
+        if (tok === null || !tok.match(CONST_TOKEN)) {
+          return {
+            state: { type: 'Normal', defaults: state.defaults },
+            issues: [
+              {
+                type: 'Issue',
+                msg: `Expected constant following #builtin ${state.builtin}`,
+                loc: { start: state.hashloc.start, end: stream.matchedLocation().end },
+              },
+            ],
+            tag: 'invalid',
+          };
+        }
+
+        return {
+          state: { type: 'Builtin3', defaults: { ...state.defaults, [state.builtin]: tok } },
+          tag: 'macroName',
+        };
+
+      case 'Builtin3':
+        return {
+          state: { ...state, type: 'Beginning' },
+          tag: stream.eat('.') ? 'punctuation' : undefined,
+        };
+
+      case 'Normal':
         if (stream.eat(TRIV_TOKEN)) {
           return { state, tag: 'literal' };
         }
@@ -111,7 +197,7 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
         for (const p of punct) {
           if (stream.eat(p)) {
             return {
-              state,
+              state: p === '.' ? { ...state, type: 'Beginning' } : state,
               tag: 'punctuation',
               tree: { type: p, loc: stream.matchedLocation() },
             };
@@ -145,6 +231,21 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
             };
           }
           if (tok.match(CONST_TOKEN)) {
+            for (const [builtin, key] of Object.entries(state.defaults)) {
+              if (tok === key) {
+                return {
+                  state,
+                  tag: 'macroName',
+                  tree: {
+                    type: 'builtin',
+                    value: tok,
+                    builtin: builtin as keyof typeof state.defaults,
+                    loc: stream.matchedLocation(),
+                  },
+                };
+              }
+            }
+
             return {
               state,
               tag: 'variableName',

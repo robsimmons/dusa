@@ -50,3 +50,11 @@
 .tok-invalid {
   color: var(--solar-red);
 }
+
+.tok-meta {
+  color: var(--solar-yellow);
+}
+
+.tok-macroName {
+  color: var(--solar-green);
+}

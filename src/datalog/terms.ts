@@ -1,4 +1,5 @@
 import { SourceLocation } from './parsing/source-location';
+import { SPECIAL_DEFAULTS } from './dinnik-special';
 
 export type Pattern =
   | { type: 'triv' }
@@ -6,6 +7,13 @@ export type Pattern =
   | { type: 'nat'; value: number }
   | { type: 'string'; value: string }
   | { type: 'const'; name: string; args: Pattern[] }
+  | {
+      type: 'special';
+      name: keyof typeof SPECIAL_DEFAULTS;
+      symbol: string;
+      args: Pattern[];
+      nonground?: number;
+    }
   | { type: 'var'; name: string };
 
 export type Data =
@@ -21,13 +29,16 @@ export type ParsedPattern =
   | { type: 'nat'; value: number; loc: SourceLocation }
   | { type: 'string'; value: string; loc: SourceLocation }
   | { type: 'const'; name: string; args: Pattern[]; loc: SourceLocation }
+  | {
+      type: 'special';
+      name: keyof typeof SPECIAL_DEFAULTS;
+      symbol: string;
+      args: Pattern[];
+      loc: SourceLocation;
+    }
   | { type: 'var'; name: string; loc: SourceLocation };
 
 export type Substitution = { [varName: string]: Data };
-
-const NAT_ZERO = 'z';
-const NAT_SUCC = 's';
-const INT_PLUS = 'plus';
 
 export function match(
   substitution: Substitution,
@@ -47,46 +58,94 @@ export function match(
       if (pattern.type !== data.type) return null;
       if (pattern.value !== data.value) return null;
       return substitution;
-
-    case 'const':
-      if (pattern.name === NAT_ZERO && pattern.args.length === 0) {
-        if (data.type !== 'nat') {
-          throw new Error(`Type error: matching nat '${NAT_ZERO}' against a ${data.type}`);
+    case 'special':
+      if (pattern.name === 'NAT_ZERO' && pattern.args.length === 0) {
+        if (data.type !== 'nat' && data.type !== 'int') {
+          throw new Error(`Type error: matching NAT_ZERO against a ${data.type}`);
         }
+
         return data.value === 0 ? substitution : null;
       }
 
-      if (pattern.name === NAT_SUCC && pattern.args.length === 1) {
-        if (data.type !== 'nat') {
-          throw new Error(
-            `Type error: matching nat constructor '${NAT_SUCC}' against a ${data.type}`,
-          );
+      if (pattern.name === 'NAT_SUCC' && pattern.args.length === 1) {
+        if (data.type !== 'nat' && data.type !== 'int') {
+          throw new Error(`Type error: matching NAT_SUCC against a ${data.type}`);
         }
         return data.value > 0
           ? match(substitution, pattern.args[0], { type: 'nat', value: data.value - 1 })
           : null;
       }
 
-      if (pattern.name === INT_PLUS && pattern.args.length === 2) {
+      if (pattern.name === 'INT_PLUS') {
         if (data.type !== 'int' && data.type !== 'nat') {
-          throw new Error(
-            `Type error: matching int constructor '${INT_PLUS}' against a ${
-              data.type
-            } ${JSON.stringify(data)}`,
-          );
+          throw new Error(`Type error: matching INT_PLUS against a ${data.type}`);
         }
-        const increment = apply(substitution, pattern.args[0]);
-        if (increment.type !== 'int' && increment.type !== 'nat') {
-          throw new Error(
-            `Type error: second argument to int constructor '${INT_PLUS}' is a ${data.type}`,
-          );
+        const increment = pattern.args
+          .map((arg, i) => {
+            if (i === pattern.nonground) return 0;
+            const value = apply(substitution, arg);
+            if (value.type !== 'int' && value.type !== 'nat') {
+              throw new Error(`Type error: argument #${i} to INT_PLUS is ${value.type}, not int.`);
+            }
+            return value.value;
+          })
+          .reduce((x, y) => x + y, 0);
+
+        if (pattern.nonground === undefined) {
+          return increment === data.value ? substitution : null;
         }
-        return match(substitution, pattern.args[1], {
+        return match(substitution, pattern.args[pattern.nonground], {
           type: 'int',
-          value: data.value - increment.value,
+          value: data.value - increment,
         });
       }
 
+      if (pattern.name === 'STRING_CONCAT') {
+        if (data.type !== 'string') {
+          throw new Error(`Type error: matching STRING_CONCAT against a ${data.type}`);
+        }
+
+        const strings = pattern.args.map((arg, i) => {
+          if (i === pattern.nonground) return '';
+          const value = apply(substitution, arg);
+          if (value.type !== 'string') {
+            throw new Error(
+              `Type error: argument #${i} to STRING_CONCAT is ${value.type}, not string.`,
+            );
+          }
+          return value.value;
+        });
+
+        if (pattern.nonground === undefined) {
+          return strings.join('') === data.value ? substitution : null;
+        }
+        const prefix = strings.slice(0, pattern.nonground).join('');
+        if (data.value.length < prefix.length || prefix !== data.value.slice(0, prefix.length)) {
+          return null;
+        }
+
+        const prefixRemoved = data.value.slice(prefix.length);
+        const postfix = strings.slice(pattern.nonground + 1).join('');
+        if (
+          prefixRemoved.length < postfix.length ||
+          postfix !== prefixRemoved.slice(prefixRemoved.length - postfix.length)
+        ) {
+          return null;
+        }
+
+        return match(substitution, pattern.args[pattern.nonground], {
+          type: 'string',
+          value: prefixRemoved.slice(0, prefixRemoved.length - postfix.length),
+        });
+      }
+
+      throw new Error(
+        `Type error: cannot support ${pattern.name} with ${pattern.args.length} argument${
+          pattern.args.length === 1 ? '' : 's'
+        }`,
+      );
+
+    case 'const':
       if (
         data.type !== 'const' ||
         pattern.name !== data.name ||
@@ -116,44 +175,62 @@ export function apply(substitution: Substitution, pattern: Pattern): Data {
       return pattern;
     }
 
-    case 'const': {
-      if (pattern.name === NAT_ZERO && pattern.args.length === 0) {
+    case 'special': {
+      if (pattern.name === 'NAT_ZERO' && pattern.args.length === 0) {
         return { type: 'nat', value: 0 };
       }
 
-      if (pattern.name === NAT_SUCC && pattern.args.length === 1) {
+      if (pattern.name === 'NAT_SUCC' && pattern.args.length === 1) {
         const arg = apply(substitution, pattern.args[0]);
         if (arg.type === 'nat') {
           return { type: 'nat', value: arg.value + 1 };
         } else {
-          throw new Error(`Type error: argument to '${NAT_SUCC}' is an ${arg.type}, not a nat.`);
+          throw new Error(`Type error: argument to NAT_SUCC is an ${arg.type}, not a nat.`);
         }
       }
 
-      if (pattern.name === INT_PLUS && pattern.args.length === 2) {
-        const [arg1, arg2] = pattern.args.map((arg) => apply(substitution, arg));
-        if (arg1.type !== 'int' && arg1.type !== 'nat') {
-          throw new Error(
-            `Type error: first argument to '${INT_PLUS}' is an ${arg1.type}, not an int.`,
-          );
-        }
-        if (arg2.type !== 'int' && arg2.type !== 'nat') {
-          throw new Error(
-            `Type error: second argument to '${INT_PLUS}' is an ${arg2.type}, not an int.`,
-          );
-        }
+      if (pattern.name === 'INT_PLUS') {
+        const args = pattern.args.map((arg, i) => {
+          const value = apply(substitution, arg);
+          if (value.type !== 'int' && value.type !== 'nat') {
+            throw new Error(`Type error: argument #${i} to INT_PLUS is ${value.type}, not int.`);
+          }
+          return value.value;
+        });
         return {
           type: 'int',
-          value: arg1.value + arg2.value,
+          value: args.reduce((x, y) => x + y, 0),
         };
       }
 
+      if (pattern.name === 'STRING_CONCAT') {
+        const args = pattern.args.map((arg, i) => {
+          const value = apply(substitution, arg);
+          if (value.type !== 'string') {
+            throw new Error(
+              `Type error: argument #${i} to STRING_CONCAT is ${value.type}, not string.`,
+            );
+          }
+          return value.value;
+        });
+        return { type: 'string', value: args.join('') };
+      }
+
+      throw new Error(
+        `Type error: cannot support ${pattern.name} with ${pattern.args.length} argument${
+          pattern.args.length === 1 ? '' : 's'
+        }`,
+      );
+    }
+
+    case 'const': {
       return {
         type: 'const',
         name: pattern.name,
         args: pattern.args.map((arg) => apply(substitution, arg)),
       };
     }
+
     case 'var': {
       const result = substitution[pattern.name];
       if (!result) {
@@ -195,6 +272,7 @@ export function termToString(t: Pattern, needsParens = true): string {
     case 'string':
       return `"${t.value}"`;
     case 'const':
+    case 'special':
       return t.args.length === 0
         ? t.name
         : needsParens

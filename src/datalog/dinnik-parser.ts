@@ -192,7 +192,7 @@ export function parseDecl(t: Istream<Token>): Declaration | null {
 
 export function parseFullTerm(t: Istream<Token>): ParsedPattern | null {
   const tok = t.peek();
-  if (tok?.type === 'const') {
+  if (tok?.type === 'const' || tok?.type === 'builtin') {
     t.next();
     const args: Pattern[] = [];
     let endLoc = tok.loc.end;
@@ -202,9 +202,18 @@ export function parseFullTerm(t: Istream<Token>): ParsedPattern | null {
       args.push(next);
       next = parseTerm(t);
     }
+    if (tok.type === 'const') {
+      return {
+        type: 'const',
+        name: tok.value,
+        args,
+        loc: { start: tok.loc.start, end: endLoc },
+      };
+    }
     return {
-      type: 'const',
-      name: tok.value,
+      type: 'special',
+      name: tok.builtin,
+      symbol: tok.value,
       args,
       loc: { start: tok.loc.start, end: endLoc },
     };
@@ -256,6 +265,11 @@ export function parseTerm(t: Istream<Token>): ParsedPattern | null {
   }
 
   if (tok.type === 'const') {
+    t.next();
+    return { type: 'const', name: tok.value, args: [], loc: tok.loc };
+  }
+
+  if (tok.type === 'builtin') {
     t.next();
     return { type: 'const', name: tok.value, args: [], loc: tok.loc };
   }
