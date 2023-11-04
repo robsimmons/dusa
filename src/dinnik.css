@@ -232,7 +232,8 @@ main {
 
 .dk-view-status {
   flex-grow: 1;
-  display: grid;
+  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: right;
   padding-right: var(--dk-medium-padding);
@@ -269,4 +270,10 @@ main {
   padding-top: var(--dk-small-padding);
   padding-bottom: var(--dk-medium-padding);
   overflow-y: scroll;
+}
+
+.dk-icon-button {
+  display: grid;
+  justify-content: center;
+  align-items: center;
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import Tabs from './Tabs.tsx';
+import Config from './Config.tsx';
 import { editorChangeListener, getEditorContents, setEditorContents } from './codemirror';
 import { sessionManager } from './sessions.ts';
 import Program from './Program.tsx';
@@ -39,6 +40,9 @@ async function deleteSession(uuid: string) {
   renderTabs();
   renderView();
 }
+
+const config = ReactDOM.createRoot(document.getElementById('config-root')!);
+config.render(<React.StrictMode><Config/></React.StrictMode>)
 
 const tabs = ReactDOM.createRoot(document.getElementById('dk-tabs')!);
 function renderTabs() {

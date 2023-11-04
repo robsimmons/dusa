@@ -1,5 +1,14 @@
+import {
+  CrumpledPaperIcon,
+  EnterIcon,
+  LapTimerIcon,
+  PauseIcon,
+  ResumeIcon,
+  StarIcon,
+} from '@radix-ui/react-icons';
 import { factToString } from './datalog/engine';
 import { Session } from './sessions';
+import { ICON_SIZE } from './constants';
 
 interface Props {
   session: Session;
@@ -36,7 +45,7 @@ export default function Program({ load, run, pause, session }: Props) {
         load();
       }}
     >
-      <span className="fa-solid fa-right-to-bracket" />
+      <EnterIcon width={ICON_SIZE} height={ICON_SIZE} />
     </button>
   );
 
@@ -64,17 +73,17 @@ export default function Program({ load, run, pause, session }: Props) {
       ) : session.stats === null ? (
         'ready'
       ) : (
-        <span>
-          <span className="fa-solid fa-worm" /> {session.stats.cycles} step
-          {session.stats.cycles !== 1 && 's'} <span className="fa-solid fa-lightbulb" />{' '}
-          {session.facts.length} solution{session.facts.length !== 1 && 's'}{' '}
+        <>
+          {session.stats.cycles} step
+          {session.stats.cycles !== 1 && 's'}  {session.facts.length} solution
+          {session.facts.length !== 1 && 's'}{' '}
           {session.stats.deadEnds > 0 && (
             <>
-              <span className="fa-solid fa-broom" /> {session.stats.deadEnds} backtrack
+               {session.stats.deadEnds} backtrack
               {session.stats.deadEnds !== 1 && 's'}
             </>
           )}
-        </span>
+        </>
       )}
     </div>
   );
@@ -110,12 +119,12 @@ export default function Program({ load, run, pause, session }: Props) {
         {loadButton}
         {session.status === 'paused' && (
           <button title="Search for more solutions" onClick={() => run()}>
-            <span className="fa-solid fa-play" />
+            <ResumeIcon width={ICON_SIZE} height={ICON_SIZE} />
           </button>
         )}
         {session.status === 'running' && (
           <button title="Pause searching for solutions" onClick={() => pause()}>
-            <span className="fa-solid fa-pause" />
+            <PauseIcon width={ICON_SIZE} height={ICON_SIZE} />
           </button>
         )}
         {stats}
