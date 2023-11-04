@@ -24,7 +24,9 @@
 
 .cm-lintRange.cm-lintRange-error {
   background-image: none;
-  text-decoration: var(--solar-red) wavy underline;
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--solar-red);
   text-decoration-skip-ink: none;
 }
 
