@@ -1,11 +1,4 @@
-import {
-  CrumpledPaperIcon,
-  EnterIcon,
-  LapTimerIcon,
-  PauseIcon,
-  ResumeIcon,
-  StarIcon,
-} from '@radix-ui/react-icons';
+import { EnterIcon, PauseIcon, ResumeIcon } from '@radix-ui/react-icons';
 import { factToString } from './datalog/engine';
 import { Session } from './sessions';
 import { ICON_SIZE } from './constants';
@@ -75,11 +68,11 @@ export default function Program({ load, run, pause, session }: Props) {
       ) : (
         <>
           {session.stats.cycles} step
-          {session.stats.cycles !== 1 && 's'}  {session.facts.length} solution
+          {session.stats.cycles !== 1 && 's'} {session.facts.length} solution
           {session.facts.length !== 1 && 's'}{' '}
           {session.stats.deadEnds > 0 && (
             <>
-               {session.stats.deadEnds} backtrack
+              {session.stats.deadEnds} backtrack
               {session.stats.deadEnds !== 1 && 's'}
             </>
           )}

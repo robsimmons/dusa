@@ -42,7 +42,11 @@ async function deleteSession(uuid: string) {
 }
 
 const config = ReactDOM.createRoot(document.getElementById('config-root')!);
-config.render(<React.StrictMode><Config/></React.StrictMode>)
+config.render(
+  <React.StrictMode>
+    <Config />
+  </React.StrictMode>,
+);
 
 const tabs = ReactDOM.createRoot(document.getElementById('dk-tabs')!);
 function renderTabs() {
