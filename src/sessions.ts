@@ -410,9 +410,9 @@ class SessionTabs {
           return Promise.resolve();
         }
 
-        const { program, initialDb } = compile(decls);
+        const program = compile(decls);
 
-        return this.messageWorker(worker, { type: 'load', program, db: initialDb }).then(
+        return this.messageWorker(worker, { type: 'load', program }).then(
           ({ stats }) => {
             this.sessionData[activeSession] = {
               status: 'paused',

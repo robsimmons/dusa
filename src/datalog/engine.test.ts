@@ -1,6 +1,6 @@
 import { compile } from './compile';
 import { parse } from './dinnik-parser';
-import { Solution, execute, factToString } from './engine';
+import { Solution, execute, factToString, makeInitialDb } from './engine';
 import { check } from './syntax';
 import { termToString } from './terms';
 import { test, expect } from 'vitest';
@@ -16,8 +16,8 @@ function testExecution(prog: string) {
     throw checked.errors;
   }
 
-  const { program, initialDb } = compile(checked.decls);
-  return execute(program, initialDb);
+  const compiled = compile(checked.decls);
+  return execute(compiled.program, makeInitialDb(compiled));
 }
 
 function solutionsToStrings(solutions: Solution[]) {

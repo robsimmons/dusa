@@ -1,6 +1,17 @@
-import { Database, InternalPartialRule, InternalPremise, Program, insertFact } from './engine';
+import {
+  CompiledProgram,
+  Database,
+  Fact,
+  InternalPartialRule,
+  InternalPremise,
+  Prefix,
+  Program,
+  insertFact,
+} from './engine';
+import PQ from './binqueue';
 import { Declaration, Premise } from './syntax';
 import { assertData, freeVars } from './terms';
+
 
 function indexToRuleName(index: number): string {
   if (index >= 26) {
@@ -72,12 +83,13 @@ export function compilePremises(
   };
 }
 
-export function compile(decls: Declaration[]): { program: Program; initialDb: Database } {
+export function compile(decls: Declaration[]): CompiledProgram {
   const program: Program = {
     rules: {},
     conclusions: {},
   };
-  let initialDb: Database = { facts: {}, factValues: {}, prefixes: {}, queue: [] };
+  let initialFacts: Fact[] = [];
+  let initialPrefixes: string[] = [];
 
   let ruleNum = 0;
   for (const decl of decls) {
@@ -90,8 +102,7 @@ export function compile(decls: Declaration[]): { program: Program; initialDb: Da
         for (const [name, rule] of rules) {
           program.rules[name] = rule;
         }
-        initialDb.prefixes[seed] = [{}];
-        initialDb.queue.push({ type: 'Prefix', name: seed, args: {} });
+        initialPrefixes.push(seed);
         program.conclusions[conclusion] = { type: 'Contradiction' };
         break;
       }
@@ -107,12 +118,12 @@ export function compile(decls: Declaration[]): { program: Program; initialDb: Da
           decl.conclusion.exhaustive
         ) {
           // This is just a fact
-          initialDb = insertFact(
-            decl.conclusion.name,
-            decl.conclusion.args.map(assertData),
-            assertData(decl.conclusion.values?.[0] ?? { type: 'triv' }),
-            initialDb,
-          );
+          initialFacts.push({
+            type: 'Fact',
+            name: decl.conclusion.name,
+            args: decl.conclusion.args.map(assertData), // TODO test case and fix
+            value: assertData(decl.conclusion.values?.[0] ?? { type: 'triv' }),
+          });
         }
 
         const { seed, rules, conclusion } = compilePremises(
@@ -123,8 +134,7 @@ export function compile(decls: Declaration[]): { program: Program; initialDb: Da
         for (const [name, rule] of rules) {
           program.rules[name] = rule;
         }
-        initialDb.prefixes[seed] = [{}];
-        initialDb.queue.push({ type: 'Prefix', name: seed, args: {} });
+        initialPrefixes.push(seed);
         program.conclusions[conclusion] = {
           type: 'NewFact',
           name: decl.conclusion.name,
@@ -137,5 +147,5 @@ export function compile(decls: Declaration[]): { program: Program; initialDb: Da
     }
   }
 
-  return { program, initialDb };
+  return { program, initialFacts, initialPrefixes };
 }

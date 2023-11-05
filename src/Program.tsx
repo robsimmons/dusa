@@ -22,7 +22,7 @@ export default function Program({ load, run, pause, session }: Props) {
               load();
             }}
           >
-            <span className="fa-solid fa-right-to-bracket" />
+            <EnterIcon width={ICON_SIZE} height={ICON_SIZE} />
           </button>
           <span className="dk-view-status">program not loaded</span>
         </div>
@@ -59,22 +59,32 @@ export default function Program({ load, run, pause, session }: Props) {
     <div></div>
   );
 
+  const solutionDescription =
+    session.status === 'error'
+      ? session.errorMessage
+      : session.status === 'done'
+      ? session.facts.length === 0
+        ? 'Done, no solutions.'
+        : session.facts.length === 1
+        ? 'Done, unique solution found.'
+        : `Done, ${session.facts.length} solutions found.`
+      : session.facts.length === 0
+      ? 'No solutions found (yet).'
+      : `${session.facts.length} solution${session.facts.length === 1 ? '' : 's'} found (so far).`;
+
   const stats = (
     <div className="dk-view-status">
-      {session.status === 'error' ? (
-        session.errorMessage
-      ) : session.stats === null ? (
-        'ready'
-      ) : (
+      {solutionDescription}
+      {session.stats && session.stats.cycles > 0 && (
         <>
-          {session.stats.cycles} step
-          {session.stats.cycles !== 1 && 's'} {session.facts.length} solution
-          {session.facts.length !== 1 && 's'}{' '}
-          {session.stats.deadEnds > 0 && (
+          {' '}
+          {session.stats.cycles} step{session.stats.cycles !== 1 && 's'}
+          {session.stats && session.stats.deadEnds > 0 ? (
             <>
-              {session.stats.deadEnds} backtrack
-              {session.stats.deadEnds !== 1 && 's'}
+              , {session.stats.deadEnds} backtrack{session.stats.deadEnds !== 1 && 's.'}{' '}
             </>
+          ) : (
+            '.'
           )}
         </>
       )}

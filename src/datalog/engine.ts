@@ -1,9 +1,16 @@
+import PQ from './binqueue';
 import { Proposition, propToString } from './syntax';
 import { Substitution, Pattern, Data, match, apply, equal, termToString } from './terms';
 
 export interface Program {
   rules: { [name: string]: InternalPartialRule };
   conclusions: { [r: string]: InternalConclusion };
+}
+
+export interface CompiledProgram {
+  program: Program;
+  initialPrefixes: string[];
+  initialFacts: Fact[];
 }
 
 export type InternalPremise =
@@ -52,7 +59,19 @@ export interface Database {
   facts: { [predicate: string]: [Data[], Data][] };
   factValues: { [prop: string]: { type: 'is'; value: Data } | { type: 'is not'; value: Data[] } };
   prefixes: { [name: string]: Substitution[] };
-  queue: (Fact | Prefix)[];
+  queue: PQ<Fact | Prefix>;
+}
+
+export function makeInitialDb(prog: CompiledProgram): Database {
+  let db: Database = { facts: {}, factValues: {}, prefixes: {}, queue: PQ.new() };
+  for (const seed of prog.initialPrefixes) {
+    db.queue = db.queue.push(0, { type: 'Prefix', name: seed, args: {} });
+    db.prefixes[seed] = [{}];
+  }
+  for (const fact of prog.initialFacts) {
+    db = insertFact(fact.name, fact.args, fact.value, db);
+  }
+  return db;
 }
 
 function matchPatterns(
@@ -143,11 +162,13 @@ function stepConclusion(conclusion: InternalConclusion, prefix: Prefix, db: Data
         ...db,
         facts: { ...db.facts, [conclusion.name]: [...existingFacts, [args, value]] },
         factValues: { ...db.factValues, [key]: { type: 'is', value } },
-        queue: [...db.queue, { type: 'Fact', name: conclusion.name, args, value }],
+        queue: db.queue.push(FACT_PRIO, { type: 'Fact', name: conclusion.name, args, value }),
       })),
     );
   }
 }
+
+const FACT_PRIO = 1;
 
 export function insertFact(name: string, args: Data[], value: Data, db: Database): Database {
   const key = `${name}${args.map((arg) => ` ${termToString(arg)}`).join('')}`;
@@ -156,7 +177,7 @@ export function insertFact(name: string, args: Data[], value: Data, db: Database
     ...db,
     facts: { ...db.facts, [name]: [...existingFacts, [args, value]] },
     factValues: { ...db.factValues, [key]: { type: 'is', value } },
-    queue: [...db.queue, { type: 'Fact', name, args, value }],
+    queue: db.queue.push(FACT_PRIO, { type: 'Fact', name, args, value }),
   };
 }
 
@@ -251,6 +272,8 @@ function stepFact(
   return extendDbWithPrefixes(newPrefixes, db);
 }
 
+const PREFIX_PRIO = 2;
+
 function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): Database {
   let copied = false;
   for (const prefix of candidatePrefixList) {
@@ -271,11 +294,11 @@ function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): Data
       // copy on write
       if (!copied) {
         copied = true;
-        db = { ...db, prefixes: { ...db.prefixes }, queue: [...db.queue] };
+        db = { ...db, prefixes: { ...db.prefixes } };
       }
 
       db.prefixes[prefix.name] = [...db.prefixes[prefix.name], prefix.args];
-      db.queue.push(prefix);
+      db.queue = db.queue.push(PREFIX_PRIO, prefix);
     }
   }
 
@@ -283,7 +306,10 @@ function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): Data
 }
 
 export function dbToString(db: Database) {
-  return `Queue: ${db.queue.map((item) => dbItemToString(item)).join(', ')}
+  return `Queue: ${db.queue
+    .toList()
+    .map((item) => dbItemToString(item))
+    .join(', ')}
 Prefixes: 
 ${Object.keys(db.prefixes)
   .sort()
@@ -305,7 +331,7 @@ ${Object.keys(db.factValues)
 }
 
 export function step(program: Program, db: Database): Database[] {
-  const [current, ...rest] = db.queue;
+  const [current, rest] = db.queue.pop();
   db = { ...db, queue: rest };
   if (current.type === 'Fact') {
     return [stepFact(program.rules, current, db)];

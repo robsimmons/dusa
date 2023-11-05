@@ -1,4 +1,4 @@
-import { Database, Fact, Program, step } from './datalog/engine';
+import { CompiledProgram, Database, Fact, Program, makeInitialDb, step } from './datalog/engine';
 
 export interface WorkerStats {
   cycles: number;
@@ -17,7 +17,7 @@ export type WorkerToApp =
 export type AppToWorker =
   | { type: 'status' }
   | { type: 'stop' }
-  | { type: 'load'; program: Program; db: Database }
+  | { type: 'load'; program: CompiledProgram }
   | { type: 'start' }
   | { type: 'reset' };
 
@@ -135,8 +135,8 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
   switch (event.data.type) {
     case 'load':
       cycleCount = 0;
-      dbStack = [event.data.db];
-      program = event.data.program;
+      dbStack = [makeInitialDb(event.data.program)];
+      program = event.data.program.program;
       queuedFacts = null;
       console.log(event.data);
       return resume('paused');
