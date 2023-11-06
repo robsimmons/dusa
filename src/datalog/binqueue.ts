@@ -32,28 +32,30 @@ function join<T>(n1: Node<T>, n2: Node<T>): Node<T> {
 }
 
 function merge<T>(h1: (null | Node<T>)[], h2: (null | Node<T>)[]): (null | Node<T>)[] {
+  const len = Math.max(h1.length, h2.length);
   const result: (null | Node<T>)[] = [];
   let carry = null;
-  let len = Math.max(h1.length, h2.length);
   for (let i = 0; i < len; i++) {
-    if (!h1[i] && !h2[i]) {
-      result.push(carry);
+    const b1 = h1[i];
+    const b2 = h2[i];
+    if (!b1 && !b2) {
+      result.push(carry); // ?00
       carry = null;
-    } else if (!carry && !h1[i]) {
-      result.push(h2[i]);
+    } else if (!carry && !b1) {
+      result.push(b2); // 001
       carry = null;
-    } else if (!carry && !h2[i]) {
-      result.push(h1[i]);
+    } else if (!carry && !b2) {
+      result.push(b1); // 010
       carry = null;
-    } else if (h1[i] && h2[i]) {
-      result.push(carry);
-      carry = join(h1[i]!, h2[i]!);
-    } else if (carry && h1[i]) {
-      result.push(null);
-      carry = join(carry, h1[i]!);
-    } else if (carry && h2[i]) {
-      result.push(null);
-      carry = join(carry, h2[i]!);
+    } else if (b1 && b2) {
+      result.push(carry); // ?11
+      carry = join(b1, b2);
+    } else if (carry && b1) {
+      result.push(null); // 110
+      carry = join(carry, b1);
+    } else if (carry && b2) {
+      result.push(null); // 101
+      carry = join(carry, b2);
     }
   }
   if (carry) {

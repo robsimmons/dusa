@@ -135,10 +135,10 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
   switch (event.data.type) {
     case 'load':
       cycleCount = 0;
+      deadEndCount = 0;
       dbStack = [makeInitialDb(event.data.program)];
       program = event.data.program.program;
       queuedFacts = null;
-      console.log(event.data);
       return resume('paused');
     case 'start':
       if (state === 'paused') {
@@ -152,6 +152,7 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       return resume(state);
     case 'reset':
       cycleCount = 0;
+      deadEndCount = 0;
       dbStack = [];
       program = null;
       queuedFacts = null;

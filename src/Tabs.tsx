@@ -43,14 +43,14 @@ export default function Tabs({
           }
         </div>
       ))}
-      <button className="dk-new-tab">
-        <span
-          className="fa-solid fa-plus"
-          onClick={(event) => {
-            event.preventDefault();
-            addSession();
-          }}
-        ></span>
+      <button
+        className="dk-new-tab"
+        onClick={(event) => {
+          event.preventDefault();
+          addSession();
+        }}
+      >
+        <span className="fa-solid fa-plus"></span>
       </button>
     </>
   );

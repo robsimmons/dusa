@@ -1,3 +1,4 @@
+import { FACT_PRIO, INITIAL_PREFIX_PRIO } from '../constants';
 import PQ from './binqueue';
 import { Proposition, propToString } from './syntax';
 import { Substitution, Pattern, Data, match, apply, equal, termToString } from './terms';
@@ -30,6 +31,7 @@ export type InternalPartialRule = {
   next: string[];
   shared: string[];
   premise: InternalPremise;
+  priority: number;
 };
 
 export type InternalConclusion =
@@ -53,6 +55,7 @@ export interface Prefix {
   type: 'Prefix';
   name: string;
   args: Substitution;
+  priority: number;
 }
 
 export interface Database {
@@ -65,7 +68,12 @@ export interface Database {
 export function makeInitialDb(prog: CompiledProgram): Database {
   let db: Database = { facts: {}, factValues: {}, prefixes: {}, queue: PQ.new() };
   for (const seed of prog.initialPrefixes) {
-    db.queue = db.queue.push(0, { type: 'Prefix', name: seed, args: {} });
+    db.queue = db.queue.push(INITIAL_PREFIX_PRIO, {
+      type: 'Prefix',
+      priority: INITIAL_PREFIX_PRIO,
+      name: seed,
+      args: {},
+    });
     db.prefixes[seed] = [{}];
   }
   for (const fact of prog.initialFacts) {
@@ -116,7 +124,7 @@ function substitutionToString(args: Substitution): string {
 }
 
 function prefixToString(prefix: Prefix): string {
-  return `${prefix.name}${substitutionToString(prefix.args)}`;
+  return `${prefix.name}${substitutionToString(prefix.args)}[${prefix.priority}]`;
 }
 
 function dbItemToString(item: Fact | Prefix) {
@@ -168,8 +176,6 @@ function stepConclusion(conclusion: InternalConclusion, prefix: Prefix, db: Data
   }
 }
 
-const FACT_PRIO = 1;
-
 export function insertFact(name: string, args: Data[], value: Data, db: Database): Database {
   const key = `${name}${args.map((arg) => ` ${termToString(arg)}`).join('')}`;
   const existingFacts = db.facts[name] || [];
@@ -202,6 +208,7 @@ function stepPrefix(
           type: 'Prefix',
           name: next,
           args: prefix.args,
+          priority: rule.priority,
         })),
       );
     }
@@ -217,6 +224,7 @@ function stepPrefix(
           type: 'Prefix',
           name: next,
           args: candidate,
+          priority: rule.priority,
         })),
       );
     }
@@ -235,6 +243,7 @@ function stepPrefix(
               type: 'Prefix',
               name: next,
               args: candidate2,
+              priority: rule.priority,
             })),
           );
         }
@@ -262,6 +271,7 @@ function stepFact(
               type: 'Prefix',
               name: next,
               args: { ...substitution, ...prefixSubst },
+              priority: rule.priority,
             })),
           );
         }
@@ -271,8 +281,6 @@ function stepFact(
 
   return extendDbWithPrefixes(newPrefixes, db);
 }
-
-const PREFIX_PRIO = 2;
 
 function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): Database {
   let copied = false;
@@ -298,18 +306,22 @@ function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): Data
       }
 
       db.prefixes[prefix.name] = [...db.prefixes[prefix.name], prefix.args];
-      db.queue = db.queue.push(PREFIX_PRIO, prefix);
+      db.queue = db.queue.push(prefix.priority, prefix);
     }
   }
 
   return db;
 }
 
-export function dbToString(db: Database) {
-  return `Queue: ${db.queue
+export function queueToString(db: Database) {
+  return db.queue
     .toList()
     .map((item) => dbItemToString(item))
-    .join(', ')}
+    .join(', ');
+}
+
+export function dbToString(db: Database) {
+  return `Queue: ${queueToString(db)}
 Prefixes: 
 ${Object.keys(db.prefixes)
   .sort()

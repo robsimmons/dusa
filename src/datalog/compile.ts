@@ -1,17 +1,7 @@
-import {
-  CompiledProgram,
-  Database,
-  Fact,
-  InternalPartialRule,
-  InternalPremise,
-  Prefix,
-  Program,
-  insertFact,
-} from './engine';
-import PQ from './binqueue';
+import { CHOICE_PRIO, CONSTRAINT_PRIO, PREFIX_PRIO } from '../constants';
+import { CompiledProgram, Fact, InternalPartialRule, InternalPremise, Program } from './engine';
 import { Declaration, Premise } from './syntax';
 import { assertData, freeVars } from './terms';
-
 
 function indexToRuleName(index: number): string {
   if (index >= 26) {
@@ -23,6 +13,7 @@ function indexToRuleName(index: number): string {
 export function compilePremises(
   rule: string,
   premises: Premise[],
+  rulePriority: number,
 ): {
   seed: string;
   rules: [string, InternalPartialRule][];
@@ -32,10 +23,11 @@ export function compilePremises(
   const rules = premises.map((premise, i): [string, InternalPartialRule] => {
     const thisPartial = `${rule}${i}`;
     const nextPartial = `${rule}${i + 1}`;
+    const priority = i === premises.length - 1 ? rulePriority : rulePriority - 1 / (i + 2);
     switch (premise.type) {
       case 'Inequality': {
         const fv = freeVars(premise.a, premise.b);
-        return [thisPartial, { next: [nextPartial], shared: [...fv], premise }];
+        return [thisPartial, { next: [nextPartial], shared: [...fv], premise, priority }];
       }
 
       case 'Equality': {
@@ -54,7 +46,7 @@ export function compilePremises(
             knownFreeVars.add(v);
           }
         }
-        return [thisPartial, { next: [nextPartial], shared, premise }];
+        return [thisPartial, { next: [nextPartial], shared, premise, priority }];
       }
 
       case 'Proposition': {
@@ -71,7 +63,7 @@ export function compilePremises(
             knownFreeVars.add(v);
           }
         }
-        return [thisPartial, { next: [nextPartial], shared, premise: newPremise }];
+        return [thisPartial, { next: [nextPartial], shared, premise: newPremise, priority }];
       }
     }
   });
@@ -88,8 +80,8 @@ export function compile(decls: Declaration[]): CompiledProgram {
     rules: {},
     conclusions: {},
   };
-  let initialFacts: Fact[] = [];
-  let initialPrefixes: string[] = [];
+  const initialFacts: Fact[] = [];
+  const initialPrefixes: string[] = [];
 
   let ruleNum = 0;
   for (const decl of decls) {
@@ -98,6 +90,7 @@ export function compile(decls: Declaration[]): CompiledProgram {
         const { seed, rules, conclusion } = compilePremises(
           indexToRuleName(ruleNum++),
           decl.premises,
+          CONSTRAINT_PRIO,
         );
         for (const [name, rule] of rules) {
           program.rules[name] = rule;
@@ -129,6 +122,10 @@ export function compile(decls: Declaration[]): CompiledProgram {
         const { seed, rules, conclusion } = compilePremises(
           indexToRuleName(ruleNum++),
           decl.premises,
+          decl.conclusion.values === null ||
+            (decl.conclusion.values.length === 1 && decl.conclusion.exhaustive)
+            ? PREFIX_PRIO
+            : CHOICE_PRIO,
         );
 
         for (const [name, rule] of rules) {
