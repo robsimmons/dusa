@@ -1,14 +1,14 @@
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView, ViewUpdate, keymap, lineNumbers, tooltips } from '@codemirror/view';
-import { ParserState, dinnikTokenizer } from './datalog/dinnik-tokenizer';
+import { ParserState, dinnikTokenizer } from './datalog/dusa-tokenizer';
 import { StringStream } from './datalog/parsing/string-stream';
 import { classHighlighter, tags } from '@lezer/highlight';
 import { Diagnostic, linter } from '@codemirror/lint';
 import { SourcePosition } from './datalog/parsing/source-location';
 import { Issue, parseWithStreamParser } from './datalog/parsing/parser';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { parseTokens } from './datalog/dinnik-parser';
+import { parseTokens } from './datalog/dusa-parser';
 import { ParsedDeclaration, check } from './datalog/syntax';
 
 const bogusPosition = {

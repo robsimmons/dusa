@@ -1,5 +1,5 @@
 import { SourceLocation } from './parsing/source-location';
-import { SPECIAL_DEFAULTS } from './dinnik-special';
+import { SPECIAL_DEFAULTS } from './dusa-builtins';
 
 export type Pattern =
   | { type: 'triv' }

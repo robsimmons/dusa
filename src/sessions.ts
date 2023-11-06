@@ -1,4 +1,4 @@
-import { parse } from './datalog/dinnik-parser';
+import { parse } from './datalog/dusa-parser';
 import { Fact } from './datalog/engine';
 import { SourceLocation } from './datalog/parsing/source-location';
 import { CHARACTER_CREATION_EXAMPLE, CKY_PARSING_EXAMPLE } from './examples';
@@ -412,18 +412,16 @@ class SessionTabs {
 
         const program = compile(decls);
 
-        return this.messageWorker(worker, { type: 'load', program }).then(
-          ({ stats }) => {
-            this.sessionData[activeSession] = {
-              status: 'paused',
-              text,
-              textLoaded: text,
-              worker,
-              facts: [],
-              stats,
-            };
-          },
-        );
+        return this.messageWorker(worker, { type: 'load', program }).then(({ stats }) => {
+          this.sessionData[activeSession] = {
+            status: 'paused',
+            text,
+            textLoaded: text,
+            worker,
+            facts: [],
+            stats,
+          };
+        });
       });
     return this.lock;
   }

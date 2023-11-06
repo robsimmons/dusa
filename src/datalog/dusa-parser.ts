@@ -1,4 +1,4 @@
-import { Token, dinnikTokenizer } from './dinnik-tokenizer';
+import { Token, dinnikTokenizer } from './dusa-tokenizer';
 import { ParsedPattern } from './terms';
 import { ParsedDeclaration, ParsedPremise } from './syntax';
 import { Issue, parseWithStreamParser } from './parsing/parser';

@@ -1,4 +1,4 @@
-import { FACT_PRIO, INITIAL_PREFIX_PRIO } from '../constants';
+import { CHOICE_PRIO, FACT_PRIO, INITIAL_PREFIX_PRIO } from '../constants';
 import PQ from './binqueue';
 import { Proposition, propToString } from './syntax';
 import { Substitution, Pattern, Data, match, apply, equal, termToString } from './terms';
@@ -63,10 +63,19 @@ export interface Database {
   factValues: { [prop: string]: { type: 'is'; value: Data } | { type: 'is not'; value: Data[] } };
   prefixes: { [name: string]: Substitution[] };
   queue: PQ<Fact | Prefix>;
+  deferredChoices: {
+    [predicate: string]: { name: string; args: Data[]; values: Data[]; exhaustive: boolean };
+  };
 }
 
 export function makeInitialDb(prog: CompiledProgram): Database {
-  let db: Database = { facts: {}, factValues: {}, prefixes: {}, queue: PQ.new() };
+  let db: Database = {
+    facts: {},
+    factValues: {},
+    prefixes: {},
+    queue: PQ.new(),
+    deferredChoices: {},
+  };
   for (const seed of prog.initialPrefixes) {
     db.queue = db.queue.push(INITIAL_PREFIX_PRIO, {
       type: 'Prefix',

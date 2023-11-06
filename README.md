@@ -1,1 +1,1 @@
-# Dinnik Language
+# Dusa Language

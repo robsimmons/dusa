@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { parse } from './dinnik-parser';
+import { parse } from './dusa-parser';
 import { declToString } from './syntax';
 
 function expectRoundTripToParse(input: string, output?: string) {
@@ -20,8 +20,8 @@ test('Parser and pretty pretter idempotence', () => {
   expectRoundTripToParse('a ((((b)))).', 'a b.');
 
   expectRoundTripToParse('a is z.');
-  expectRoundTripToParse('a is s z.')
-  expectRoundTripToParse('a is s (s (s z)).')
+  expectRoundTripToParse('a is s z.');
+  expectRoundTripToParse('a is s (s (s z)).');
   expectRoundTripToParse('a is { b }.', 'a is b.');
   expectRoundTripToParse('a is { b, c }.');
   expectRoundTripToParse('a is { b, c... }.');

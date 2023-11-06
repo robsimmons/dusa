@@ -1,5 +1,5 @@
 import { compile } from './compile';
-import { parse } from './dinnik-parser';
+import { parse } from './dusa-parser';
 import { Solution, execute, factToString, makeInitialDb } from './engine';
 import { check } from './syntax';
 import { termToString } from './terms';
