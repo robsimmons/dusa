@@ -1,4 +1,4 @@
-import { CHOICE_PRIO, FACT_PRIO, INITIAL_PREFIX_PRIO } from '../constants';
+import { FACT_PRIO, INITIAL_PREFIX_PRIO } from '../constants';
 import PQ from './binqueue';
 import { Proposition, propToString } from './syntax';
 import { Substitution, Pattern, Data, match, apply, equal, termToString } from './terms';
