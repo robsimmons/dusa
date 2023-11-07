@@ -55,9 +55,9 @@ test('Insert values in random order', () => {
   for (let i = 0n; i < 20000n; i++) {
     values.push([i, Math.random()]);
   }
-  values.sort(([_a, x], [_b, y]) => x - y);
-  let map: DataMap<BigInt> = DataMap.new();
-  for (const [a, _] of values) {
+  values.sort((a, b) => a[1] - b[1]);
+  let map: DataMap<bigint> = DataMap.new();
+  for (const [a] of values) {
     map = map.set(a, -a);
   }
   for (let i = 0n; i < 20000n; i++) {

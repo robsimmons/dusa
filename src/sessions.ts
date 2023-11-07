@@ -1,5 +1,4 @@
 import { parse } from './datalog/dusa-parser';
-import { Fact } from './datalog/engine';
 import { SourceLocation } from './datalog/parsing/source-location';
 import { CHARACTER_CREATION_EXAMPLE, CKY_PARSING_EXAMPLE } from './examples';
 import { Declaration, check } from './datalog/syntax';

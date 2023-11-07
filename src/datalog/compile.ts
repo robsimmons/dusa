@@ -1,7 +1,7 @@
 import { CHOICE_PRIO, CONSTRAINT_PRIO, PREFIX_PRIO } from '../constants';
-import { CompiledProgram, Fact, InternalPartialRule, InternalPremise, Program } from './engine';
+import { CompiledProgram, InternalPartialRule, InternalPremise, Program } from './engine';
 import { Declaration, Premise, Proposition } from './syntax';
-import { assertData, freeVars } from './terms';
+import { freeVars } from './terms';
 
 function indexToRuleName(index: number): string {
   if (index >= 26) {

@@ -3,7 +3,6 @@ import { dataToString } from './data';
 import { parse } from './dusa-parser';
 import { Solution, execute, factToString, makeInitialDb } from './engine';
 import { check } from './syntax';
-import { termToString } from './terms';
 import { test, expect } from 'vitest';
 
 function testExecution(prog: string) {
@@ -30,7 +29,7 @@ test('Multi-step declaration, basic nat (in)equality', () => {
   #builtin NAT_ZERO z
   #builtin NAT_SUCC s
 
-  a :- 1 == 1, 0 != s z, 1 == s z, 0 == z, 1 == s 0, 2 == s _, s _Y != 0.
+  a :- 1 == 1, 0 != s z, 1 == s z, 0 == z, 1 == s 0, 2 == s _, s _Y != 0, s (s Q) != 1.
   b :- a, a.
   c :- b.
   d :- c, z == 1.

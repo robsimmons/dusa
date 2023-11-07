@@ -1,5 +1,4 @@
 import { EnterIcon, PauseIcon, ResumeIcon } from '@radix-ui/react-icons';
-import { factToString } from './datalog/engine';
 import { Session } from './sessions';
 import { ICON_SIZE } from './constants';
 
