@@ -1,7 +1,8 @@
 import { FACT_PRIO, INITIAL_PREFIX_PRIO } from '../constants';
 import PQ from './binqueue';
-import { Proposition, propToString } from './syntax';
-import { Substitution, Pattern, Data, match, apply, equal, termToString } from './terms';
+import { Data, TRIV_DATA, dataToString } from './data';
+import { Proposition } from './syntax';
+import { Substitution, Pattern, match, apply, equal } from './terms';
 
 export interface Program {
   rules: { [name: string]: InternalPartialRule };
@@ -11,7 +12,7 @@ export interface Program {
 export interface CompiledProgram {
   program: Program;
   initialPrefixes: string[];
-  initialFacts: Fact[];
+  initialFacts: Proposition[];
 }
 
 export type InternalPremise =
@@ -86,7 +87,12 @@ export function makeInitialDb(prog: CompiledProgram): Database {
     db.prefixes[seed] = [{}];
   }
   for (const fact of prog.initialFacts) {
-    db = insertFact(fact.name, fact.args, fact.value, db);
+    db = insertFact(
+      fact.name,
+      fact.args.map((arg) => apply({}, arg)),
+      fact.value === null ? TRIV_DATA : apply({}, fact.value),
+      db,
+    );
   }
   return db;
 }
@@ -121,14 +127,16 @@ function matchFact(substitution: Substitution, proposition: Proposition, fact: F
 }
 
 export function factToString(fact: Fact): string {
-  return propToString({ ...fact, type: 'Proposition' });
+  const args = fact.args.map((arg) => ` ${dataToString(arg)}`).join('');
+  const value = fact.value === TRIV_DATA ? '' : ` is ${dataToString(fact.value)}`;
+  return `${fact.name}${args}${value}`;
 }
 
 function substitutionToString(args: Substitution): string {
   if (Object.keys(args).length === 0) return `{}`;
   return `{ ${Object.entries(args)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([varName, term]) => `${termToString(term)}/${varName}`)
+    .map(([varName, term]) => `${dataToString(term)}/${varName}`)
     .join(', ')} }`;
 }
 
@@ -146,7 +154,7 @@ function stepConclusion(conclusion: InternalConclusion, prefix: Prefix, db: Data
   const args = conclusion.args.map((arg) => apply(prefix.args, arg));
   let values = conclusion.values.map((value) => apply(prefix.args, value));
 
-  const key = `${conclusion.name}${args.map((arg) => ` ${termToString(arg)}`).join('')}`;
+  const key = `${conclusion.name}${args.map((arg) => ` ${dataToString(arg)}`).join('')}`;
   const knownValue = db.factValues[key];
 
   if (knownValue?.type === 'is') {
@@ -186,7 +194,7 @@ function stepConclusion(conclusion: InternalConclusion, prefix: Prefix, db: Data
 }
 
 export function insertFact(name: string, args: Data[], value: Data, db: Database): Database {
-  const key = `${name}${args.map((arg) => ` ${termToString(arg)}`).join('')}`;
+  const key = `${name}${args.map((arg) => ` ${dataToString(arg)}`).join('')}`;
   const existingFacts = db.facts[name] || [];
   return {
     ...db,
@@ -342,9 +350,9 @@ ${Object.keys(db.factValues)
   .map((fact) => {
     const entry = db.factValues[fact];
     if (entry.type === 'is') {
-      return entry.value.type === 'triv' ? fact : `${fact} is ${termToString(entry.value, false)}`;
+      return entry.value === TRIV_DATA ? fact : `${fact} is ${dataToString(entry.value, false)}`;
     } else {
-      return `${fact} is not ${entry.value.map((term) => termToString(term, false)).join(' or ')}`;
+      return `${fact} is not ${entry.value.map((term) => dataToString(term, false)).join(' or ')}`;
     }
   })
   .join('\n')}

@@ -1,4 +1,5 @@
 import { compile } from './compile';
+import { dataToString } from './data';
 import { parse } from './dusa-parser';
 import { Solution, execute, factToString, makeInitialDb } from './engine';
 import { check } from './syntax';
@@ -86,7 +87,7 @@ test('Non-exhaustive choice', () => {
     solutions
       .map(({ unfacts }) =>
         unfacts.map(
-          ([attribute, data]) => `${attribute} ${data.map((term) => termToString(term)).join(' ')}`,
+          ([attribute, data]) => `${attribute} ${data.map((term) => dataToString(term)).join(' ')}`,
         ),
       )
       .sort((a, b) => a.length - b.length),
@@ -132,4 +133,14 @@ test('Matching nats', () => {
   e (s X) :- a X, X != s (s (s _Y)).`);
 
   expect(solutionsToStrings(solutions)).toEqual(['a 2, a 4, b 1, b 3, c 3, c 5, d 1, e 3, e 4']);
+});
+
+test('Terms that are zero', () => {
+  const { solutions } = testExecution(`  
+  #builtin INT_PLUS plus
+
+  lt4 0.
+  lt4 (plus 1 N) :- lt4 N, N != 3.`);
+
+  expect(solutionsToStrings(solutions)).toEqual(['lt4 0, lt4 1, lt4 2, lt4 3']);
 });

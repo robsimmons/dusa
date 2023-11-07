@@ -1,4 +1,12 @@
-import { CompiledProgram, Database, Fact, Program, makeInitialDb, step } from './datalog/engine';
+import {
+  CompiledProgram,
+  Database,
+  Fact,
+  Program,
+  factToString,
+  makeInitialDb,
+  step,
+} from './datalog/engine';
 
 export interface WorkerStats {
   cycles: number;
@@ -7,7 +15,7 @@ export interface WorkerStats {
 
 export type WorkerToApp =
   | { stats: WorkerStats; type: 'hello' }
-  | { stats: WorkerStats; type: 'saturated'; facts: Fact[]; last: boolean }
+  | { stats: WorkerStats; type: 'saturated'; facts: string[]; last: boolean }
   | { stats: WorkerStats; type: 'paused' }
   | { stats: WorkerStats; type: 'running' }
   | { stats: WorkerStats; type: 'done' }
@@ -105,7 +113,7 @@ function resume(state: 'paused' | 'done' | 'saturated' | 'running') {
     case 'saturated': {
       const msg: WorkerToApp = {
         type: 'saturated',
-        facts: queuedFacts!,
+        facts: queuedFacts!.map(factToString),
         last: dbStack.length === 0,
         stats: stats(),
       };

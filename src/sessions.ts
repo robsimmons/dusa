@@ -17,7 +17,7 @@ type SessionData =
       text: string;
       textLoaded: string;
       worker: Worker;
-      facts?: Fact[][];
+      facts?: string[][];
       stats?: WorkerStats;
       issues: { msg: string; loc?: SourceLocation }[];
       errorMessage: string;
@@ -27,7 +27,7 @@ type SessionData =
       text: string;
       textLoaded: string;
       worker: Worker;
-      facts: Fact[][];
+      facts: string[][];
       stats: WorkerStats | null;
     }
   | {
@@ -35,7 +35,7 @@ type SessionData =
       text: string;
       textLoaded: string;
       worker: Worker;
-      facts: Fact[][];
+      facts: string[][];
       stats: WorkerStats;
     };
 
@@ -48,7 +48,7 @@ export type Session =
       status: 'error';
       text: string;
       textModified: boolean;
-      facts?: Fact[][];
+      facts?: string[][];
       stats?: WorkerStats;
       issues: { msg: string; loc?: SourceLocation }[];
       errorMessage: string;
@@ -57,14 +57,14 @@ export type Session =
       status: 'paused';
       text: string;
       textModified: boolean;
-      facts: Fact[][];
+      facts: string[][];
       stats: WorkerStats | null;
     }
   | {
       status: 'running' | 'done';
       text: string;
       textModified: boolean;
-      facts: Fact[][];
+      facts: string[][];
       stats: WorkerStats;
     };
 

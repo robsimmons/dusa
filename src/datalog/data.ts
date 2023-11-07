@@ -9,6 +9,8 @@ export type DataView =
 type ViewsIndex = number;
 const views: DataView[] = [{ type: 'triv' }];
 
+export const TRIV_DATA = 0;
+
 export function expose(d: Data): DataView {
   if (typeof d === 'bigint') return { type: 'int', value: d };
   if (d < 0 || d >= views.length) throw new Error(`Internalized value ${d} invalid`);

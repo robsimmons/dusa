@@ -106,11 +106,6 @@ export class DataMap<T> {
   }
 
   isOk() {
-    if (!(isTreeNode(this.indexTree) && isTreeNode(this.bigintTree))) {
-      console.log(this.indexTree);
-      console.log(this.bigintTree);
-      return false;
-    }
-    return true;
+    return isTreeNode(this.indexTree) && isTreeNode(this.bigintTree);
   }
 }

@@ -1,6 +1,6 @@
 import { CHOICE_PRIO, CONSTRAINT_PRIO, PREFIX_PRIO } from '../constants';
 import { CompiledProgram, Fact, InternalPartialRule, InternalPremise, Program } from './engine';
-import { Declaration, Premise } from './syntax';
+import { Declaration, Premise, Proposition } from './syntax';
 import { assertData, freeVars } from './terms';
 
 function indexToRuleName(index: number): string {
@@ -80,7 +80,7 @@ export function compile(decls: Declaration[]): CompiledProgram {
     rules: {},
     conclusions: {},
   };
-  const initialFacts: Fact[] = [];
+  const initialFacts: Proposition[] = [];
   const initialPrefixes: string[] = [];
 
   let ruleNum = 0;
@@ -112,10 +112,10 @@ export function compile(decls: Declaration[]): CompiledProgram {
         ) {
           // This is just a fact
           initialFacts.push({
-            type: 'Fact',
+            type: 'Proposition',
             name: decl.conclusion.name,
-            args: decl.conclusion.args.map(assertData), // TODO test case and fix
-            value: assertData(decl.conclusion.values?.[0] ?? { type: 'triv' }),
+            args: decl.conclusion.args,
+            value: decl.conclusion.values?.[0] ?? { type: 'triv' },
           });
         }
 
