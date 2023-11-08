@@ -1,11 +1,13 @@
+import { Data } from './datalog/data';
 import {
+  ChoiceTree,
+  ChoiceTreeNode,
   CompiledProgram,
-  Database,
   Fact,
   Program,
   factToString,
   makeInitialDb,
-  step,
+  stepTreeRandomDFS,
 } from './datalog/engine';
 
 export interface WorkerStats {
@@ -31,54 +33,39 @@ export type AppToWorker =
 
 const CYCLE_LIMIT = 10000;
 const TIME_LIMIT = 500;
-let cycleCount = 0;
-let deadEndCount = 0;
-let dbStack: Database[] = [];
 let program: Program | null = null;
 let queuedFacts: Fact[] | null = null;
 
-function stats(): WorkerStats {
-  return { cycles: cycleCount, deadEnds: deadEndCount };
-}
+let stats: WorkerStats = { cycles: 0, deadEnds: 0 };
 
 function post(message: WorkerToApp) {
   postMessage(message);
 }
 
+let tree: null | ChoiceTree = null;
+let path: [ChoiceTreeNode, Data | 'defer'][] = [];
+
 function cycle(): boolean {
-  const limit = cycleCount + CYCLE_LIMIT + Math.random() * CYCLE_LIMIT;
+  const limit = stats.cycles + CYCLE_LIMIT + Math.random() * CYCLE_LIMIT;
   const start = performance.now();
-  while (cycleCount < limit && start + TIME_LIMIT > performance.now()) {
-    const db = dbStack.pop()!;
-    if (!db) return false;
+  while (stats.cycles < limit && start + TIME_LIMIT > performance.now()) {
+    if (tree === null) return false;
+    const result = stepTreeRandomDFS(program!, tree, path, stats);
+    tree = result.tree;
+    path = result.tree === null ? path : result.path;
 
-    // Check for saturation
-    if (db.queue.length === 0) {
-      if (Object.values(db.factValues).every(({ type }) => type === 'is')) {
-        // We've found a proper solution here
-        queuedFacts = ([] as Fact[]).concat(
-          ...Object.entries(db.facts).map(([name, argses]) =>
-            argses.map<Fact>(([args, value]) => ({
-              type: 'Fact',
-              name,
-              args,
-              value,
-            })),
-          ),
-        );
-        return false;
-      }
-      // Throw this solution away, it has 'is not' constraints
-      continue;
-    }
-
-    // Take a step
-    cycleCount += 1;
-    const newDbs = step(program!, db);
-    if (newDbs.length === 0) {
-      deadEndCount += 1;
-    } else {
-      dbStack.push(...newDbs);
+    if (result.solution) {
+      queuedFacts = ([] as Fact[]).concat(
+        ...Object.entries(result.solution.facts).map(([name, argses]) =>
+          argses.map<Fact>(([args, value]) => ({
+            type: 'Fact',
+            name,
+            args,
+            value,
+          })),
+        ),
+      );
+      return false;
     }
   }
 
@@ -98,24 +85,24 @@ function liveLoop() {
 function resume(state: 'paused' | 'done' | 'saturated' | 'running') {
   switch (state) {
     case 'paused': {
-      return post({ type: 'paused', stats: stats() });
+      return post({ type: 'paused', stats });
     }
 
     case 'done': {
-      return post({ type: 'done', stats: stats() });
+      return post({ type: 'done', stats });
     }
 
     case 'running': {
       liveLoopHandle = setTimeout(liveLoop);
-      return post({ type: 'running', stats: stats() });
+      return post({ type: 'running', stats });
     }
 
     case 'saturated': {
       const msg: WorkerToApp = {
         type: 'saturated',
         facts: queuedFacts!.map(factToString),
-        last: dbStack.length === 0,
-        stats: stats(),
+        last: tree === null,
+        stats,
       };
       queuedFacts = null;
       return post(msg);
@@ -130,7 +117,7 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       ? 'running'
       : queuedFacts !== null
       ? 'saturated'
-      : dbStack.length === 0
+      : tree === null
       ? 'done'
       : 'paused';
 
@@ -142,9 +129,9 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
 
   switch (event.data.type) {
     case 'load':
-      cycleCount = 0;
-      deadEndCount = 0;
-      dbStack = [makeInitialDb(event.data.program)];
+      stats = { cycles: 0, deadEnds: 0 };
+      tree = { type: 'leaf', db: makeInitialDb(event.data.program) };
+      path = [];
       program = event.data.program.program;
       queuedFacts = null;
       return resume('paused');
@@ -159,15 +146,15 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       }
       return resume(state);
     case 'reset':
-      cycleCount = 0;
-      deadEndCount = 0;
-      dbStack = [];
+      stats = { cycles: 0, deadEnds: 0 };
+      tree = null;
+      path = [];
       program = null;
       queuedFacts = null;
-      return post({ type: 'reset', stats: stats() });
+      return post({ type: 'reset', stats });
     case 'status':
       return resume(state);
   }
 };
 
-post({ stats: stats(), type: 'hello' });
+post({ stats, type: 'hello' });

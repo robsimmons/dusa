@@ -2,6 +2,7 @@ import { Data } from './data';
 
 interface TreeNode<K, V> {
   height: number;
+  size: number;
   key: K;
   value: V;
   left: null | TreeNode<K, V>;
@@ -12,59 +13,187 @@ function height<K, V>(t: TreeNode<K, V> | null) {
   return t === null ? 0 : t.height;
 }
 
+function size<K, V>(t: TreeNode<K, V> | null): number {
+  return t === null ? 0 : t.size;
+}
+
 function lookup<K, V>(t: TreeNode<K, V> | null, key: K): V | null {
   if (t === null) return null;
   if (t.key === key) return t.value;
   return key < t.key ? lookup(t.left, key) : lookup(t.right, key);
 }
 
-function insert<K, V>(t: TreeNode<K, V> | null, key: K, value: V): TreeNode<K, V> {
-  if (t === null) return { height: 1, key, value, left: null, right: null };
+/** Precondition: height(left) and height(right) differ by at most one */
+function create<K, V>(
+  key: K,
+  value: V,
+  left: TreeNode<K, V> | null,
+  right: TreeNode<K, V> | null,
+): TreeNode<K, V> {
+  return {
+    height: Math.max(height(left), height(right)) + 1,
+    size: size(left) + size(right) + 1,
+    key,
+    value,
+    left,
+    right,
+  };
+}
+
+/** Precondition: height(left) === 2 + height(right) */
+function createAndFixLeft<K, V>(keyZ: K, valueZ: V, x: TreeNode<K, V>, D: TreeNode<K, V> | null) {
+  if (height(x.left) >= height(x.right)) {
+    /* This is the 'single rotation case,' where a single rotation will fix things.
+     * During insertion, the heights will never be equal, and the resulting tree will
+     * have height h+2. During deletion, it's possible for the resulting tree to have
+     * height h+3.
+     *
+     *         z              x
+     *       /   \           / \
+     *      x     D         A   z
+     *    /   \  [h]  --->     / \
+     *   A     B              B   D
+     * [h+1]  [h]
+     *       [h+1]
+     */
+    return create(x.key, x.value, x.left, create(keyZ, valueZ, x.right, D));
+  } else {
+    /* This is the double rotation case. The resulting tree will have height h+2
+     *
+     *         z                 y
+     *       /   \             /   \
+     *      x     D           x     z
+     *    /   \  [h]  --->   / \   / \
+     *   A     y            A   B C   D
+     *  [h]  /   \
+     *      B     C
+     *     [h]   [h]
+     *    [h-1] [h-1]
+     */
+    const y = x.right!;
+    return create(
+      y.key,
+      y.value,
+      create(x.key, x.value, x.left, y.left),
+      create(keyZ, valueZ, y.right, D),
+    );
+  }
+}
+
+/** Precondition: height(left) + 2 === height(right) */
+function createAndFixRight<K, V>(keyX: K, valueX: V, A: TreeNode<K, V> | null, z: TreeNode<K, V>) {
+  if (height(z.left) <= height(z.right)) {
+    /* This is the 'single rotation case,' where a single rotation will fix things.
+     * During insertion, the heights will never be equal, and the resulting tree will
+     * have height h+2. During deletion, it's possible for the resulting tree to have
+     * height h+3.
+     *
+     *      x                   z
+     *    /   \                / \
+     *   A     z              x   C
+     *  [h]  /   \    --->   / \
+     *      B     C         A   B
+     *     [h]  [h+1]
+     *    [h+1]
+     */
+    return create(z.key, z.value, create(keyX, valueX, A, z.left), z.right);
+  } else {
+    /* This is the double rotation case. The resulting tree will have height h+2
+     *
+     *       x                  y
+     *     /   \              /   \
+     *    A     z            x     z
+     *   [h]  /   \   --->  / \   / \
+     *       y     D       A   B C   D
+     *     /   \  [h]
+     *    B     C
+     *   [h]   [h]
+     *  [h-1] [h-1]
+     */
+    const y = z.left!;
+    return create(
+      y.key,
+      y.value,
+      create(keyX, valueX, A, y.left),
+      create(z.key, z.value, y.right, z.right),
+    );
+  }
+}
+
+function createAndFix<K, V>(
+  key: K,
+  value: V,
+  left: TreeNode<K, V> | null,
+  right: TreeNode<K, V> | null,
+): TreeNode<K, V> {
+  switch (height(left) - height(right)) {
+    case -2:
+      return createAndFixRight(key, value, left, right!);
+    case 2:
+      return createAndFixLeft(key, value, left!, right);
+    case -1:
+    case 0:
+    case 1:
+      break;
+    default:
+      throw new Error(`TreeNode: heights differ by ${Math.abs(height(left) - height(right))}`);
+  }
+  return create(key, value, left, right);
+}
+
+function removeMin<K, V>(t: TreeNode<K, V>): [K, V, TreeNode<K, V> | null] {
+  if (t.left === null) {
+    return [t.key, t.value, t.right];
+  }
+  const [key, value, left] = removeMin(t.left);
+  return [key, value, createAndFix(t.key, t.value, left, t.right)];
+}
+
+function remove<K, V>(t: TreeNode<K, V> | null, key: K): [V, TreeNode<K, V> | null] | null {
+  if (t === null) return null;
   if (key < t.key) {
-    const tL = insert(t.left, key, value);
-    if (tL.height === height(t.right) + 2) {
-      const newHeight = tL.height;
-      if (height(tL.left) === height(tL.right))
-        throw new Error('Failed invariant in tree insertion');
-      if (height(tL.left) > height(tL.right))
-        return { ...tL, right: { ...t, height: newHeight - 1, left: tL.right } };
-      const small = tL;
-      const medium = tL.right!;
-      const large = t;
-
-      return {
-        ...medium,
-        height: newHeight,
-        left: { ...small, height: newHeight - 1, left: tL.left, right: tL.right!.left },
-        right: { ...large, height: newHeight - 1, left: tL.right!.right, right: t.right },
-      };
-    }
-    return { ...t, height: 1 + Math.max(tL.height, height(t.right)), left: tL, right: t.right };
+    const result = remove(t.left, key);
+    return result === null ? null : [result[0], createAndFix(t.key, t.value, result[1], t.right)];
   }
-
   if (key > t.key) {
-    const tR = insert(t.right, key, value);
-    if (height(t.left) + 2 == tR.height) {
-      const newHeight = tR.height;
-      if (height(tR.left) == height(tR.right))
-        throw new Error('Failed invariant in tree insertion');
-      if (height(tR.left) < height(tR.right))
-        return { ...tR, left: { ...t, height: newHeight - 1, right: tR.left } };
-      const small = t;
-      const medium = tR.left!;
-      const large = tR;
-
-      return {
-        ...medium,
-        height: newHeight,
-        left: { ...small, height: newHeight - 1, left: t.left, right: tR.left!.left },
-        right: { ...large, height: newHeight - 1, left: tR.left!.right, right: tR.right },
-      };
-    }
-    return { ...t, height: 1 + Math.max(height(t.left), tR.height), left: t.left, right: tR };
+    const result = remove(t.right, key);
+    return result === null ? null : [result[0], createAndFix(t.key, t.value, t.left, result[1])];
   }
+  if (t.right === null) return [t.value, t.left];
+  const [rootKey, rootValue, newRight] = removeMin(t.right);
+  return [t.value, createAndFix(rootKey, rootValue, t.left, newRight)];
+}
 
-  return { ...t, value };
+function removeNth<K, V>(t: TreeNode<K, V> | null, n: number): [K, V, TreeNode<K, V> | null] {
+  if (t === null) throw new Error('Out of bounds removal');
+  if (n < size(t.left)) {
+    const [key, value, left] = removeNth(t.left, n);
+    return [key, value, createAndFix(t.key, t.value, left, t.right)];
+  }
+  if (n > size(t.left)) {
+    const [key, value, right] = removeNth(t.right, n - size(t.left) - 1);
+    return [key, value, createAndFix(t.key, t.value, t.left, right)];
+  }
+  if (t.right === null) return [t.key, t.value, t.left];
+  const [rootKey, rootValue, newRight] = removeMin(t.right);
+  return [t.key, t.value, createAndFix(rootKey, rootValue, t.left, newRight)];
+}
+
+function getNth<K, V>(t: TreeNode<K, V> | null, n: number): [K, V] {
+  if (t === null) throw new Error('Out of bounds lookup');
+  if (n < size(t.left)) return getNth(t.left, n);
+  if (n > size(t.left)) return getNth(t.right, n - size(t.left) - 1);
+  return [t.key, t.value];
+}
+
+function insert<K, V>(t: TreeNode<K, V> | null, key: K, value: V): TreeNode<K, V> {
+  if (t === null) return create(key, value, null, null);
+  if (key < t.key) {
+    return createAndFix(t.key, t.value, insert(t.left, key, value), t.right);
+  } else if (key > t.key) {
+    return createAndFix(t.key, t.value, t.left, insert(t.right, key, value));
+  }
+  return create(t.key, value, t.left, t.right);
 }
 
 function isTreeNode<K, V>(t: null | TreeNode<K, V>, lo?: K, hi?: K): boolean {
@@ -73,9 +202,22 @@ function isTreeNode<K, V>(t: null | TreeNode<K, V>, lo?: K, hi?: K): boolean {
     (lo == null || lo < t.key) &&
     (hi == null || hi > t.key) &&
     t.height === 1 + Math.max(height(t.left), height(t.right)) &&
+    t.size === 1 + size(t.left) + size(t.right) &&
     isTreeNode(t.left, lo, t.key) &&
     isTreeNode(t.right, t.key, hi)
   );
+}
+
+function accumEntries<K, V>(accum: [K, V][], t: null | TreeNode<K, V>) {
+  if (t === null) return;
+  accumEntries(accum, t.left);
+  accum.push([t.key, t.value]);
+  accumEntries(accum, t.right);
+}
+
+function every<K, V>(t: null | TreeNode<K, V>, test: (key: K, value: V) => boolean): boolean {
+  if (t === null) return true;
+  return test(t.key, t.value) && every(t.left, test) && every(t.right, test);
 }
 
 export class DataMap<T> {
@@ -103,6 +245,61 @@ export class DataMap<T> {
   get(key: Data): T | null {
     if (typeof key === 'bigint') return lookup(this.bigintTree, key);
     return lookup(this.indexTree, key);
+  }
+
+  getNth(n: number): [Data, T] {
+    if (n < size(this.indexTree)) return getNth(this.indexTree, n);
+    return getNth(this.bigintTree, n - size(this.indexTree));
+  }
+
+  remove(key: Data): [T, DataMap<T>] | null {
+    if (typeof key === 'bigint') {
+      const result = remove(this.bigintTree, key);
+      if (result === null) return null;
+      return [result[0], new DataMap<T>(this.indexTree, result[1])];
+    }
+    const result = remove(this.indexTree, key);
+    if (result === null) return null;
+    return [result[0], new DataMap<T>(result[1], this.bigintTree)];
+  }
+
+  entries(): [Data, T][] {
+    const accum: [Data, T][] = [];
+    accumEntries(accum, this.indexTree);
+    accumEntries(accum, this.bigintTree);
+    return accum;
+  }
+
+  get length() {
+    return size(this.indexTree) + size(this.bigintTree);
+  }
+
+  every(test: (key: Data, value: T) => boolean): boolean {
+    return every(this.indexTree, test) && every(this.bigintTree, test);
+  }
+
+  popFirst(): [Data, T, DataMap<T>] {
+    if (this.indexTree === null) {
+      if (this.bigintTree === null) {
+        throw new Error('Removal from empty map');
+      }
+      const [k, v, bigintTree] = removeMin(this.bigintTree);
+      return [k, v, new DataMap(this.indexTree, bigintTree)];
+    }
+    const [k, v, indexTree] = removeMin(this.indexTree);
+    return [k, v, new DataMap(indexTree, this.bigintTree)];
+  }
+
+  popRandom(): [Data, T, DataMap<T>] {
+    const i = size(this.indexTree);
+    const b = size(this.bigintTree);
+    const toRemove = Math.floor((i + b) * Math.random());
+    if (toRemove < i) {
+      const [k, v, indexTree] = removeNth(this.indexTree!, toRemove);
+      return [k, v, new DataMap(indexTree, this.bigintTree)];
+    }
+    const [k, v, bigintTree] = removeNth(this.bigintTree!, toRemove - i);
+    return [k, v, new DataMap(this.indexTree, bigintTree)];
   }
 
   isOk() {

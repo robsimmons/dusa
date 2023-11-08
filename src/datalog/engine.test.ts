@@ -1,5 +1,4 @@
 import { compile } from './compile';
-import { dataToString } from './data';
 import { parse } from './dusa-parser';
 import { Solution, execute, factToString, makeInitialDb } from './engine';
 import { check } from './syntax';
@@ -25,7 +24,7 @@ function solutionsToStrings(solutions: Solution[]) {
 }
 
 test('Multi-step declaration, basic nat (in)equality', () => {
-  const { solutions, deadEnds, splits, highWater } = testExecution(`
+  const { solutions, deadEnds } = testExecution(`
   #builtin NAT_ZERO z
   #builtin NAT_SUCC s
 
@@ -38,34 +37,17 @@ test('Multi-step declaration, basic nat (in)equality', () => {
   d :- c, s z != 1.
   e :- d.
   `);
-  expect(solutions.length).toEqual(1);
   expect(deadEnds).toEqual(0);
-  expect(splits).toEqual(0);
-  expect(highWater).toEqual(1);
-  expect(solutions[0].unfacts).toEqual([]);
-
-  const facts = solutions[0].facts.map(factToString);
-  expect(facts.length).toEqual(3);
-  expect(facts).toContainEqual('a');
-  expect(facts).toContainEqual('b');
-  expect(facts).toContainEqual('c');
+  expect(solutionsToStrings(solutions)).toEqual(['a, b, c']);
 });
 
 test('Exhaustive choices', () => {
-  const { solutions, deadEnds, splits, highWater } = testExecution(`
+  const { solutions, deadEnds } = testExecution(`
   a is { true, false }.
   b is { true, false }.
   `);
-  expect(solutions.length).toEqual(4);
   expect(deadEnds).toEqual(0);
-  expect(splits).toEqual(3);
-  expect(highWater).toEqual(3);
-  expect(solutions.map(({ unfacts }) => unfacts)).toEqual([[], [], [], []]);
-
-  const facts = solutions
-    .map((solution) => solution.facts.map(factToString).sort().join(', '))
-    .sort();
-  expect(facts).toEqual([
+  expect(solutionsToStrings(solutions)).toEqual([
     'a is false, b is false',
     'a is false, b is true',
     'a is true, b is false',
@@ -74,32 +56,62 @@ test('Exhaustive choices', () => {
 });
 
 test('Non-exhaustive choice', () => {
-  const { solutions, deadEnds, splits, highWater } = testExecution(`
+  const { solutions, deadEnds } = testExecution(`
   a is { false... }.
   b is { true, false } :- a is false.
   `);
-  expect(solutions.length).toEqual(3);
-  expect(deadEnds).toEqual(0);
-  expect(splits).toEqual(2);
-  expect(highWater).toEqual(3);
-  expect(
-    solutions
-      .map(({ unfacts }) =>
-        unfacts.map(
-          ([attribute, data]) => `${attribute} ${data.map((term) => dataToString(term)).join(' ')}`,
-        ),
-      )
-      .sort((a, b) => a.length - b.length),
-  ).toEqual([[], [], ['a false']]);
 
-  const facts = solutions
-    .map((solution) => solution.facts.map(factToString).sort().join(', '))
-    .sort();
-  expect(facts).toEqual(['', 'a is false, b is false', 'a is false, b is true']);
+  expect(deadEnds).toEqual(1);
+  expect(solutionsToStrings(solutions)).toEqual([
+    'a is false, b is false',
+    'a is false, b is true',
+  ]);
+});
+
+test('Overlapping exhaustive choices', () => {
+  const { solutions } = testExecution(`
+  a.
+  b.
+  c is { a, b, d, e }.
+  c is { a, b, c, e } :- a.
+  c is { a, c, d, e} :- b.
+  `);
+  expect(solutionsToStrings(solutions)).toEqual(['a, b, c is a', 'a, b, c is e']);
+});
+
+test('Overlapping non-exhaustive and exhaustive choices', () => {
+  const { solutions } = testExecution(`
+  a.
+  b.
+  c is { a, b, d, e } :- a.
+  c is { a, b, c... } :- a.
+  c is { a, c, d, e } :- b.
+  c is { c... }.
+  c is { a... }.
+  c is { f... }.
+  `);
+  expect(solutionsToStrings(solutions)).toEqual(['a, b, c is a', 'a, b, c is d', 'a, b, c is e']);
+});
+
+test('Overlapping non-exhaustive choices', () => {
+  const { solutions } = testExecution(`
+  a.
+  b.
+  c is { a, b, c... } :- a.
+  c is { a, c, d... } :- b.
+  c is { f... }.
+  `);
+  expect(solutionsToStrings(solutions)).toEqual([
+    'a, b, c is a',
+    'a, b, c is b',
+    'a, b, c is c',
+    'a, b, c is d',
+    'a, b, c is f',
+  ]);
 });
 
 test('Plus is okay if grounded by previous rules', () => {
-  const { solutions, deadEnds, splits, highWater } = testExecution(`
+  const { solutions, deadEnds } = testExecution(`
   #builtin INT_PLUS plus
 
   a 2.
@@ -110,10 +122,7 @@ test('Plus is okay if grounded by previous rules', () => {
   d 6.
   e X Y :- a X, a Y, d (plus X Y).`);
 
-  expect(solutions.length).toEqual(1);
   expect(deadEnds).toEqual(0);
-  expect(splits).toEqual(0);
-  expect(highWater).toEqual(1);
   expect(solutionsToStrings(solutions)).toEqual([
     'a 12, a 2, a 7, d 19, d 6, d 9, e 12 7, e 2 7, e 7 12, e 7 2',
   ]);

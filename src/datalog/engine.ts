@@ -1,6 +1,8 @@
 import { FACT_PRIO, INITIAL_PREFIX_PRIO } from '../constants';
+import { AttributeMap } from './attributemap';
 import PQ from './binqueue';
-import { Data, TRIV_DATA, dataToString } from './data';
+import { Data, TRIV_DATA, dataToString, hide } from './data';
+import { DataMap } from './datamap';
 import { Proposition } from './syntax';
 import { Substitution, Pattern, match, apply, equal } from './terms';
 
@@ -61,21 +63,19 @@ export interface Prefix {
 
 export interface Database {
   facts: { [predicate: string]: [Data[], Data][] };
-  factValues: { [prop: string]: { type: 'is'; value: Data } | { type: 'is not'; value: Data[] } };
+  factValues: AttributeMap<{ type: 'is'; value: Data } | { type: 'is not'; value: Data[] }>;
   prefixes: { [name: string]: Substitution[] };
   queue: PQ<Fact | Prefix>;
-  deferredChoices: {
-    [predicate: string]: { name: string; args: Data[]; values: Data[]; exhaustive: boolean };
-  };
+  deferredChoices: AttributeMap<{ is: Data[]; isNot: null | Data[] }>;
 }
 
 export function makeInitialDb(prog: CompiledProgram): Database {
   let db: Database = {
     facts: {},
-    factValues: {},
+    factValues: AttributeMap.new(),
     prefixes: {},
     queue: PQ.new(),
-    deferredChoices: {},
+    deferredChoices: AttributeMap.new(),
   };
   for (const seed of prog.initialPrefixes) {
     db.queue = db.queue.push(INITIAL_PREFIX_PRIO, {
@@ -92,7 +92,7 @@ export function makeInitialDb(prog: CompiledProgram): Database {
       fact.args.map((arg) => apply({}, arg)),
       fact.value === null ? TRIV_DATA : apply({}, fact.value),
       db,
-    );
+    )!; // XXX TODO this _could_ fail if there's contradictary initial facts!
   }
   return db;
 }
@@ -149,59 +149,94 @@ function dbItemToString(item: Fact | Prefix) {
   return prefixToString(item);
 }
 
-function stepConclusion(conclusion: InternalConclusion, prefix: Prefix, db: Database): Database[] {
-  if (conclusion.type === 'Contradiction') return [];
+function stepConclusion(
+  conclusion: InternalConclusion,
+  prefix: Prefix,
+  db: Database,
+): Database | null {
+  if (conclusion.type === 'Contradiction') return null;
   const args = conclusion.args.map((arg) => apply(prefix.args, arg));
   let values = conclusion.values.map((value) => apply(prefix.args, value));
 
-  const key = `${conclusion.name}${args.map((arg) => ` ${dataToString(arg)}`).join('')}`;
-  const knownValue = db.factValues[key];
+  const knownValue = db.factValues.get(conclusion.name, args);
 
   if (knownValue?.type === 'is') {
     // Either this conclusion will be redundant or cause a contradiction
     if (conclusion.exhaustive && !values.some((value) => equal(value, knownValue.value))) {
-      return [];
+      return null;
     }
-    return [db];
+    return db;
   } else {
-    // Just have to make sure options are not already excluded from this branch
-    let isNot = knownValue ? knownValue.value : [];
+    // Remove any options that are already excluded from this branch
+    const isNot = knownValue ? knownValue.value : [];
     values = values.filter((value) => !isNot.some((excludedValue) => equal(value, excludedValue)));
 
-    // If this conclusion is nonexhaustive, add any new concrete outcomes to the
-    // nonexhaustive branch
-    isNot = [...isNot, ...values];
+    let deferred = db.deferredChoices.get(conclusion.name, args);
+    if (deferred === null) {
+      deferred = { is: [], isNot };
+    }
 
-    const nonExhaustive: Database[] = conclusion.exhaustive
-      ? []
-      : [
-          {
-            ...db,
-            factValues: { ...db.factValues, [key]: { type: 'is not', value: isNot } },
-          },
-        ];
+    if (deferred.isNot === null && conclusion.exhaustive) {
+      // deferred choices are the intersection of two lists
+      deferred = {
+        is: deferred.is.filter((value) => values.some((newValue) => equal(value, newValue))),
+        isNot: null,
+      };
+    } else if (deferred.isNot === null || conclusion.exhaustive) {
+      // the non-exhaustive deferred choices are basically irrelevant
+      deferred = {
+        is: conclusion.exhaustive ? values : deferred.is,
+        isNot: null,
+      };
+    } else {
+      // non-deferred choices are the union of the two lists
+      const redundantPossibilities = deferred.is.filter(
+        (value) => !values.some((newValue) => equal(value, newValue)),
+      );
+      deferred = {
+        is: values.concat(...redundantPossibilities),
+        isNot: deferred.isNot.concat(...redundantPossibilities),
+      };
+    }
 
-    const existingFacts = db.facts[conclusion.name] || [];
-    return nonExhaustive.concat(
-      values.map<Database>((value) => ({
+    if (deferred.is.length === 1 && deferred.isNot === null) {
+      const existingFacts = db.facts[conclusion.name] || [];
+      const value = deferred.is[0];
+      return {
         ...db,
         facts: { ...db.facts, [conclusion.name]: [...existingFacts, [args, value]] },
-        factValues: { ...db.factValues, [key]: { type: 'is', value } },
+        factValues: db.factValues.set(conclusion.name, args, { type: 'is', value }),
         queue: db.queue.push(FACT_PRIO, { type: 'Fact', name: conclusion.name, args, value }),
-      })),
-    );
+      };
+    }
+
+    if (deferred.is.length === 0 && deferred.isNot === null) {
+      return null;
+    }
+
+    return { ...db, deferredChoices: db.deferredChoices.set(conclusion.name, args, deferred) };
   }
 }
 
-export function insertFact(name: string, args: Data[], value: Data, db: Database): Database {
-  const key = `${name}${args.map((arg) => ` ${dataToString(arg)}`).join('')}`;
-  const existingFacts = db.facts[name] || [];
-  return {
-    ...db,
-    facts: { ...db.facts, [name]: [...existingFacts, [args, value]] },
-    factValues: { ...db.factValues, [key]: { type: 'is', value } },
-    queue: db.queue.push(FACT_PRIO, { type: 'Fact', name, args, value }),
-  };
+export function insertFact(name: string, args: Data[], value: Data, db: Database): Database | null {
+  const knownValue = db.factValues.get(name, args);
+  if (knownValue?.type === 'is') {
+    return equal(knownValue.value, value) ? db : null;
+  } else {
+    if (knownValue?.type === 'is not') {
+      if (knownValue.value.some((excludedValue) => equal(excludedValue, value))) {
+        return null;
+      }
+    }
+
+    const existingFacts = db.facts[name] || [];
+    return {
+      ...db,
+      facts: { ...db.facts, [name]: [...existingFacts, [args, value]] },
+      factValues: db.factValues.set(name, args, { type: 'is', value }),
+      queue: db.queue.push(FACT_PRIO, { type: 'Fact', name, args, value }),
+    };
+  }
 }
 
 function stepPrefix(
@@ -345,55 +380,254 @@ ${Object.keys(db.prefixes)
   .map((key) => `${key}: ${db.prefixes[key].map(substitutionToString).join(', ')}`)
   .join('\n')}
 Facts:
-${Object.keys(db.factValues)
-  .sort()
-  .map((fact) => {
-    const entry = db.factValues[fact];
-    if (entry.type === 'is') {
-      return entry.value === TRIV_DATA ? fact : `${fact} is ${dataToString(entry.value, false)}`;
-    } else {
-      return `${fact} is not ${entry.value.map((term) => dataToString(term, false)).join(' or ')}`;
-    }
+${db.factValues
+  .entries()
+  .map(([name, args, entry]) => {
+    const attribute = dataToString(hide({ type: 'const', name, args }), false);
+    const postfix =
+      entry.type === 'is not'
+        ? ` is not ${entry.value.map((term) => dataToString(term, false)).join(' or ')}`
+        : entry.value === TRIV_DATA
+        ? ''
+        : ` is ${dataToString(entry.value)}`;
+    return `${attribute}${postfix};`;
   })
+  .sort()
   .join('\n')}
 `;
 }
 
-export function step(program: Program, db: Database): Database[] {
+export function stepDb(program: Program, db: Database): Database | null {
   const [current, rest] = db.queue.pop();
   db = { ...db, queue: rest };
   if (current.type === 'Fact') {
-    return [stepFact(program.rules, current, db)];
+    return stepFact(program.rules, current, db);
   } else if (program.conclusions[current.name]) {
     return stepConclusion(program.conclusions[current.name], current, db);
   } else {
-    return [stepPrefix(program.rules, current, db)];
+    return stepPrefix(program.rules, current, db);
   }
 }
 
 export interface Solution {
   facts: Fact[];
-  unfacts: [string, Data[]][];
 }
 
-export function execute(
-  program: Program,
-  db: Database,
-): { solutions: Solution[]; steps: number; deadEnds: number; splits: number; highWater: number } {
-  const dbStack: Database[] = [db];
-  const solutions: Solution[] = [];
-  let steps = 0;
-  let deadEnds = 0;
-  let highWater = 0;
-  let splits = 0;
-  while (dbStack.length > 0) {
-    if (dbStack.length > highWater) highWater = dbStack.length;
+export interface ChoiceTreeLeaf {
+  type: 'leaf';
+  db: Database;
+}
 
-    const db = dbStack.pop()!;
-    if (db.queue.length === 0) {
+export interface ChoiceTreeNode {
+  type: 'choice';
+  base: Database;
+  attribute: [string, Data[]];
+  children: DataMap<null | ChoiceTree>;
+  defer: 'exhaustive' | ChoiceTree;
+}
+
+export type ChoiceTree = ChoiceTreeLeaf | ChoiceTreeNode;
+
+function maybeStep(
+  program: Program,
+  ref: { db: Database },
+): 'solution' | 'discard' | 'choose' | 'stepped' {
+  if (ref.db.queue.length === 0) {
+    if (ref.db.deferredChoices.length === 0) {
+      // Saturation! Check that it meets requirements
+      if (ref.db.factValues.every((_name, _args, { type }) => type === 'is')) {
+        return 'solution';
+      } else {
+        return 'discard';
+      }
+    } else {
+      // Must make a choice
+      return 'choose';
+    }
+  } else {
+    const db = stepDb(program, ref.db);
+    if (db === null) {
+      return 'discard';
+    } else {
+      ref.db = db;
+      return 'stepped';
+    }
+  }
+}
+
+export interface Stats {
+  cycles: number;
+  deadEnds: number;
+}
+
+function cleanPath(
+  path: [ChoiceTreeNode, Data | 'defer'][],
+): { tree: null } | { tree: ChoiceTree; path: [ChoiceTreeNode, Data | 'defer'][] } {
+  while (path.length > 0) {
+    const [parentNode, parentChoice] = path.pop()!;
+    if (parentChoice === 'defer') {
+      parentNode.defer = 'exhaustive';
+    } else {
+      parentNode.children = parentNode.children.remove(parentChoice)![1];
+    }
+    if (parentNode.defer !== 'exhaustive' || parentNode.children.length > 0) {
+      return { tree: parentNode, path };
+    }
+  }
+  return { tree: null };
+}
+
+function choiceTreeNodeToString(
+  { attribute, children, defer }: ChoiceTreeNode,
+  data?: Data | 'defer',
+) {
+  return `Tree node for attribute ${dataToString(
+    hide({ type: 'const', name: attribute[0], args: attribute[1] }),
+  )}${children
+    .entries()
+    .map(
+      ([dataOption, child]) =>
+        `${
+          data !== undefined && data !== 'defer' && equal(data, dataOption) ? '\n * ' : '\n   '
+        }${dataToString(dataOption)}:${child === null ? ' null' : ' ...'}`,
+    )
+    .join('')}${defer === 'exhaustive' ? '' : `\n${data === 'defer' ? ' * ' : '   '}<defer>: ...`}`;
+}
+
+export function pathToString(tree: ChoiceTree, path: [ChoiceTreeNode, Data | 'defer'][]) {
+  return `~~~~~~~~~~~~~~
+${path.map(([node, data]) => choiceTreeNodeToString(node, data)).join('\n\n')}
+
+${tree.type === 'leaf' ? dbToString(tree.db) : choiceTreeNodeToString(tree)}`;
+}
+
+export function stepTreeRandomDFS(
+  program: Program,
+  tree: ChoiceTree,
+  path: [ChoiceTreeNode, Data | 'defer'][],
+  stats: Stats,
+):
+  | { tree: ChoiceTree; path: [ChoiceTreeNode, Data | 'defer'][]; solution?: Database }
+  | { tree: null; solution?: Database } {
+  switch (tree.type) {
+    case 'leaf': {
+      const stepResult = maybeStep(program, tree);
+      switch (stepResult) {
+        case 'stepped': {
+          stats.cycles += 1;
+          return { tree, path };
+        }
+
+        case 'solution': {
+          // Return to the root
+          const cleaned = cleanPath(path);
+          if (cleaned.tree === null) return { tree: null, solution: tree.db };
+          if (cleaned.path.length === 0) return { tree: cleaned.tree, path: [], solution: tree.db };
+          return { tree: cleaned.path[0][0], path: [], solution: tree.db };
+        }
+
+        case 'choose': {
+          // Forced to make a choice
+          if (tree.db.deferredChoices.length === 0) {
+            // This case may be impossible?
+            console.error('====== unexpected point reached ======');
+            return cleanPath(path);
+          }
+          const [pred, args, values, deferredChoices] = tree.db.deferredChoices.popRandom();
+          const newTree: ChoiceTreeNode = {
+            type: 'choice',
+            base: { ...tree.db, deferredChoices },
+            attribute: [pred, args],
+            children: DataMap.new(),
+            defer:
+              values.isNot === null
+                ? 'exhaustive'
+                : {
+                    type: 'leaf',
+                    db: {
+                      ...tree.db,
+                      deferredChoices,
+                      factValues: tree.db.factValues.set(pred, args, {
+                        type: 'is not',
+                        value: values.isNot,
+                      }),
+                    },
+                  },
+          };
+          for (const choice of values.is) {
+            newTree.children = newTree.children.set(choice, null);
+          }
+
+          // Fix up the parent pointer
+          if (path.length > 0) {
+            const [parent, route] = path[path.length - 1];
+            if (route === 'defer') {
+              parent.defer = newTree;
+            } else {
+              parent.children = parent.children.set(route, newTree);
+            }
+          }
+
+          return { tree: newTree, path };
+        }
+
+        case 'discard': {
+          // Return only as far as possible
+          stats.deadEnds += 1;
+          return cleanPath(path);
+        }
+
+        default:
+          throw new Error('should be unreachable');
+      }
+    }
+
+    case 'choice': {
+      if (tree.children.length === 0) {
+        if (tree.defer === 'exhaustive') {
+          return cleanPath(path);
+        }
+        path.push([tree, 'defer']);
+        return { tree: tree.defer, path };
+      } else {
+        const [value, existingChild] = tree.children.getNth(
+          Math.floor(Math.random() * tree.children.length),
+        );
+        if (existingChild !== null) {
+          path.push([tree, value]);
+          return { tree: existingChild, path };
+        }
+        const newDb = insertFact(tree.attribute[0], tree.attribute[1], value, tree.base);
+        if (newDb === null) {
+          tree.children = tree.children.remove(value)![1];
+          return { tree, path };
+        }
+        const newChild: ChoiceTreeLeaf = { type: 'leaf', db: newDb };
+        tree.children = tree.children.set(value, newChild);
+        path.push([tree, value]);
+        return { tree: newChild, path };
+      }
+    }
+  }
+}
+
+export function execute(program: Program, db: Database) {
+  let tree: null | ChoiceTree = { type: 'leaf', db };
+  let path: [ChoiceTreeNode, Data | 'defer'][] = [];
+  const stats: Stats = { cycles: 0, deadEnds: 0 };
+  const solutions: Solution[] = [];
+
+  for (;;) {
+    if (tree === null) return { solutions, steps: stats.cycles, deadEnds: stats.deadEnds };
+
+    const result = stepTreeRandomDFS(program, tree, path, stats);
+    tree = result.tree;
+    path = result.tree === null ? path : result.path;
+
+    if (result.solution) {
       solutions.push({
         facts: ([] as Fact[]).concat(
-          ...Object.entries(db.facts).map(([name, argses]) =>
+          ...Object.entries(result.solution.facts).map(([name, argses]) =>
             argses.map<Fact>(([args, value]) => ({
               type: 'Fact',
               name: name,
@@ -402,20 +636,7 @@ export function execute(
             })),
           ),
         ),
-        unfacts: Object.entries(db.factValues)
-          .filter(
-            (arg): arg is [string, { type: 'is not'; value: Data[] }] => arg[1].type === 'is not',
-          )
-          .map(([attribute, { value }]) => [attribute, value]),
       });
-    } else {
-      steps += 1;
-      const newDbs = step(program, db);
-      if (newDbs.length === 0) deadEnds += 1;
-      if (newDbs.length > 1) splits += 1;
-      dbStack.push(...newDbs);
     }
   }
-
-  return { solutions, steps, deadEnds, splits, highWater };
 }

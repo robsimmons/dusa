@@ -1,5 +1,6 @@
 import { test, expect } from 'vitest';
 import { DataMap } from './datamap';
+import { Data } from './data';
 
 test('Inserting increasing values', () => {
   let map: DataMap<bigint> = DataMap.new();
@@ -62,5 +63,22 @@ test('Insert values in random order', () => {
   }
   for (let i = 0n; i < 20000n; i++) {
     expect(map.get(i)).toEqual(-i);
+  }
+});
+
+test('Insertion and deletion', () => {
+  let key: Data;
+  let value: bigint;
+  let map: DataMap<bigint> = DataMap.new();
+  for (let i = 0n; i < 100n; i++) {
+    map = map.set(i, i - 5n);
+  }
+
+  for (let i = 0n; i < 100n; i++) {
+    expect(BigInt(map.length)).toBe(100n - i);
+    [key, value, map] = map.popFirst();
+    expect(key).toBe(i);
+    expect(value).toBe(i - 5n);
+    expect(map.isOk()).toBeTruthy();
   }
 });
