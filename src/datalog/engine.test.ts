@@ -152,3 +152,48 @@ test('Terms that are zero', () => {
 
   expect(solutionsToStrings(solutions)).toEqual(['lt4 0, lt4 1, lt4 2, lt4 3']);
 });
+
+test('Absent/extant bug', () => {
+  const { solutions } = testExecution(`
+  vertex 0.
+  vertex 1.
+  vertex 2.
+
+  edge 0 1 is absent.
+  edge 0 2 is absent.
+  edge 1 2 is extant.
+  edge X Y is Z :- edge Y X is Z.
+
+  reachable N N :- vertex N.
+  reachable Start Y :- reachable Start X, edge X Y is extant.`);
+
+  expect(solutionsToStrings(solutions)).toEqual([
+    'edge 0 1 is absent, edge 0 2 is absent, edge 1 0 is absent, edge 1 2 is extant, edge 2 0 is absent, edge 2 1 is extant, reachable 0 0, reachable 1 1, reachable 1 2, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+  ]);
+});
+
+test('Generating edges', () => {
+  const { solutions } = testExecution(`
+  #builtin NAT_SUCC s
+
+  vertex 2.
+  vertex N :- vertex (s N).
+
+  edge X Y is { extant, absent } :- vertex X, vertex Y, X != Y.
+  edge X Y is Z :- edge Y X is Z.
+
+  reachable N N :- vertex N.
+  reachable Start Y :- reachable Start X, edge X Y is extant.
+  `);
+
+  expect(solutionsToStrings(solutions)).toEqual([
+    'edge 0 1 is absent, edge 0 2 is absent, edge 1 0 is absent, edge 1 2 is absent, edge 2 0 is absent, edge 2 1 is absent, reachable 0 0, reachable 1 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+    'edge 0 1 is absent, edge 0 2 is absent, edge 1 0 is absent, edge 1 2 is extant, edge 2 0 is absent, edge 2 1 is extant, reachable 0 0, reachable 1 1, reachable 1 2, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+    'edge 0 1 is absent, edge 0 2 is extant, edge 1 0 is absent, edge 1 2 is absent, edge 2 0 is extant, edge 2 1 is absent, reachable 0 0, reachable 0 2, reachable 1 1, reachable 2 0, reachable 2 2, vertex 0, vertex 1, vertex 2',
+    'edge 0 1 is absent, edge 0 2 is extant, edge 1 0 is absent, edge 1 2 is extant, edge 2 0 is extant, edge 2 1 is extant, reachable 0 0, reachable 0 1, reachable 0 2, reachable 1 0, reachable 1 1, reachable 1 2, reachable 2 0, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+    'edge 0 1 is extant, edge 0 2 is absent, edge 1 0 is extant, edge 1 2 is absent, edge 2 0 is absent, edge 2 1 is absent, reachable 0 0, reachable 0 1, reachable 1 0, reachable 1 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+    'edge 0 1 is extant, edge 0 2 is absent, edge 1 0 is extant, edge 1 2 is extant, edge 2 0 is absent, edge 2 1 is extant, reachable 0 0, reachable 0 1, reachable 0 2, reachable 1 0, reachable 1 1, reachable 1 2, reachable 2 0, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+    'edge 0 1 is extant, edge 0 2 is extant, edge 1 0 is extant, edge 1 2 is absent, edge 2 0 is extant, edge 2 1 is absent, reachable 0 0, reachable 0 1, reachable 0 2, reachable 1 0, reachable 1 1, reachable 1 2, reachable 2 0, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+    'edge 0 1 is extant, edge 0 2 is extant, edge 1 0 is extant, edge 1 2 is extant, edge 2 0 is extant, edge 2 1 is extant, reachable 0 0, reachable 0 1, reachable 0 2, reachable 1 0, reachable 1 1, reachable 1 2, reachable 2 0, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+  ]);
+});

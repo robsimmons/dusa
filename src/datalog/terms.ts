@@ -161,7 +161,7 @@ export function match(
       return substitution;
 
     case 'var':
-      if (substitution[pattern.name]) {
+      if (substitution[pattern.name] !== undefined) {
         return equal(substitution[pattern.name], data) ? substitution : null;
       }
       return { [pattern.name]: data, ...substitution };

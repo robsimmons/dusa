@@ -7,6 +7,7 @@ import {
   Program,
   factToString,
   makeInitialDb,
+  pathToString,
   stepTreeRandomDFS,
 } from './datalog/engine';
 
@@ -50,6 +51,7 @@ function cycle(): boolean {
   const start = performance.now();
   while (stats.cycles < limit && start + TIME_LIMIT > performance.now()) {
     if (tree === null) return false;
+    console.log(pathToString(tree, path));
     const result = stepTreeRandomDFS(program!, tree, path, stats);
     tree = result.tree;
     path = result.tree === null ? path : result.path;
