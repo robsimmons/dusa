@@ -1,7 +1,7 @@
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView, ViewUpdate, keymap, lineNumbers, tooltips } from '@codemirror/view';
-import { ParserState, dinnikTokenizer } from './datalog/dusa-tokenizer';
+import { ParserState, dusaTokenizer } from './datalog/dusa-tokenizer';
 import { StringStream } from './datalog/parsing/string-stream';
 import { classHighlighter, tags } from '@lezer/highlight';
 import { Diagnostic, linter } from '@codemirror/lint';
@@ -22,8 +22,8 @@ const bogusPosition = {
  * tree, we can feed bogus SourceLocation information to matchedLocation.
  */
 const parser = StreamLanguage.define<{ state: ParserState }>({
-  name: 'Dinnik',
-  startState: () => ({ state: dinnikTokenizer.startState }),
+  name: 'Dusa',
+  startState: () => ({ state: dusaTokenizer.startState }),
   token: (stream, cell) => {
     const stream2: StringStream = {
       eat(pattern) {
@@ -52,7 +52,7 @@ const parser = StreamLanguage.define<{ state: ParserState }>({
       matchedLocation: () => bogusPosition,
     };
 
-    const result = dinnikTokenizer.advance(stream2, cell.state);
+    const result = dusaTokenizer.advance(stream2, cell.state);
     cell.state = result.state;
     return result.tag || null;
   },
@@ -65,7 +65,7 @@ const parser = StreamLanguage.define<{ state: ParserState }>({
       eol: () => true,
       matchedLocation: () => bogusPosition,
     };
-    const result = dinnikTokenizer.advance(stream, cell.state);
+    const result = dusaTokenizer.advance(stream, cell.state);
     cell.state = result.state;
   },
   copyState: ({ state }) => ({ state }),
@@ -100,9 +100,9 @@ function issueToDiagnostic(issues: Issue[]): readonly Diagnostic[] {
     .filter((issue): issue is Diagnostic => issue !== null);
 }
 
-function dinnikLinter(view: EditorView): readonly Diagnostic[] {
+function dusaLinter(view: EditorView): readonly Diagnostic[] {
   const contents = view.state.doc.toString();
-  const tokens = parseWithStreamParser(dinnikTokenizer, contents);
+  const tokens = parseWithStreamParser(dusaTokenizer, contents);
   if (tokens.issues.length > 0) {
     return issueToDiagnostic(tokens.issues);
   }
@@ -133,7 +133,7 @@ const state = EditorState.create({
         editorChangeListener.current(update);
       }
     }),
-    linter(dinnikLinter),
+    linter(dusaLinter),
     tooltips({ parent: document.body }),
     keymap.of([...defaultKeymap, ...historyKeymap]),
   ],

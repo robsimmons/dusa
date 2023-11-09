@@ -54,7 +54,7 @@ function issue(stream: StringStream, msg: string): Issue {
   };
 }
 
-export const dinnikTokenizer: StreamParser<ParserState, Token> = {
+export const dusaTokenizer: StreamParser<ParserState, Token> = {
   startState: { type: 'Beginning', defaults: SPECIAL_DEFAULTS },
   advance: (stream, state): ParserResponse<ParserState, Token> => {
     let tok: string | null;

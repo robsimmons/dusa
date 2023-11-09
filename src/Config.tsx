@@ -2,14 +2,16 @@ import React from 'react';
 import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
 import { ICON_SIZE } from './constants';
 
+const LS_THEME = 'dusa-theme';
+
 export default function Config() {
   const [mode, setMode] = React.useState<'light' | 'dark'>(
-    localStorage.getItem('dinnik-theme') === 'dark' ? 'dark' : 'light',
+    localStorage.getItem('dusa-theme') === 'dark' ? 'dark' : 'light',
   );
 
   React.useEffect(() => {
     document.getElementById('root')!.className = `theme-${mode}`;
-    localStorage.setItem('dinnik-theme', mode);
+    localStorage.setItem('dusa-theme', mode);
   }, [mode]);
 
   function toggle() {

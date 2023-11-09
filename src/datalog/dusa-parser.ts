@@ -1,4 +1,4 @@
-import { Token, dinnikTokenizer } from './dusa-tokenizer';
+import { Token, dusaTokenizer } from './dusa-tokenizer';
 import { ParsedPattern } from './terms';
 import { ParsedDeclaration, ParsedPremise } from './syntax';
 import { Issue, parseWithStreamParser } from './parsing/parser';
@@ -9,8 +9,8 @@ interface Istream<T> {
   peek(): T | null;
 }
 
-export class DinnikSyntaxError extends SyntaxError {
-  public name = 'DinnikSyntaxError';
+export class DusaSyntaxError extends SyntaxError {
+  public name = 'DusaSyntaxError';
   public message: string;
   public loc?: SourceLocation;
   constructor(msg: string, loc?: SourceLocation) {
@@ -23,7 +23,7 @@ export class DinnikSyntaxError extends SyntaxError {
 export function parse(
   str: string,
 ): { errors: Issue[] } | { errors: null; document: ParsedDeclaration[] } {
-  const tokens = parseWithStreamParser(dinnikTokenizer, str);
+  const tokens = parseWithStreamParser(dusaTokenizer, str);
   if (tokens.issues.length > 0) return { errors: tokens.issues };
   const parseResult = parseTokens(tokens.document);
   const parseIssues = parseResult.filter((decl): decl is Issue => decl.type === 'Issue');
@@ -38,7 +38,7 @@ function parseDeclOrIssue(t: Istream<Token>): ParsedDeclaration | Issue | null {
   try {
     return parseDecl(t);
   } catch (e) {
-    if (e instanceof DinnikSyntaxError) {
+    if (e instanceof DusaSyntaxError) {
       let next: Token | null;
       while ((next = t.next()) !== null && next.type !== '.');
       return { type: 'Issue', msg: e.message, loc: e.loc };
@@ -76,9 +76,9 @@ function mkStream<T>(xs: T[]): Istream<T> {
 
 function force(t: Istream<Token>, type: string): Token {
   const tok = t.next();
-  if (tok === null) throw new DinnikSyntaxError(`Expected ${type}, found end of input.`);
+  if (tok === null) throw new DusaSyntaxError(`Expected ${type}, found end of input.`);
   if (tok.type !== type)
-    throw new DinnikSyntaxError(`Expected ${type}, found ${tok.type}`, tok.loc);
+    throw new DusaSyntaxError(`Expected ${type}, found ${tok.type}`, tok.loc);
   return tok;
 }
 
@@ -93,7 +93,7 @@ function chomp(t: Istream<Token>, type: string): Token | null {
 function forceFullTerm(t: Istream<Token>): ParsedPattern {
   const result = parseFullTerm(t);
   if (result === null) {
-    throw new DinnikSyntaxError('Expected a term, but no term found', t.peek()?.loc ?? undefined);
+    throw new DusaSyntaxError('Expected a term, but no term found', t.peek()?.loc ?? undefined);
   }
   return result;
 }
@@ -136,7 +136,7 @@ export function parseHeadValue(t: Istream<Token>): {
   } else {
     const value = parseFullTerm(t);
     if (value === null) {
-      throw new DinnikSyntaxError(`Did not find value after 'is'`, istok.loc);
+      throw new DusaSyntaxError(`Did not find value after 'is'`, istok.loc);
     }
     return { values: [value], exhaustive: true, end: value.loc.end };
   }
@@ -153,7 +153,7 @@ export function forcePremise(t: Istream<Token>): ParsedPremise {
     return { type: 'Inequality', a, b, loc: { start: a.loc.start, end: b.loc.end } };
   }
   if (a.type !== 'const') {
-    throw new DinnikSyntaxError(`Expected an attribute, found a '${a.type}'`, a.loc);
+    throw new DusaSyntaxError(`Expected an attribute, found a '${a.type}'`, a.loc);
   }
   if (chomp(t, 'is')) {
     const value = forceFullTerm(t);
@@ -194,12 +194,12 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
         loc: tok.loc,
       };
     } else {
-      throw new DinnikSyntaxError(
+      throw new DusaSyntaxError(
         `Unexpected directive '${tok.value}'. Valid directives are #builtin, #demand, and #forbid.`,
       );
     }
   } else if (tok.type === ':-') {
-    throw new DinnikSyntaxError(`Declaration started with ':-' (use #forbid instead)`, tok.loc);
+    throw new DusaSyntaxError(`Declaration started with ':-' (use #forbid instead)`, tok.loc);
   } else if (tok.type === 'const') {
     const name = tok.value;
     let attributeEnd = tok.loc.end;
@@ -223,7 +223,7 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
     }
     force(t, ':-');
   } else {
-    throw new DinnikSyntaxError(`Unexpected token '${tok.type}' at start of declaration`, tok.loc);
+    throw new DusaSyntaxError(`Unexpected token '${tok.type}' at start of declaration`, tok.loc);
   }
 
   result.premises.push(forcePremise(t));
@@ -274,14 +274,14 @@ export function parseTerm(t: Istream<Token>): ParsedPattern | null {
     t.next();
     const result = parseFullTerm(t);
     if (result === null) {
-      throw new DinnikSyntaxError('No term following an open parenthesis', {
+      throw new DusaSyntaxError('No term following an open parenthesis', {
         start: tok.loc.start,
         end: t.peek()?.loc.end ?? tok.loc.end,
       });
     }
     const closeParen = t.next();
     if (closeParen?.type !== ')') {
-      throw new DinnikSyntaxError('Did not find expected matching parenthesis', {
+      throw new DusaSyntaxError('Did not find expected matching parenthesis', {
         start: tok.loc.start,
         end: closeParen?.loc.end ?? result.loc.end,
       });

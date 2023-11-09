@@ -1,6 +1,6 @@
 import { parse } from './datalog/dusa-parser';
 import { SourceLocation } from './datalog/parsing/source-location';
-import { CHARACTER_CREATION_EXAMPLE, CKY_PARSING_EXAMPLE } from './examples';
+import { CHARACTER_CREATION_EXAMPLE, CKY_PARSING_EXAMPLE, GRAPH_GENERATION_EXAMPLE } from './examples';
 import { Declaration, check } from './datalog/syntax';
 import { compile } from './datalog/compile';
 import { AppToWorker, WorkerStats, WorkerToApp } from './worker';
@@ -74,10 +74,10 @@ class SessionTabs {
   private lock: Promise<void> = Promise.resolve();
   private resolver: null | ((value: WorkerToApp) => void) = null;
 
-  private static LS_SESSION_LIST = 'dinnik-sessions';
-  private static LS_SESSION_ACTIVE = 'dinnik-active-session';
+  private static LS_SESSION_LIST = 'dusa-sessions';
+  private static LS_SESSION_ACTIVE = 'dusa-active-session';
   private static LS_SESSION_TEXT(uuid: string) {
-    return `dinnik-session-${uuid}`;
+    return `dusa-session-${uuid}`;
   }
 
   static tabs = new SessionTabs();
@@ -86,9 +86,11 @@ class SessionTabs {
     if (localStorage.getItem(SessionTabs.LS_SESSION_LIST) === null) {
       const uuid1 = crypto.randomUUID();
       const uuid2 = crypto.randomUUID();
+      const uuid3 = crypto.randomUUID();
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid1), CHARACTER_CREATION_EXAMPLE);
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid2), CKY_PARSING_EXAMPLE);
-      localStorage.setItem(SessionTabs.LS_SESSION_LIST, `${uuid1},${uuid2}`);
+      localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid3), GRAPH_GENERATION_EXAMPLE);
+      localStorage.setItem(SessionTabs.LS_SESSION_LIST, `${uuid1},${uuid2},${uuid3}`);
     }
     this.sessionList = localStorage.getItem(SessionTabs.LS_SESSION_LIST)!.split(',');
     this.activeSession = localStorage.getItem(SessionTabs.LS_SESSION_ACTIVE) ?? this.sessionList[0];
