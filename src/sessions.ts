@@ -4,6 +4,7 @@ import {
   CHARACTER_CREATION_EXAMPLE,
   CKY_PARSING_EXAMPLE,
   GRAPH_GENERATION_EXAMPLE,
+  ROCK_PAPER_SCISSORS,
 } from './examples';
 import { Declaration, check } from './datalog/syntax';
 import { compile } from './datalog/compile';
@@ -91,10 +92,12 @@ class SessionTabs {
       const uuid1 = crypto.randomUUID();
       const uuid2 = crypto.randomUUID();
       const uuid3 = crypto.randomUUID();
+      const uuid4 = crypto.randomUUID();
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid1), CHARACTER_CREATION_EXAMPLE);
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid2), CKY_PARSING_EXAMPLE);
+      localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid3), ROCK_PAPER_SCISSORS);
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid3), GRAPH_GENERATION_EXAMPLE);
-      localStorage.setItem(SessionTabs.LS_SESSION_LIST, `${uuid1},${uuid2},${uuid3}`);
+      localStorage.setItem(SessionTabs.LS_SESSION_LIST, `${uuid1},${uuid2},${uuid3},${uuid4}`);
     }
     this.sessionList = localStorage.getItem(SessionTabs.LS_SESSION_LIST)!.split(',');
     this.activeSession = localStorage.getItem(SessionTabs.LS_SESSION_ACTIVE) ?? this.sessionList[0];
