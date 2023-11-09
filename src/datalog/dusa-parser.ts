@@ -77,8 +77,7 @@ function mkStream<T>(xs: T[]): Istream<T> {
 function force(t: Istream<Token>, type: string): Token {
   const tok = t.next();
   if (tok === null) throw new DusaSyntaxError(`Expected ${type}, found end of input.`);
-  if (tok.type !== type)
-    throw new DusaSyntaxError(`Expected ${type}, found ${tok.type}`, tok.loc);
+  if (tok.type !== type) throw new DusaSyntaxError(`Expected ${type}, found ${tok.type}`, tok.loc);
   return tok;
 }
 
