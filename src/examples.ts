@@ -62,8 +62,8 @@ a_story is (concat
   VillainName 
   " of "
   VillainHome
-  "!")
-:- character hero is HeroName, 
+  "!") :-
+   character hero is HeroName, 
    character sidekick is SidekickName, 
    character villain is VillainName, 
    homeName hero is HeroHome, 
