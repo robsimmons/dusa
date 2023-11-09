@@ -35,6 +35,7 @@ const CYCLE_LIMIT = 10000;
 const TIME_LIMIT = 500;
 let program: Program | null = null;
 let queuedFacts: Fact[] | null = null;
+let queuedError: string | null = null;
 
 let stats: WorkerStats = { cycles: 0, deadEnds: 0 };
 
@@ -48,26 +49,31 @@ let path: [ChoiceTreeNode, Data | 'defer'][] = [];
 function cycle(): boolean {
   const limit = stats.cycles + CYCLE_LIMIT + Math.random() * CYCLE_LIMIT;
   const start = performance.now();
-  while (stats.cycles < limit && start + TIME_LIMIT > performance.now()) {
-    if (tree === null) return false;
-    // console.log(pathToString(tree, path));
-    const result = stepTreeRandomDFS(program!, tree, path, stats);
-    tree = result.tree;
-    path = result.tree === null ? path : result.path;
+  try {
+    while (stats.cycles < limit && start + TIME_LIMIT > performance.now()) {
+      if (tree === null) return false;
+      // console.log(pathToString(tree, path));
+      const result = stepTreeRandomDFS(program!, tree, path, stats);
+      tree = result.tree;
+      path = result.tree === null ? path : result.path;
 
-    if (result.solution) {
-      queuedFacts = ([] as Fact[]).concat(
-        ...Object.entries(result.solution.facts).map(([name, argses]) =>
-          argses.map<Fact>(([args, value]) => ({
-            type: 'Fact',
-            name,
-            args,
-            value,
-          })),
-        ),
-      );
-      return false;
+      if (result.solution) {
+        queuedFacts = ([] as Fact[]).concat(
+          ...Object.entries(result.solution.facts).map(([name, argses]) =>
+            argses.map<Fact>(([args, value]) => ({
+              type: 'Fact',
+              name,
+              args,
+              value,
+            })),
+          ),
+        );
+        return false;
+      }
     }
+  } catch (e) {
+    queuedError = `${e}`;
+    return false;
   }
 
   return true;
@@ -83,8 +89,12 @@ function liveLoop() {
 }
 
 // Picking up where you left off
-function resume(state: 'paused' | 'done' | 'saturated' | 'running') {
+function resume(state: 'error' | 'paused' | 'done' | 'saturated' | 'running') {
   switch (state) {
+    case 'error': {
+      return post({ type: 'error', message: queuedError!, stats });
+    }
+
     case 'paused': {
       return post({ type: 'paused', stats });
     }
@@ -113,9 +123,11 @@ function resume(state: 'paused' | 'done' | 'saturated' | 'running') {
 
 onmessage = (event: MessageEvent<AppToWorker>) => {
   // What state are we actually in?
-  const state: 'paused' | 'done' | 'saturated' | 'running' =
+  const state: 'error' | 'paused' | 'done' | 'saturated' | 'running' =
     liveLoopHandle !== null
       ? 'running'
+      : queuedError !== null
+      ? 'error'
       : queuedFacts !== null
       ? 'saturated'
       : tree === null
@@ -131,11 +143,17 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
   switch (event.data.type) {
     case 'load':
       stats = { cycles: 0, deadEnds: 0 };
-      tree = { type: 'leaf', db: makeInitialDb(event.data.program) };
       path = [];
       program = event.data.program.program;
       queuedFacts = null;
-      return resume('paused');
+      queuedError = null;
+      try {
+        tree = { type: 'leaf', db: makeInitialDb(event.data.program) };
+        return resume('paused');
+      } catch (e) {
+        queuedError = `${e}`;
+        return resume('error');
+      }
     case 'start':
       if (state === 'paused') {
         return resume('running');
@@ -152,6 +170,7 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       path = [];
       program = null;
       queuedFacts = null;
+      queuedError = null;
       return post({ type: 'reset', stats });
     case 'status':
       return resume(state);

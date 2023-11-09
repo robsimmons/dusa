@@ -256,7 +256,7 @@ class SessionTabs {
 
     switch (msg.type) {
       case 'error':
-        if (session.status !== 'running') {
+        if (session.status !== 'running' && session.status !== 'paused') {
           reportUnexpected();
         } else {
           this.sessionData[activeSession] = {
