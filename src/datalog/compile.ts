@@ -1,4 +1,4 @@
-import { CHOICE_PRIO, CONSTRAINT_PRIO, PREFIX_PRIO } from '../constants';
+import { CHOICE_PRIO, CONSTRAINT_PRIO, DEMAND_PRIO, PREFIX_PRIO } from '../constants';
 import { CompiledProgram, InternalPartialRule, InternalPremise, Program } from './engine';
 import { Declaration, Premise, Proposition } from './syntax';
 import { freeVars } from './terms';
@@ -79,6 +79,7 @@ export function compile(decls: Declaration[]): CompiledProgram {
   const program: Program = {
     rules: {},
     conclusions: {},
+    demands: {},
   };
   const initialFacts: Proposition[] = [];
   const initialPrefixes: string[] = [];
@@ -101,7 +102,17 @@ export function compile(decls: Declaration[]): CompiledProgram {
       }
 
       case 'Demand': {
-        throw new Error('todo');
+        const { seed, rules, conclusion } = compilePremises(
+          indexToRuleName(ruleNum++),
+          decl.premises,
+          DEMAND_PRIO,
+        );
+        for (const [name, rule] of rules) {
+          program.rules[name] = rule;
+        }
+        initialPrefixes.push(seed);
+        program.demands[conclusion] = true;
+        break;
       }
 
       case 'Rule': {

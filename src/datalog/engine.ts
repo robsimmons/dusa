@@ -9,6 +9,7 @@ import { Substitution, Pattern, match, apply, equal } from './terms';
 export interface Program {
   rules: { [name: string]: InternalPartialRule };
   conclusions: { [r: string]: InternalConclusion };
+  demands: { [r: string]: boolean };
 }
 
 export interface CompiledProgram {
@@ -67,6 +68,7 @@ export interface Database {
   prefixes: { [name: string]: Substitution[] };
   queue: PQ<Fact | Prefix>;
   deferredChoices: AttributeMap<{ is: Data[]; isNot: null | Data[] }>;
+  remainingDemands: DataMap<true>;
 }
 
 export function makeInitialDb(prog: CompiledProgram): Database {
@@ -76,6 +78,7 @@ export function makeInitialDb(prog: CompiledProgram): Database {
     prefixes: {},
     queue: PQ.new(),
     deferredChoices: AttributeMap.new(),
+    remainingDemands: DataMap.new(),
   };
   for (const seed of prog.initialPrefixes) {
     db.queue = db.queue.push(INITIAL_PREFIX_PRIO, {
@@ -93,6 +96,9 @@ export function makeInitialDb(prog: CompiledProgram): Database {
       fact.value === null ? TRIV_DATA : apply({}, fact.value),
       db,
     )!; // XXX TODO this _could_ fail if there's contradictary initial facts!
+  }
+  for (const demand of Object.keys(prog.program.demands)) {
+    db.remainingDemands = db.remainingDemands.set(hide({ type: 'string', value: demand }), true);
   }
   return db;
 }
@@ -404,6 +410,11 @@ export function stepDb(program: Program, db: Database): Database | null {
     return stepFact(program.rules, current, db);
   } else if (program.conclusions[current.name]) {
     return stepConclusion(program.conclusions[current.name], current, db);
+  } else if (program.demands[current.name]) {
+    db.remainingDemands =
+      db.remainingDemands.remove(hide({ type: 'string', value: current.name }))?.[1] ??
+      db.remainingDemands;
+    return db;
   } else {
     return stepPrefix(program.rules, current, db);
   }
@@ -435,7 +446,10 @@ function maybeStep(
   if (ref.db.queue.length === 0) {
     if (ref.db.deferredChoices.length === 0) {
       // Saturation! Check that it meets requirements
-      if (ref.db.factValues.every((_name, _args, { type }) => type === 'is')) {
+      if (
+        ref.db.factValues.every((_name, _args, { type }) => type === 'is') &&
+        ref.db.remainingDemands.length === 0
+      ) {
         return 'solution';
       } else {
         return 'discard';
@@ -640,4 +654,3 @@ export function execute(program: Program, db: Database) {
     }
   }
 }
-

@@ -20,7 +20,7 @@ type StateRoot =
       builtin: keyof typeof SPECIAL_DEFAULTS;
     };
 
-const punct = ['...', ',', '.', '{', '}', '(', ')', ':-', '!=', '=='] as const;
+const punct = ['...', ',', '.', '{', '}', '(', ')', ':-', '!=', '==', '?'] as const;
 type PUNCT = (typeof punct)[number];
 
 export type Token =
@@ -73,10 +73,6 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
 
     switch (state.type) {
       case 'Beginning':
-        if (stream.eat(/^#(| .*)$/)) {
-          return { state, tag: 'comment' };
-        }
-
         if ((tok = stream.eat('#'))) {
           tok = stream.eat(META_TOKEN);
           if (!tok) {
@@ -160,6 +156,21 @@ export const dinnikTokenizer: StreamParser<ParserState, Token> = {
         };
 
       case 'Normal':
+        if ((tok = stream.eat('#'))) {
+          tok = stream.eat(META_TOKEN);
+          return {
+            state,
+            issues: [
+              {
+                type: 'Issue',
+                msg: `A hash command like '#${tok}' can only appear at the beginning of a declaration`,
+                loc: stream.matchedLocation(),
+              },
+            ],
+            tag: 'invalid',
+          };
+        }
+
         if (stream.eat(TRIV_TOKEN)) {
           return { state, tag: 'literal' };
         }

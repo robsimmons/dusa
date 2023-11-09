@@ -1,91 +1,141 @@
 export const CHARACTER_CREATION_EXAMPLE = `
 # Character creation
+# and a bit of Tracery-style template story creation
 
-character celeste.
-character nimbus.
-character terra.
-character luna.
+name "Celeste".
+name "Nimbus".
+name "Terra".
+name "Luna".
 
-# Ensure two characters have different species
-char1 is { X... } :- character X.
-char2 is { X... } :- character X.
-:- char1 is C, char2 is C. 
-:- char1 is C1, char2 is C2,
-   species C1 is S, species C2 is S.
+# Pick names for three characters: a hero, sidekick, and villan
+character hero is { Name? } :- name Name.
+character sidekick is { Name? } :- name Name.
+character villain is { Name? } :- name Name.
 
-# Characters have a home and a species
-home C is {
-  uplands,
-  lowlands,
-  catlands,
-  doghouse
-} :- character C.
-species C is {
-  cat,
-  dog,
-  horse,
-  bird
-} :- character C.
+# No two characters can have the same name
+#forbid character Char1 is N, character Char2 is N, Char1 != Char2.
 
-# Birds only live in the uplands
-home C is uplands :- species C is bird.
+# everyone must have a different training
+training C is { warrior, mage, assassin, bard } :- character C is _.
+#forbid training Char1 is T, training Char2 is T, Char1 != Char2.
 
-# Only dogs live in the doghouse
-species C is dog :- home C is doghouse.
+# hero and villain can't be from the same home
+home C is { highlands, seaside_town, city, foothills } :- character C is _.
+#forbid home hero is H, home villain is H.
 
-# Nimbus and celeste must have the same home & species
-home celeste is H :- home nimbus is H.
-species celeste is S :- species nimbus is S.
+# Building the story with string concatenation
+#builtin STRING_CONCAT concat.
 
-# Luna and terra can't have the same home or species
-:- home luna is H, home terra is H.
-:- species luna is S, species terra is S.
+lowerCase warrior is "warrior".
+upperCase warrior is "Warrior".
+lowerCase mage is "mage".
+upperCase mage is "Mage".
+lowerCase assassin is "assassin".
+upperCase assassin is "Assassin".
+lowerCase bard is "bard".
+upperCase bard is "Bard".
 
-# Only room for one in the doghouse
-:- home C1 is doghouse, home C2 is doghouse, C1 != C2.
+homeName Char is "the Highlands" :- home Char is highlands.
+homeName Char is "Seaside Village" :- home Char is seaside_town.
+homeName Char is "the Foothills" :- home Char is foothills.
+homeName Char is (concat TrainingCity " City") :-
+   home Char is city,
+   training Char is Training,
+   upperCase Training is TrainingCity.
+
+a_story is (concat 
+  "Our hero " 
+  HeroName 
+  ", a talented " 
+  HeroTraining 
+  " hailing from " 
+  HeroHome 
+  ", sets off for adventure with their trusty " 
+  SidekickTraining 
+  " sidekick " 
+  SidekickName 
+  " from " 
+  SidekickHome 
+  ". Together they defeat the " 
+  VillainTraining 
+  " villain " 
+  VillainName 
+  " of "
+  VillainHome
+  "!")
+:- character hero is HeroName, 
+   character sidekick is SidekickName, 
+   character villain is VillainName, 
+   homeName hero is HeroHome, 
+   homeName sidekick is SidekickHome, 
+   homeName villain is VillainHome, 
+   training hero is HT, 
+     lowerCase HT is HeroTraining,
+   training sidekick is ST, 
+     lowerCase ST is SidekickTraining,
+   training villain is VT, 
+     lowerCase VT is VillainTraining.
 `.trim();
 
 export const CKY_PARSING_EXAMPLE = `
 # CKY Parsing
-#builtin INT_PLUS plus.
+#builtin INT_PLUS plus
+#builtin STRING_CONCAT concat
 
-token "Mary" 1.
-token "saw" 2.
-token "Bob" 3.
-token "with" 4. 
-token "binoculars" 5.  
+token 1 is "mary".
+token 2 is "saw".
+token 3 is "bob".
+token 4 is "with". 
+token 5 is "binoculars".  
 
-word "Bob" noun.
-word "Mary" noun.
 word "binoculars" noun.  
+word "bob" noun.
+word "mary" noun.
+word "saw" noun.
 word "saw" verb.
 word "with" prep.
 
-unary  nounPh noun.          # nounPh <- noun
-binary senten nounPh verbPh. # senten <- nounPh verbPh
-binary verbPh verb   nounPh. # verbPh <- verb nounPh
+unary  nounPh noun.          # noun phrase <- noun
+binary senten nounPh verbPh. # senten <- noun phrase + verb phrase
+binary verbPh verb   nounPh. # verb phrase <- verb + noun phrase
 binary verbPh verbPh prepPh. # etc.
 binary prepPh prep   nounPh.
 binary nounPh nounPh prepPh.
 
-parse X (t W) I (plus 1 I) :-
-  token W I, 
-  word W X.
+parse X I (plus 1 I) Tok :-
+  token I is Tok, 
+  word Tok X.
 
-parse X T I J :- 
-  unary X Y,
-  parse W T I J.
+# Unary rules are like X <- Y
+parse X I J Str :- 
+  unary X Y, 
+  parse Y I J Str.
 
-parse X (cons T1 T2) I K :-
+# Binary rules are like X <- Y Z
+parse X I K (concat "(" StrY " " StrZ ")") :-
   binary X Y Z,
-  parse Y T1 I J,
-  parse Z T2 J K.
+  parse Y I J StrY,
+  parse Z J K StrZ.
 
-goal T :- parse senten T 1 6.
+# (mary ((saw bob) (with binoculars))) - mary has the binoculars
+# (mary (saw (bob (with binoculars)))) - bob has the binoculars
+goal Str :- parse senten 1 6 Str.
+`.trim();
 
-# Mary sees the Bob that has binoculars
-# goal (cons (t "Mary") (cons (t "saw") (cons (t "Bob") (cons (t "with") (t "binoculars")))))
-#
-# Mary, using binoculars, sees Bob
-# goal (cons (t "Mary") (cons (cons (t "saw") (t "Bob")) (cons (t "with") (t "binoculars"))))
+export const GRAPH_GENERATION_EXAMPLE = `
+# Generating graphs
+#builtin NAT_SUCC s
+
+vertex 6.
+vertex N :- vertex (s N).
+
+edge X Y is { extant, absent } :- vertex X, vertex Y, X != Y.
+edge X Y is Z :- edge Y X is Z.
+
+reachable N N :- vertex N.
+reachable Start Y :- reachable Start X, edge X Y is extant.
+
+#demand reachable 0 1.
+#demand reachable 5 6.
+#forbid reachable 0 6.
 `.trim();

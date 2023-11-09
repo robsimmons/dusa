@@ -110,14 +110,23 @@ export function parseHeadValue(t: Istream<Token>): {
 
   let tok: Token | null;
   if ((tok = chomp(t, '{')) !== null) {
-    const values = [forceFullTerm(t)];
+    const values = [];
     let exhaustive = true;
     let end = tok.loc.end;
+    if (chomp(t, '?')) {
+      exhaustive = false;
+    } else {
+      values.push(forceFullTerm(t));
+    }
     while ((tok = chomp(t, '}')) === null) {
       if (chomp(t, ',')) {
-        values.push(forceFullTerm(t));
+        if (chomp(t, '?')) {
+          exhaustive = false;
+        } else {
+          values.push(forceFullTerm(t));
+        }
       } else {
-        force(t, '...');
+        force(t, '?');
         end = force(t, '}').loc.end;
         exhaustive = false;
         break;
@@ -171,12 +180,26 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
 
   let result: ParsedDeclaration;
   const start: SourcePosition = tok.loc.start;
-  if (tok.type === ':-') {
-    result = {
-      type: 'Forbid',
-      premises: [],
-      loc: tok.loc, // dummy value, will be replaced
-    };
+  if (tok.type === 'hashdirective') {
+    if (tok.value === 'forbid') {
+      result = {
+        type: 'Forbid',
+        premises: [],
+        loc: tok.loc, // dummy value, will be replaced
+      };
+    } else if (tok.value === 'demand') {
+      result = {
+        type: 'Demand',
+        premises: [],
+        loc: tok.loc,
+      };
+    } else {
+      throw new DinnikSyntaxError(
+        `Unexpected directive '${tok.value}'. Valid directives are #builtin, #demand, and #forbid.`,
+      );
+    }
+  } else if (tok.type === ':-') {
+    throw new DinnikSyntaxError(`Declaration started with ':-' (use #forbid instead)`, tok.loc);
   } else if (tok.type === 'const') {
     const name = tok.value;
     let attributeEnd = tok.loc.end;

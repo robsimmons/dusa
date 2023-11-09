@@ -57,7 +57,7 @@ test('Exhaustive choices', () => {
 
 test('Non-exhaustive choice', () => {
   const { solutions, deadEnds } = testExecution(`
-  a is { false... }.
+  a is { false? }.
   b is { true, false } :- a is false.
   `);
 
@@ -84,11 +84,11 @@ test('Overlapping non-exhaustive and exhaustive choices', () => {
   a.
   b.
   c is { a, b, d, e } :- a.
-  c is { a, b, c... } :- a.
+  c is { a, b, ?, c } :- a.
   c is { a, c, d, e } :- b.
-  c is { c... }.
-  c is { a... }.
-  c is { f... }.
+  c is { c? }.
+  c is { a, ? }.
+  c is { ?, f }.
   `);
   expect(solutionsToStrings(solutions)).toEqual(['a, b, c is a', 'a, b, c is d', 'a, b, c is e']);
 });
@@ -97,9 +97,9 @@ test('Overlapping non-exhaustive choices', () => {
   const { solutions } = testExecution(`
   a.
   b.
-  c is { a, b, c... } :- a.
-  c is { a, c, d... } :- b.
-  c is { f... }.
+  c is { a, b, c? } :- a.
+  c is { a, c, d? } :- b.
+  c is { f? }.
   `);
   expect(solutionsToStrings(solutions)).toEqual([
     'a, b, c is a',
@@ -126,6 +126,19 @@ test('Plus is okay if grounded by previous rules', () => {
   expect(solutionsToStrings(solutions)).toEqual([
     'a 12, a 2, a 7, d 19, d 6, d 9, e 12 7, e 2 7, e 7 12, e 7 2',
   ]);
+});
+
+test('INT_MINUS', () => {
+  const { solutions } = testExecution(`
+  #builtin INT_MINUS minus
+
+  a 0.
+  a 4.
+
+  b (minus X Y) :- a X, a Y.
+  c X :- b X, a (minus 0 X).
+  `);
+  expect(solutionsToStrings(solutions)).toEqual(['a 0, a 4, b -4, b 0, b 4, c -4, c 0']);
 });
 
 test('Matching nats', () => {

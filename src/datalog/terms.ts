@@ -98,6 +98,23 @@ export function match(
         );
       }
 
+      if (pattern.name === 'INT_MINUS' && pattern.args.length === 2) {
+        if (dv.type !== 'int') {
+          throw new Error(`Type error: matching INT_MINUS against a ${dv.type}`);
+        }
+        if (pattern.nonground === undefined) {
+          const [x, y] = pattern.args.map((arg, i) => {
+            const value = expose(apply(substitution, arg));
+            if (value.type !== 'int') {
+              throw new Error(`Type error: argument #${i} to INT_MINUS is ${dv.type}, not int.`);
+            }
+            return value.value;
+          });
+          return x - y === dv.value ? substitution : null;
+        }
+        throw new Error('Non ground matching against INT_MINUS not implemented');
+      }
+
       if (pattern.name === 'STRING_CONCAT') {
         if (dv.type !== 'string') {
           throw new Error(`Type error: matching STRING_CONCAT against a ${dv.type}`);
@@ -204,6 +221,17 @@ export function apply(substitution: Substitution, pattern: Pattern): Data {
           type: 'int',
           value: args.reduce((x, y) => x + y, 0n),
         });
+      }
+
+      if (pattern.name === 'INT_MINUS' && pattern.args.length === 2) {
+        const [x, y] = pattern.args.map((arg, i) => {
+          const value = expose(apply(substitution, arg));
+          if (value.type !== 'int') {
+            throw new Error(`Type error: argument #${i} to INT_PLUS is ${value.type}, not int.`);
+          }
+          return value.value;
+        });
+        return hide({ type: 'int', value: x - y });
       }
 
       if (pattern.name === 'STRING_CONCAT') {

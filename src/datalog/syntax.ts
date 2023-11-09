@@ -1,12 +1,6 @@
 import { Issue } from './parsing/parser';
 import { SourceLocation } from './parsing/source-location';
-import {
-  ParsedPattern,
-  Pattern,
-  freeParsedVars,
-  repeatedWildcards,
-  termToString,
-} from './terms';
+import { ParsedPattern, Pattern, freeParsedVars, repeatedWildcards, termToString } from './terms';
 
 export interface Proposition {
   type: 'Proposition';
@@ -87,7 +81,7 @@ function headToString(head: Conclusion) {
   } else if (head.values.length !== 1 || !head.exhaustive) {
     return `${head.name}${args} is { ${head.values
       .map((term) => termToString(term, false))
-      .join(', ')}${head.exhaustive ? '' : '...'} }`;
+      .join(', ')}${head.exhaustive ? '' : head.values.length < 2 ? '?' : ', ?'} }`;
   } else if (head.values[0].type === 'triv') {
     return `${head.name}${args}`;
   } else {
