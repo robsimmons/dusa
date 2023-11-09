@@ -138,11 +138,9 @@ export default function Program({ load, run, pause, session }: Props) {
           <div className="dk-view-scroller">
             <div>Result #{session.facts.length}</div>
             <ul>
-              {session.facts[session.facts.length - 1]
-                .sort()
-                .map((fact, i) => (
-                  <li key={i}>{fact}</li>
-                ))}
+              {session.facts[session.facts.length - 1].sort().map((fact, i) => (
+                <li key={i}>{fact}</li>
+              ))}
             </ul>
           </div>
         </div>
