@@ -1,0 +1,27 @@
+name: Test with vitest
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - run: npm run coverage
+      - uses: coverallsapp/github-action@v2
+        with:
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+     - uses: actions/checkout@v3
+     - run: echo 'pretty_files=' **/*.{json,md,?s,?sx} >> "$GITHUB_ENV"
+     - run: echo "$pretty_files"
+     - run: npm ci
+     - run: ./node_modules/.bin/prettier -l "$pretty_files"

@@ -37,7 +37,7 @@ test('Internalizing fibonacci-shaped structured types', () => {
 
   expect(seq[0]).toEqual(seq[1]);
   expect(dataToString(seq[1], false)).toEqual('leaf');
-  expect(dataToString(seq[2], false)).toEqual('node leaf leaf');
+  expect(dataToString(seq[2], false)).toEqual('node leaf  leaf');
   expect(dataToString(seq[3], false)).toEqual('node leaf (node leaf leaf)');
   expect(dataToString(seq[4], false)).toEqual('node (node leaf leaf) (node leaf (node leaf leaf))');
 
