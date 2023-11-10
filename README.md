@@ -75,8 +75,10 @@ we then add a seemingly innoccuous additional fact...
     parent "Bran" "Eddard".
 
 ...then Dusa will report that there are no solutions. By trying to derive both `sibling "Arya" is
-"Sansa"` and `sibling "Arya" is "Bran"`, the database failed an integrity constraint. The right solution
-here is to make the `sibling` relationship a relation, not a function.
+"Sansa"` and `sibling "Arya" is "Bran"`, the database failed an integrity constraint.
+
+The takeway here is that we made a mistake: the `sibling` relationship should be a relation, not a
+function.
 
 Integrity constraints can also be added with the `#forbid` and `#demand` directives. If we want to
 insist that no two characters have the same weapon, we can write.
@@ -154,7 +156,7 @@ We can ask Dusa to solve this problem by negating all the OR-ed together clauses
     #forbid a is true, b is false, c is true.
     #forbid a is true, b is true, c is false.
 
-# Syntax
+# Language definition
 
 ## Lexical tokens
 
