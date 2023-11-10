@@ -126,6 +126,34 @@ that too:
 
     #demand guilt _ is guilty.
 
+Answer set programming is sometimes compared to boolean satisfiability solving, and is sometimes
+implemented with, general purpose satisfiablity solvers. We can also use Dusa as a pretty bad boolean
+satisfibility solver, by assigning every proposition we come across the value `true` or `false`. The
+[Wikipedia article describing a basic SAT-solving algorithm, DPLL](https://en.wikipedia.org/wiki/DPLL_algorithm),
+uses as its example the following SAT instance:
+
+    (a' + b  + c ) * (a  + c  + d ) *
+    (a  + c  + d') * (a  + c' + d ) *
+    (a  + c' + d') * (b' + c' + d ) *
+    (a' + b  + c') * (a' + b' + c )
+
+We can ask Dusa to solve this problem by negating all the OR-ed together clauses and making them
+`#forbid` constraints.
+
+    a is { true, false }.
+    b is { true, false }.
+    c is { true, false }.
+    d is { true, false }.
+
+    #forbid a is true, b is false, c is false.
+    #forbid a is false, c is false, c is false.
+    #forbid a is false, c is false, d is true.
+    #forbid a is false, c is true, d is false.
+    #forbid a is false, c is true, d is true.
+    #forbid b is true, c is true, d is false.
+    #forbid a is true, b is false, c is true.
+    #forbid a is true, b is true, c is false.
+
 # Syntax
 
 ## Lexical tokens
