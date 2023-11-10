@@ -41,6 +41,44 @@ test('Multi-step declaration, basic nat (in)equality', () => {
   expect(solutionsToStrings(solutions)).toEqual(['a, b, c']);
 });
 
+test('Long chain of inferences', () => {
+  const { solutions } = testExecution(
+    Array.from({ length: 30 })
+      .map((_, i) => `a ${i} :- a ${i + 1}.`)
+      .join('\n') + '\na 30.',
+  );
+  expect(solutionsToStrings(solutions)).toEqual([
+    Array.from({ length: 31 })
+      .map((_, i) => `a ${i}`)
+      .sort()
+      .join(', '),
+  ]);
+});
+
+test('Chained equality', () => {
+  const { solutions } = testExecution(`
+  #builtin NAT_SUCC s
+  
+  a 0.
+  b E :- a A, s A == B, s B == C, s C == D, D == s (s E), E != D, F == E.
+  c A :- a (s A).
+  d B :- b (s B).
+  `);
+  expect(solutionsToStrings(solutions)).toEqual(['a 0, b 1, d 0']);
+});
+
+test('Equality on structures', () => {
+  const { solutions } = testExecution(`
+  a (pair 10 2).
+  b Y :- a X, X == pair Y _.
+  c Y :- a X, pair _ Y == X.
+  d (pair X Y) :- b Y, c X.
+  e X :- d A, c Y, A == pair Y X.
+  f X :- d A, c Y, A == pair X Y.
+  `);
+  expect(solutionsToStrings(solutions)).toEqual(['a (pair 10 2), b 10, c 2, d (pair 2 10), e 10']);
+});
+
 test('Exhaustive choices', () => {
   const { solutions, deadEnds } = testExecution(`
   a is { true, false }.
@@ -208,5 +246,24 @@ test('Generating edges', () => {
     'edge 0 1 is extant, edge 0 2 is absent, edge 1 0 is extant, edge 1 2 is extant, edge 2 0 is absent, edge 2 1 is extant, reachable 0 0, reachable 0 1, reachable 0 2, reachable 1 0, reachable 1 1, reachable 1 2, reachable 2 0, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
     'edge 0 1 is extant, edge 0 2 is extant, edge 1 0 is extant, edge 1 2 is absent, edge 2 0 is extant, edge 2 1 is absent, reachable 0 0, reachable 0 1, reachable 0 2, reachable 1 0, reachable 1 1, reachable 1 2, reachable 2 0, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
     'edge 0 1 is extant, edge 0 2 is extant, edge 1 0 is extant, edge 1 2 is extant, edge 2 0 is extant, edge 2 1 is extant, reachable 0 0, reachable 0 1, reachable 0 2, reachable 1 0, reachable 1 1, reachable 1 2, reachable 2 0, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
+  ]);
+});
+
+test('Forbid and demand', () => {
+  const { solutions } = testExecution(`
+
+  a is { true, false }.
+  b is { true, false }.
+  c is { true, false }.
+  d is { true, false }.
+
+  #demand a is true, b is true.
+  #forbid c is true, d is true.
+  `);
+
+  expect(solutionsToStrings(solutions)).toEqual([
+    'a is true, b is true, c is false, d is false',
+    'a is true, b is true, c is false, d is true',
+    'a is true, b is true, c is true, d is false',
   ]);
 });
