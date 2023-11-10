@@ -27,23 +27,23 @@ export default function Config(props: Props) {
     <>
       <div className="bottom-config">
         <Tooltip.Root>
-          <Tooltip.Trigger className="dk-trigger-button">
+          <Tooltip.Trigger asChild className="dk-trigger-button">
             <button className="dk-icon-button" onClick={() => props.share()}>
               <Share1Icon width={ICON_SIZE} height={ICON_SIZE} />
             </button>
           </Tooltip.Trigger>
-          <Tooltip.Content className="dk-tooltip-button" side="right">
+          <Tooltip.Content className="dk-tooltip-button" side="right" sideOffset={8}>
             Copy a link that can be used to share the current program
           </Tooltip.Content>
         </Tooltip.Root>
         <Tooltip.Root>
-          <Tooltip.Trigger className="dk-trigger-button">
+          <Tooltip.Trigger asChild className="dk-trigger-button">
             <button id="themeswitcher" className="dk-icon-button" onClick={toggle}>
               {mode === 'light' && <SunIcon width={ICON_SIZE} height={ICON_SIZE} />}
               {mode === 'dark' && <MoonIcon width={ICON_SIZE} height={ICON_SIZE} />}{' '}
             </button>
           </Tooltip.Trigger>
-          <Tooltip.Content className="dk-tooltip-button" side="right">
+          <Tooltip.Content className="dk-tooltip-button" side="right" sideOffset={8}>
             Switch to {mode === 'light' ? 'dark' : 'light'} mode
           </Tooltip.Content>
         </Tooltip.Root>
