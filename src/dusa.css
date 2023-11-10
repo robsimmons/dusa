@@ -73,7 +73,13 @@ main {
   padding: var(--dk-outer-padding);
 }
 
-.dk-config button {
+.dk-config div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dk-medium-padding);
+}
+
+.dk-config .dk-icon-button {
   height: 2rem;
   border: 0;
   background: var(--oksolar-background);
@@ -81,9 +87,28 @@ main {
   border-radius: var(--dk-small-radius);
 }
 
-.dk-config button:hover {
+.dk-config .dk-icon-button:hover {
   color: var(--oksolar-text-highlight);
   background-color: var(--oksolar-background-highlight);
+}
+
+.dk-config .dk-tooltip-button {
+  background-color: var(--oksolar-background-highlight);
+  color: var(--oksolar-text-highlight);
+  border-radius: var(--dk-small-radius);
+  height: 2rem;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  padding-inline: var(--dk-small-padding);
+  box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
+}
+
+.dk-trigger-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
 .dk-sessions {
@@ -282,4 +307,8 @@ main {
   display: grid;
   justify-content: center;
   align-items: center;
+}
+
+#sharebutton {
+  position: relative;
 }

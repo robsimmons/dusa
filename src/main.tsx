@@ -5,6 +5,7 @@ import Config from './Config.tsx';
 import { editorChangeListener, getEditorContents, setEditorContents } from './codemirror';
 import { sessionManager } from './sessions.ts';
 import Program from './Program.tsx';
+import * as Tooltip from '@radix-ui/react-tooltip';
 
 async function addSession() {
   syncronizeCodeMirror();
@@ -41,10 +42,37 @@ async function deleteSession(uuid: string) {
   renderView();
 }
 
+let alerted = false;
+function share() {
+  syncronizeCodeMirror();
+  window.location.hash = `#program=${encodeURIComponent(sessionManager.activeText)}`;
+  try {
+    navigator.clipboard.writeText(`${window.location}`).then(
+      () => {
+        if (!alerted) {
+          alerted = true;
+          alert('Sharable link copied to clipboard');
+        }
+      },
+      () => {
+        alert(
+          'Unable to copy sharable URL to clipboard, but you can copy the link from your address bar',
+        );
+      },
+    );
+  } catch {
+    alert(
+      'Unable to copy sharable URL to clipboard, but you can copy the link from your address bar',
+    );
+  }
+}
+
 const config = ReactDOM.createRoot(document.getElementById('config-root')!);
 config.render(
   <React.StrictMode>
-    <Config />
+    <Tooltip.Provider>
+      <Config share={share} />
+    </Tooltip.Provider>
   </React.StrictMode>,
 );
 
@@ -101,12 +129,13 @@ function inspectionLoop() {
 }
 inspectionLoop();
 
-const EDITOR_SYNC_DEBOUNCE_MS = 10;
+const EDITOR_SYNC_DEBOUNCE_MS = 100;
 let currentSyncTimeout: ReturnType<typeof setTimeout> | null = null;
 editorChangeListener.current = () => {
   if (currentSyncTimeout !== null) {
     clearTimeout(currentSyncTimeout);
   }
+  renderView();
   currentSyncTimeout = setTimeout(() => {
     currentSyncTimeout = null;
     syncronizeCodeMirror();

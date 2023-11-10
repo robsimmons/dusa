@@ -1,3 +1,6 @@
+import { Cross2Icon, PlusIcon } from '@radix-ui/react-icons';
+import { ICON_SIZE } from './constants';
+
 interface Props {
   activeSessionKey: string;
   sessions: { key: string; title: string | null }[];
@@ -36,7 +39,7 @@ export default function Tabs({
                     deleteSession(key);
                   }}
                 >
-                  <span className="fa-solid fa-xmark" />
+                  <Cross2Icon />
                 </button>
               )}
             </>
@@ -50,7 +53,7 @@ export default function Tabs({
           addSession();
         }}
       >
-        <span className="fa-solid fa-plus"></span>
+        <PlusIcon width={ICON_SIZE} height={ICON_SIZE} />
       </button>
     </>
   );

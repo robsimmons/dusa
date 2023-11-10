@@ -10,6 +10,28 @@ import { Declaration, check } from './datalog/syntax';
 import { compile } from './datalog/compile';
 import { AppToWorker, WorkerStats, WorkerToApp } from './worker';
 
+function decodeDusaHashURI(): null | { program: string } {
+  if (!window.location.hash.startsWith('#')) return null;
+
+  // Split the hash into key/value pairs
+  const hash: [string, string][] = [];
+  for (const kv of window.location.hash
+    .slice(1)
+    .split('&')
+    .map((str) => str.split('='))) {
+    if (kv.length !== 2) return null;
+    hash.push([kv[0], kv[1]]);
+  }
+
+  // For now, we only expect one key/value pair, can generalize this later
+  if (hash.length !== 1 || hash[0][0] !== 'program') return null;
+  try {
+    return { program: decodeURIComponent(hash[0][1]) };
+  } catch {
+    return null;
+  }
+}
+
 type SessionData =
   | {
       status: 'unconnected';
@@ -96,7 +118,7 @@ class SessionTabs {
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid1), CHARACTER_CREATION_EXAMPLE);
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid2), CKY_PARSING_EXAMPLE);
       localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid3), ROCK_PAPER_SCISSORS);
-      localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid3), GRAPH_GENERATION_EXAMPLE);
+      localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid4), GRAPH_GENERATION_EXAMPLE);
       localStorage.setItem(SessionTabs.LS_SESSION_LIST, `${uuid1},${uuid2},${uuid3},${uuid4}`);
     }
     this.sessionList = localStorage.getItem(SessionTabs.LS_SESSION_LIST)!.split(',');
@@ -107,13 +129,39 @@ class SessionTabs {
 
     this.sessionData = {};
     for (const sessionKey of this.sessionList) {
-      const text = localStorage.getItem(SessionTabs.LS_SESSION_TEXT(sessionKey));
+      const text = localStorage.getItem(SessionTabs.LS_SESSION_TEXT(sessionKey)) || '';
       if (text !== null) {
         this.sessionData[sessionKey] = {
           status: 'unconnected',
           text,
           worker: null,
         };
+      }
+    }
+
+    // This is a little inelegant: it needs to correctly repeat the saving logic/loading that happens
+    // elsewhere in the add(), set list(), and set activeText() functions... but I'd like to do it here
+    // in the constructor rather than trying to get it right after the constructor has completed its work
+    const hash = decodeDusaHashURI();
+    if (hash !== null) {
+      const existingIndex = Object.values(this.sessionData).findIndex(
+        ({ text }) => text === hash.program,
+      );
+
+      if (existingIndex === -1) {
+        const uuid = crypto.randomUUID();
+        this.sessionList.push(uuid);
+        this.activeSession = uuid;
+        localStorage.setItem(SessionTabs.LS_SESSION_TEXT(uuid), hash.program);
+        localStorage.setItem(SessionTabs.LS_SESSION_LIST, this.sessionList.join(','));
+        localStorage.setItem(SessionTabs.LS_SESSION_ACTIVE, uuid);
+        this.sessionData[uuid] = {
+          status: 'unconnected',
+          text: hash.program,
+          worker: null,
+        };
+      } else {
+        this.activeSession = this.sessionList[existingIndex];
       }
     }
   }

@@ -48,11 +48,12 @@ and `ancestor` were relations between two characters.
 It's also possible to have propositions that are functions.
 
 - Relations look like this: `prop t1 t2 ... tn-1 tn`
-- Functions look like this: `prop t1 t2 ... tn-1 is tn`
+- Functions look like this: `prop t1 t2 ... tn-1 is tn` (`is` is a keyword)
 
 A function describes a unique key-value relationship. Familiar relationships don't work like that: Arya
 has multiple parents and Eddard has multiple children. But we could use `weapon Char is W` as a
-functional proposition to describe a character's favorite weapon.
+functional proposition to describe a character's favorite weapon, if each character can have at most one
+favorite weapon.
 
     weapon "Arya" is "smallsword".
     weapon "Eddard" is "greatsword".
@@ -74,8 +75,9 @@ we then add a seemingly innoccuous additional fact...
 
     parent "Bran" "Eddard".
 
-...then Dusa will report that there are no solutions. By trying to derive both `sibling "Arya" is
-"Sansa"` and `sibling "Arya" is "Bran"`, the database failed an integrity constraint.
+...then Dusa will throw out the database in its entirety, reporting that there are no solutions. By trying
+to derive both `sibling "Arya" is "Sansa"` and `sibling "Arya" is "Bran"`, the database failed an integrity
+constraint and was completely invalidated.
 
 The takeway here is that we made a mistake: the `sibling` relationship should be a relation, not a
 function.
@@ -139,23 +141,23 @@ uses as its example the following SAT instance:
     (a  + c' + d') * (b' + c' + d ) *
     (a' + b  + c') * (a' + b' + c )
 
-We can ask Dusa to solve this problem by negating all the OR-ed together clauses and making them
-`#forbid` constraints — needing one of the literals in the clause to hold is the same as needing
-all of their negations to hold.
+We can ask Dusa to solve this problem by negating each the OR-ed together clauses and making each one
+a `#forbid` constraint. (Needing one of the literals in the clause to hold is the same as needing
+all of their negations to hold.)
 
     a is { true, false }.
     b is { true, false }.
     c is { true, false }.
     d is { true, false }.
 
-    #forbid a is true, b is false, c is false.
+    #forbid a is true,  b is false, c is false.
     #forbid a is false, c is false, c is false.
     #forbid a is false, c is false, d is true.
-    #forbid a is false, c is true, d is false.
-    #forbid a is false, c is true, d is true.
-    #forbid b is true, c is true, d is false.
-    #forbid a is true, b is false, c is true.
-    #forbid a is true, b is true, c is false.
+    #forbid a is false, c is true,  d is false.
+    #forbid a is false, c is true,  d is true.
+    #forbid b is true,  c is true,  d is false.
+    #forbid a is true,  b is false, c is true.
+    #forbid a is true,  b is true,  c is false.
 
 # Language definition
 

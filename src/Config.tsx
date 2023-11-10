@@ -1,10 +1,14 @@
 import React from 'react';
-import { MoonIcon, SunIcon } from '@radix-ui/react-icons';
+import { MoonIcon, Share1Icon, SunIcon } from '@radix-ui/react-icons';
 import { ICON_SIZE } from './constants';
-
+import * as Tooltip from '@radix-ui/react-tooltip';
 const LS_THEME = 'dusa-theme';
 
-export default function Config() {
+interface Props {
+  share: () => void;
+}
+
+export default function Config(props: Props) {
   const [mode, setMode] = React.useState<'light' | 'dark'>(
     localStorage.getItem(LS_THEME) === 'dark' ? 'dark' : 'light',
   );
@@ -21,10 +25,29 @@ export default function Config() {
 
   return (
     <>
-      <button id="themeswitcher" className="dk-icon-button" onClick={toggle}>
-        {mode === 'light' && <SunIcon width={ICON_SIZE} height={ICON_SIZE} />}
-        {mode === 'dark' && <MoonIcon width={ICON_SIZE} height={ICON_SIZE} />}{' '}
-      </button>
+      <div className="bottom-config">
+        <Tooltip.Root>
+          <Tooltip.Trigger className="dk-trigger-button">
+            <button className="dk-icon-button" onClick={() => props.share()}>
+              <Share1Icon width={ICON_SIZE} height={ICON_SIZE} />
+            </button>
+          </Tooltip.Trigger>
+          <Tooltip.Content className="dk-tooltip-button" side="right">
+            Copy a link that can be used to share the current program
+          </Tooltip.Content>
+        </Tooltip.Root>
+        <Tooltip.Root>
+          <Tooltip.Trigger className="dk-trigger-button">
+            <button id="themeswitcher" className="dk-icon-button" onClick={toggle}>
+              {mode === 'light' && <SunIcon width={ICON_SIZE} height={ICON_SIZE} />}
+              {mode === 'dark' && <MoonIcon width={ICON_SIZE} height={ICON_SIZE} />}{' '}
+            </button>
+          </Tooltip.Trigger>
+          <Tooltip.Content className="dk-tooltip-button" side="right">
+            Switch to {mode === 'light' ? 'dark' : 'light'} mode
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </div>
     </>
   );
 }
