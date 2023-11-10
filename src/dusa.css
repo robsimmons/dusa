@@ -111,9 +111,18 @@ main {
   padding: 0 0 10px 0;
 }
 
-.dk-logo {
+.dk-logo a {
   font-size: 1.5rem;
   padding-right: var(--dk-medium-padding);
+  color: var(--oksolar-text-emph);
+  text-decoration: none;
+}
+
+.dk-logo a:hover {
+  color: var(--oksolar-text-emph-highlight);
+  text-decoration-color: var(--oksolar-text-emph-highlight);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
 }
 
 .dk-session {
@@ -252,7 +261,9 @@ main {
 }
 
 .dk-view-edit-warning a {
-  text-decoration: solid underline var(--oksolar-text-emph);
+  text-decoration-color: var(--oksolar-text-emph);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
   color: var(--oksolar-text-emph);
 }
 

@@ -43,7 +43,7 @@ const CONST_TOKEN = /^[a-z][a-zA-Z0-9_]*$/;
 const WILDCARD_TOKEN = /^_[a-zA-Z0-9_]*$/;
 const VAR_TOKEN = /^[A-Z][a-zA-Z0-9_]*$/;
 const INT_TOKEN = /^-?(0|[1-9][0-9]*)$/;
-const STRING_CONTENTS = /^[a-zA-Z0-9`~!@#$%^&*()\-_+=,<.>?;:'{[}\]| ]*/;
+const STRING_CONTENTS = /^[ !#-[\[-~]*/;
 const TRIV_TOKEN = /^\(\)/;
 
 function issue(stream: StringStream, msg: string): Issue {
