@@ -8,6 +8,8 @@ body {
   --dk-small-radius: 8px;
   --dk-medium-padding: 12px;
 
+  --text-editor-panel-width: 1fr;
+
   --oksolar-background: oklch(97% 0 0);
   --oksolar-background-highlight: oklch(92% 0 0);
   --oksolar-background-deemph: oklch(87% 0 0);
@@ -151,10 +153,7 @@ main {
   text-decoration-style: solid;
 }
 
-.dk-session {
-  display: grid;
-  grid-template-columns: 1fr 10px 1fr;
-}
+/** THE TABS **/
 
 .dk-tab {
   display: flex;
@@ -207,6 +206,19 @@ main {
   color: var(--oksolar-text-emph-highlight);
 }
 
+/** THE SESSION **/
+
+#session {
+  display: none; /* JS sets as 'grid' to avoid resize flash */
+  grid-template-columns: var(--text-editor-panel-width) 10px minmax(200px, 1fr);
+}
+
+#session-divider {
+  cursor: ew-resize;
+}
+
+/** THE TEXT EDITOR **/
+
 .dk-edit {
   background-color: var(--oksolar-background);
   box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
@@ -223,6 +235,8 @@ main {
       3rem
   );
 }
+
+/** THE ENGINE VIEW **/
 
 .dk-view {
   box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);

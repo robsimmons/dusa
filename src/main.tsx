@@ -6,6 +6,7 @@ import { editorChangeListener, getEditorContents, setEditorContents } from './co
 import { sessionManager } from './sessions.ts';
 import Program from './Program.tsx';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import { LS_SESSION_DIVIDER_PROPORTION } from './constants.ts';
 
 async function addSession() {
   syncronizeCodeMirror();
@@ -151,3 +152,66 @@ function syncronizeCodeMirror() {
   renderTabs();
   renderView();
 }
+
+let referenceSessionDividerStatus: null | {
+  mouseDownX: number;
+  currentDeltaX: number;
+  initialTextWidth: number;
+  initialEngineWidth: number;
+} = null;
+const MIN_PANE_PIXEL = 200;
+function sessionDividerMove(event: MouseEvent) {
+  const { mouseDownX, initialTextWidth, initialEngineWidth } = referenceSessionDividerStatus!;
+  const deltaX = event.clientX - mouseDownX;
+  let newTextWidth = initialTextWidth + deltaX;
+  if (initialTextWidth + deltaX < MIN_PANE_PIXEL) {
+    newTextWidth = MIN_PANE_PIXEL;
+  } else if (initialEngineWidth - deltaX < MIN_PANE_PIXEL) {
+    newTextWidth = initialTextWidth + initialEngineWidth - MIN_PANE_PIXEL;
+  }
+  bodyRoot.style.setProperty('--text-editor-panel-width', `${newTextWidth}px`);
+  referenceSessionDividerStatus!.currentDeltaX = newTextWidth - initialTextWidth;
+}
+
+function sessionDividerStop() {
+  window.removeEventListener('mousemove', sessionDividerMove);
+  window.removeEventListener('mouseup', sessionDividerStop);
+  const { currentDeltaX, initialTextWidth, initialEngineWidth } = referenceSessionDividerStatus!;
+  const newTextWidth = initialTextWidth + currentDeltaX;
+  const newEngineWidth = initialEngineWidth - currentDeltaX;
+  console.log(newTextWidth);
+  console.log(newEngineWidth);
+  console.log(((1 + newTextWidth) / (newTextWidth + newEngineWidth)) * 2);
+  setDividerProportion(newTextWidth / newEngineWidth);
+  localStorage.setItem(LS_SESSION_DIVIDER_PROPORTION, `${newTextWidth / newEngineWidth}`);
+}
+
+function setDividerProportion(fr: number) {
+  bodyRoot.style.setProperty('--text-editor-panel-width', `minmax(${MIN_PANE_PIXEL}px, ${fr}fr)`);
+}
+
+const bodyRoot = document.getElementById('root')!;
+const sessionRoot = document.getElementById('session')!;
+const codemirrorRoot = document.getElementById('codemirror-root')!;
+const sessionDivider = document.getElementById('session-divider')!;
+const engineRoot = document.getElementById('react-root')!;
+sessionDivider.addEventListener('mousedown', (event) => {
+  event.preventDefault();
+  referenceSessionDividerStatus = {
+    mouseDownX: event.clientX,
+    currentDeltaX: 0,
+    initialTextWidth: codemirrorRoot.getBoundingClientRect().width,
+    initialEngineWidth: engineRoot.getBoundingClientRect().width,
+  };
+  window.addEventListener('mousemove', sessionDividerMove);
+  window.addEventListener('mouseup', sessionDividerStop);
+  const actualWidth = codemirrorRoot.getBoundingClientRect().width;
+  const bodyStyle = document.getElementById('root')!.style;
+  console.log({ actualWidth, bodyStyle });
+  bodyStyle.setProperty('--text-editor-panel-width', `${actualWidth}px`);
+});
+
+let dividerProportion = parseFloat(localStorage.getItem(LS_SESSION_DIVIDER_PROPORTION) ?? '1');
+if (isNaN(dividerProportion)) dividerProportion = 1;
+setDividerProportion(dividerProportion);
+sessionRoot.style.setProperty('display', 'grid');

@@ -16,3 +16,5 @@ export const PREFIX_PRIO = 40;
 export const CONSTRAINT_PRIO = 50;
 
 export const INITIAL_PREFIX_PRIO = 90;
+
+export const LS_SESSION_DIVIDER_PROPORTION = 'dusa-divider-position';
