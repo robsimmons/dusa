@@ -67,7 +67,7 @@ export interface Database {
   factValues: AttributeMap<{ type: 'is'; value: Data } | { type: 'is not'; value: Data[] }>;
   prefixes: { [name: string]: Substitution[] };
   queue: PQ<Fact | Prefix>;
-  deferredChoices: AttributeMap<{ is: Data[]; isNot: null | Data[] }>;
+  deferredChoices: AttributeMap<{ values: Data[]; exhaustive: boolean }>;
   remainingDemands: DataMap<true>;
 }
 
@@ -162,66 +162,61 @@ function stepConclusion(
 ): Database | null {
   if (conclusion.type === 'Contradiction') return null;
   const args = conclusion.args.map((arg) => apply(prefix.args, arg));
-  let values = conclusion.values.map((value) => apply(prefix.args, value));
+  let { values, exhaustive } = prune(
+    conclusion.name,
+    args,
+    conclusion.values.map((value) => apply(prefix.args, value)),
+    conclusion.exhaustive,
+    db,
+  );
 
-  const knownValue = db.factValues.get(conclusion.name, args);
-
-  if (knownValue?.type === 'is') {
-    // Either this conclusion will be redundant or cause a contradiction
-    if (conclusion.exhaustive && !values.some((value) => equal(value, knownValue.value))) {
-      return null;
-    }
-    return db;
-  } else {
-    // Remove any options that are already excluded from this branch
-    const isNot = knownValue ? knownValue.value : [];
-    values = values.filter((value) => !isNot.some((excludedValue) => equal(value, excludedValue)));
-
-    let deferred = db.deferredChoices.get(conclusion.name, args);
-    if (deferred === null) {
-      deferred = { is: [], isNot };
-    }
-
-    if (deferred.isNot === null && conclusion.exhaustive) {
-      // deferred choices are the intersection of two lists
-      deferred = {
-        is: deferred.is.filter((value) => values.some((newValue) => equal(value, newValue))),
-        isNot: null,
-      };
-    } else if (deferred.isNot === null || conclusion.exhaustive) {
-      // the non-exhaustive deferred choices are basically irrelevant
-      deferred = {
-        is: conclusion.exhaustive ? values : deferred.is,
-        isNot: null,
-      };
+  // merge the conclusion with any existing deferred values
+  const [deferredChoice, deferredChoices] = db.deferredChoices.remove(conclusion.name, args) ?? [
+    null,
+    db.deferredChoices,
+  ];
+  if (deferredChoice !== null) {
+    if (exhaustive && deferredChoice.exhaustive) {
+      // Intersect values
+      values = values.filter((v1) => deferredChoice.values.some((v2) => equal(v1, v2)));
+    } else if (exhaustive) {
+      // Ignore deferred values
+    } else if (deferredChoice.exhaustive) {
+      // Ignore values in this conclusion
+      values = deferredChoice.values;
     } else {
-      // non-deferred choices are the union of the two lists
-      const redundantPossibilities = deferred.is.filter(
-        (value) => !values.some((newValue) => equal(value, newValue)),
+      // Union values
+      values = deferredChoice.values.concat(
+        values.filter((v1) => !deferredChoice.values.some((v2) => equal(v1, v2))),
       );
-      deferred = {
-        is: values.concat(...redundantPossibilities),
-        isNot: deferred.isNot.concat(...redundantPossibilities),
-      };
     }
 
-    if (deferred.is.length === 1 && deferred.isNot === null) {
-      const existingFacts = db.facts[conclusion.name] || [];
-      const value = deferred.is[0];
-      return {
-        ...db,
-        facts: { ...db.facts, [conclusion.name]: [...existingFacts, [args, value]] },
-        factValues: db.factValues.set(conclusion.name, args, { type: 'is', value }),
-        queue: db.queue.push(FACT_PRIO, { type: 'Fact', name: conclusion.name, args, value }),
-      };
-    }
-
-    if (deferred.is.length === 0 && deferred.isNot === null) {
-      return null;
-    }
-
-    return { ...db, deferredChoices: db.deferredChoices.set(conclusion.name, args, deferred) };
+    exhaustive = exhaustive || deferredChoice.exhaustive;
   }
+
+  if (exhaustive && values.length === 0) {
+    return null;
+  }
+
+  if (
+    exhaustive &&
+    values.length === 1 &&
+    db.factValues.get(conclusion.name, args)?.type !== 'is'
+  ) {
+    const existingFacts = db.facts[conclusion.name] || [];
+    const value = values[0];
+    return {
+      ...db,
+      facts: { ...db.facts, [conclusion.name]: [...existingFacts, [args, value]] },
+      factValues: db.factValues.set(conclusion.name, args, { type: 'is', value }),
+      queue: db.queue.push(FACT_PRIO, { type: 'Fact', name: conclusion.name, args, value }),
+      deferredChoices,
+    };
+  }
+  return {
+    ...db,
+    deferredChoices: deferredChoices.set(conclusion.name, args, { values, exhaustive }),
+  };
 }
 
 export function insertFact(name: string, args: Data[], value: Data, db: Database): Database | null {
@@ -515,6 +510,35 @@ ${path.map(([node, data]) => choiceTreeNodeToString(node, data)).join('\n\n')}
 ${tree.type === 'leaf' ? dbToString(tree.db) : choiceTreeNodeToString(tree)}`;
 }
 
+/* A decision will always take the form "this attribute takes one of these values", or
+ * "this attribute takes one of these values, or maybe some other values."
+ *
+ * Given a database, we can prune any possibilities that are inconsistent with respect to that
+ * database, ideally getting a single possibility that we can then use to continue reasoning.
+ */
+function prune(pred: string, args: Data[], values: Data[], exhaustive: boolean, db: Database) {
+  const knownValue = db.factValues.get(pred, args);
+
+  if (knownValue?.type === 'is') {
+    // Each choice is redundant or is immediately contradictory
+    // Check for contradiction with the provided options
+    if (exhaustive && !values.some((value) => equal(value, knownValue.value))) {
+      return { values: [], exhaustive: true };
+    }
+
+    // No contradiction, so just continue, nothing was learned
+    return { values: [knownValue.value], exhaustive: true };
+  }
+
+  if (knownValue?.type === 'is not') {
+    values = values.filter(
+      (value) => !knownValue.value.some((excludedValue) => equal(excludedValue, value)),
+    );
+  }
+
+  return { values, exhaustive };
+}
+
 export function stepTreeRandomDFS(
   program: Program,
   tree: ChoiceTree,
@@ -542,34 +566,56 @@ export function stepTreeRandomDFS(
 
         case 'choose': {
           // Forced to make a choice
+          // TODO prune everything: if a choice has become unitary we shouldn't branch
           if (tree.db.deferredChoices.length === 0) {
             // This case may be impossible?
             console.error('====== unexpected point reached ======');
             return cleanPath(path);
           }
-          const [pred, args, values, deferredChoices] = tree.db.deferredChoices.popRandom();
+
+          const [pred, args, unpruned, deferredChoices] = tree.db.deferredChoices.popRandom();
+          const { values, exhaustive } = prune(
+            pred,
+            args,
+            unpruned.values,
+            unpruned.exhaustive,
+            tree.db,
+          );
           const newTree: ChoiceTreeNode = {
             type: 'choice',
             base: { ...tree.db, deferredChoices },
             attribute: [pred, args],
-            children: DataMap.new(),
-            defer:
-              values.isNot === null
-                ? 'exhaustive'
-                : {
-                    type: 'leaf',
-                    db: {
-                      ...tree.db,
-                      deferredChoices,
-                      factValues: tree.db.factValues.set(pred, args, {
-                        type: 'is not',
-                        value: values.isNot,
-                      }),
-                    },
-                  },
+            children: DataMap.new(), // A default, we may change this below
+            defer: 'exhaustive', // A default, we may change this below
           };
-          for (const choice of values.is) {
+
+          // Add a child for each positive choice of value
+          for (const choice of values) {
             newTree.children = newTree.children.set(choice, null);
+          }
+
+          // If the tree is open-ended, add a child for all negative choices of value
+          if (!exhaustive) {
+            const currentAssignment = tree.db.factValues.get(pred, args) ?? {
+              type: 'is not',
+              value: [],
+            };
+            if (currentAssignment.type === 'is') {
+              throw new Error('Invariant: prunedChoice should have returned exhaustive === true');
+            }
+            newTree.defer = {
+              type: 'leaf',
+              db: {
+                ...tree.db,
+                deferredChoices,
+                factValues: tree.db.factValues.set(pred, args, {
+                  type: 'is not',
+                  value: currentAssignment.value.concat(
+                    values.filter((v1) => !currentAssignment.value.some((v2) => equal(v1, v2))),
+                  ),
+                }),
+              },
+            };
           }
 
           // Fix up the parent pointer
