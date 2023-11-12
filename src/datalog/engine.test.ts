@@ -267,3 +267,28 @@ test('Forbid and demand', () => {
     'a is true, b is true, c is true, d is false',
   ]);
 });
+
+test('Open ended and closed ended possibility', () => {
+  const { solutions } = testExecution(`
+  #builtin INT_MINUS minus
+  n 9.
+  n (minus N 1) :- n N, N != 0.
+  
+  choice is {C?} :- n C.
+  a C is {ff?} :- n C.
+  a C is {tt} :- choice is C.
+  `);
+
+  expect(solutionsToStrings(solutions)).toEqual([
+    'a 0 is ff, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is tt, choice is 9, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is tt, a 9 is ff, choice is 8, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is tt, a 8 is ff, a 9 is ff, choice is 7, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is tt, a 7 is ff, a 8 is ff, a 9 is ff, choice is 6, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is tt, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is ff, choice is 5, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is tt, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is ff, choice is 4, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is ff, a 2 is ff, a 3 is tt, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is ff, choice is 3, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is ff, a 2 is tt, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is ff, choice is 2, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is ff, a 1 is tt, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is ff, choice is 1, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+    'a 0 is tt, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is ff, choice is 0, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
+  ]);
+});
