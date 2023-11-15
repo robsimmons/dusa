@@ -8,7 +8,7 @@ import {
 } from './examples';
 import { Declaration, check } from './datalog/syntax';
 import { compile } from './datalog/compile';
-import { AppToWorker, WorkerStats, WorkerToApp } from './worker';
+import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker';
 
 function decodeDusaHashURI(): null | { program: string } {
   if (!window.location.hash.startsWith('#')) return null;
@@ -39,30 +39,28 @@ type SessionData =
       worker: null;
     }
   | {
-      status: 'error';
+      status: 'load-error';
       text: string;
       textLoaded: string;
       worker: Worker;
-      facts?: string[][];
-      stats?: WorkerStats;
       issues: { msg: string; loc?: SourceLocation }[];
       errorMessage: string;
     }
   | {
-      status: 'paused';
+      status: 'paused' | 'running';
       text: string;
       textLoaded: string;
       worker: Worker;
-      facts: string[][];
-      stats: WorkerStats | null;
+      stats: WorkerStats;
+      query: null | WorkerQuery;
     }
   | {
-      status: 'running' | 'done';
+      status: 'done';
       text: string;
       textLoaded: string;
       worker: Worker;
-      facts: string[][];
       stats: WorkerStats;
+      query: null | WorkerQuery;
     };
 
 export type Session =
@@ -71,27 +69,25 @@ export type Session =
       text: string;
     }
   | {
-      status: 'error';
+      status: 'load-error';
       text: string;
       textModified: boolean;
-      facts?: string[][];
-      stats?: WorkerStats;
-      issues: { msg: string; loc?: SourceLocation }[];
       errorMessage: string;
+      issues: { msg: string; loc?: SourceLocation }[];
     }
   | {
-      status: 'paused';
+      status: 'paused' | 'running';
       text: string;
       textModified: boolean;
-      facts: string[][];
-      stats: WorkerStats | null;
-    }
-  | {
-      status: 'running' | 'done';
-      text: string;
-      textModified: boolean;
-      facts: string[][];
       stats: WorkerStats;
+      query: null | WorkerQuery;
+    }
+  | {
+      status: 'done';
+      text: string;
+      textModified: boolean;
+      stats: WorkerStats;
+      query: null | WorkerQuery;
     };
 
 class SessionTabs {
@@ -306,24 +302,8 @@ class SessionTabs {
     }
 
     switch (msg.type) {
-      case 'error':
-        if (session.status !== 'running' && session.status !== 'paused') {
-          reportUnexpected();
-        } else {
-          this.sessionData[activeSession] = {
-            status: 'error',
-            text: session.text,
-            textLoaded: session.textLoaded,
-            worker: session.worker,
-            errorMessage: 'error during execution',
-            issues: [{ msg: msg.message }],
-            stats: msg.stats,
-          };
-        }
-        break;
-
       case 'done':
-        if (session.status !== 'running') {
+        if (session.status !== 'running' && session.status !== 'done') {
           reportUnexpected();
         } else {
           this.sessionData[activeSession] = {
@@ -331,14 +311,14 @@ class SessionTabs {
             text: session.text,
             textLoaded: session.textLoaded,
             worker: session.worker,
-            facts: session.facts,
             stats: msg.stats,
+            query: msg.query,
           };
         }
         break;
 
       case 'paused':
-        if (session.status !== 'running') {
+        if (session.status !== 'running' && session.status !== 'paused') {
           reportUnexpected();
         } else {
           this.sessionData[activeSession] = {
@@ -346,23 +326,8 @@ class SessionTabs {
             text: session.text,
             textLoaded: session.textLoaded,
             worker: session.worker,
-            facts: session.facts,
             stats: msg.stats,
-          };
-        }
-        break;
-
-      case 'saturated':
-        if (session.status !== 'running') {
-          reportUnexpected();
-        } else {
-          this.sessionData[activeSession] = {
-            status: msg.last ? 'done' : 'paused',
-            text: session.text,
-            textLoaded: session.textLoaded,
-            worker: session.worker,
-            facts: [...session.facts, msg.facts],
-            stats: msg.stats,
+            query: msg.query,
           };
         }
         break;
@@ -376,8 +341,8 @@ class SessionTabs {
             text: session.text,
             textLoaded: session.textLoaded,
             worker: session.worker,
-            facts: session.facts,
             stats: msg.stats,
+            query: msg.query,
           };
         }
     }
@@ -408,6 +373,27 @@ class SessionTabs {
         return this.messageWorker(session.worker, { type: 'start' }).then((msg) => {
           this.handleMessageResponse(activeSession, msg);
         });
+      } else {
+        return Promise.resolve();
+      }
+    });
+    return this.lock;
+  }
+
+  setSolution(index: null | number) {
+    this.lock = this.lock.then(() => {
+      const activeSession = this.activeSession;
+      const session = this.sessionData[activeSession];
+      if (
+        session.status === 'done' ||
+        session.status === 'running' ||
+        session.status === 'paused'
+      ) {
+        return this.messageWorker(session.worker, { type: 'setsolution', solution: index }).then(
+          (msg) => {
+            this.handleMessageResponse(activeSession, msg);
+          },
+        );
       } else {
         return Promise.resolve();
       }
@@ -454,12 +440,12 @@ class SessionTabs {
 
         if (issues.length > 0 || decls === null) {
           this.sessionData[activeSession] = {
-            status: 'error',
+            status: 'load-error',
             text,
             textLoaded: text,
             worker,
             issues,
-            errorMessage: `unable to load program: ${issues.length} error${
+            errorMessage: `Unable to load program: ${issues.length} error${
               issues.length === 1 ? '' : 's'
             }`,
           };
@@ -468,15 +454,26 @@ class SessionTabs {
 
         const program = compile(decls);
 
-        return this.messageWorker(worker, { type: 'load', program }).then(({ stats }) => {
-          this.sessionData[activeSession] = {
-            status: 'paused',
-            text,
-            textLoaded: text,
-            worker,
-            facts: [],
-            stats,
-          };
+        return this.messageWorker(worker, { type: 'load', program }).then((response) => {
+          if (response.type === 'done' || response.type === 'running') {
+            this.sessionData[activeSession] = {
+              status: response.type,
+              text,
+              textLoaded: text,
+              worker,
+              stats: response.stats,
+              query: response.query,
+            };
+          } else {
+            this.sessionData[activeSession] = {
+              status: 'load-error',
+              text,
+              textLoaded: text,
+              worker,
+              issues: [],
+              errorMessage: `unexpected response ${response.type} to load message`,
+            };
+          }
         });
       });
     return this.lock;

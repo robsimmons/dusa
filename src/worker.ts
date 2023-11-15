@@ -3,30 +3,36 @@ import {
   ChoiceTree,
   ChoiceTreeNode,
   CompiledProgram,
-  Fact,
+  Database,
   Program,
   factToString,
   makeInitialDb,
-  pathToString,
   stepTreeRandomDFS,
 } from './datalog/engine';
+
+export type WorkerQuery = {
+  type: 'list';
+  solution: number | null;
+  value: string[];
+};
 
 export interface WorkerStats {
   cycles: number;
   deadEnds: number;
+  solutions: number;
+  error: string | null;
 }
 
 export type WorkerToApp =
   | { stats: WorkerStats; type: 'hello' }
-  | { stats: WorkerStats; type: 'saturated'; facts: string[]; last: boolean }
-  | { stats: WorkerStats; type: 'paused' }
-  | { stats: WorkerStats; type: 'running' }
-  | { stats: WorkerStats; type: 'done' }
-  | { stats: WorkerStats; type: 'error'; message: string }
+  | { stats: WorkerStats; type: 'paused'; query: null | WorkerQuery }
+  | { stats: WorkerStats; type: 'running'; query: null | WorkerQuery }
+  | { stats: WorkerStats; type: 'done'; query: null | WorkerQuery }
   | { stats: WorkerStats; type: 'reset' };
 
 export type AppToWorker =
   | { type: 'status' }
+  | { type: 'setsolution'; solution: number | null }
   | { type: 'stop' }
   | { type: 'load'; program: CompiledProgram }
   | { type: 'start' }
@@ -35,105 +41,105 @@ export type AppToWorker =
 const CYCLE_LIMIT = 10000;
 const TIME_LIMIT = 500;
 let program: Program | null = null;
-let queuedFacts: Fact[] | null = null;
-let queuedError: string | null = null;
+let solutions: Database[] = [];
+let setSolution: number | null = null;
 
-let stats: WorkerStats = { cycles: 0, deadEnds: 0 };
+function newStats(): WorkerStats {
+  return {
+    cycles: 0,
+    deadEnds: 0,
+    solutions: 0,
+    error: null,
+  };
+}
+let stats: WorkerStats = newStats();
 
-function post(message: WorkerToApp) {
+function post(message: WorkerToApp): true {
   postMessage(message);
+  return true;
 }
 
 let tree: null | ChoiceTree = null;
 let path: [ChoiceTreeNode, Data | 'defer'][] = [];
 
-function cycle(): boolean {
+function cycle(): null | number {
   const limit = stats.cycles + CYCLE_LIMIT + Math.random() * CYCLE_LIMIT;
   const start = performance.now();
   try {
     while (stats.cycles < limit && start + TIME_LIMIT > performance.now()) {
-      if (tree === null) return false;
-      console.log(pathToString(tree, path));
+      if (tree === null) return null;
+      //(pathToString(tree, path));
       const result = stepTreeRandomDFS(program!, tree, path, stats);
       tree = result.tree;
       path = result.tree === null ? path : result.path;
 
       if (result.solution) {
-        queuedFacts = ([] as Fact[]).concat(
-          ...Object.entries(result.solution.facts).map(([name, argses]) =>
-            argses.map<Fact>(([args, value]) => ({
-              type: 'Fact',
-              name,
-              args,
-              value,
-            })),
-          ),
-        );
-        return false;
+        solutions.push(result.solution);
+        stats.solutions += 1;
+        return 0;
       }
     }
   } catch (e) {
-    queuedError = `${e}`;
-    return false;
+    stats.error = `${e}`;
+    return null;
   }
 
-  return true;
+  return 0;
 }
 
 let liveLoopHandle: null | ReturnType<typeof setTimeout> = null;
 function liveLoop() {
-  if (cycle()) {
-    liveLoopHandle = setTimeout(liveLoop);
+  let nextTimeout: null | number = null;
+  if ((nextTimeout = cycle()) !== null) {
+    liveLoopHandle = setTimeout(liveLoop, nextTimeout);
   } else {
     liveLoopHandle = null;
   }
 }
 
-// Picking up where you left off
-function resume(state: 'error' | 'paused' | 'done' | 'saturated' | 'running') {
-  switch (state) {
-    case 'error': {
-      return post({ type: 'error', message: queuedError!, stats });
-    }
+function resolveQuery(index: number): WorkerQuery {
+  return {
+    type: 'list',
+    solution: setSolution,
+    value: ([] as string[])
+      .concat(
+        ...Object.entries(solutions[index].facts).map(([name, values]) =>
+          values.map(([args, value]) => factToString({ type: 'Fact', name, args, value })),
+        ),
+      )
+      .sort(),
+  };
+}
 
+// Picking up where you left off
+function resume(state: 'paused' | 'done' | 'running') {
+  const query =
+    solutions.length === 0
+      ? null
+      : setSolution === null
+      ? resolveQuery(solutions.length - 1)
+      : resolveQuery(setSolution);
+
+  switch (state) {
     case 'paused': {
-      return post({ type: 'paused', stats });
+      return post({ type: 'paused', stats, query });
     }
 
     case 'done': {
-      return post({ type: 'done', stats });
+      return post({ type: 'done', stats, query });
     }
 
     case 'running': {
       liveLoopHandle = setTimeout(liveLoop);
-      return post({ type: 'running', stats });
-    }
-
-    case 'saturated': {
-      const msg: WorkerToApp = {
-        type: 'saturated',
-        facts: queuedFacts!.map(factToString),
-        last: tree === null,
-        stats,
-      };
-      queuedFacts = null;
-      return post(msg);
+      return post({ type: 'running', stats, query });
     }
   }
 }
 
-onmessage = (event: MessageEvent<AppToWorker>) => {
+onmessage = (event: MessageEvent<AppToWorker>): true => {
   // What state are we actually in?
-  const state: 'error' | 'paused' | 'done' | 'saturated' | 'running' =
-    liveLoopHandle !== null
-      ? 'running'
-      : queuedError !== null
-      ? 'error'
-      : queuedFacts !== null
-      ? 'saturated'
-      : tree === null
-      ? 'done'
-      : 'paused';
+  const state: 'paused' | 'done' | 'running' =
+    liveLoopHandle !== null ? 'running' : tree === null || stats.error !== null ? 'done' : 'paused';
 
   // Pause
   if (liveLoopHandle !== null) {
@@ -143,17 +149,15 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
 
   switch (event.data.type) {
     case 'load':
-      stats = { cycles: 0, deadEnds: 0 };
+      stats = newStats();
       path = [];
       program = event.data.program.program;
-      queuedFacts = null;
-      queuedError = null;
       try {
         tree = { type: 'leaf', db: makeInitialDb(event.data.program) };
-        return resume('paused');
+        return resume('running');
       } catch (e) {
-        queuedError = `${e}`;
-        return resume('error');
+        stats.error = `${e}`;
+        return resume('done');
       }
     case 'start':
       if (state === 'paused') {
@@ -166,14 +170,17 @@ onmessage = (event: MessageEvent<AppToWorker>) => {
       }
       return resume(state);
     case 'reset':
-      stats = { cycles: 0, deadEnds: 0 };
+      stats = newStats();
+      solutions = [];
+      setSolution = null;
       tree = null;
       path = [];
       program = null;
-      queuedFacts = null;
-      queuedError = null;
       return post({ type: 'reset', stats });
     case 'status':
+      return resume(state);
+    case 'setsolution':
+      setSolution = event.data.solution;
       return resume(state);
   }
 };

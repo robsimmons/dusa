@@ -7,6 +7,7 @@ body {
   --dk-small-padding: 8px;
   --dk-small-radius: 8px;
   --dk-medium-padding: 12px;
+  --dk-large-padding: 16px;
 
   --text-editor-panel-width: 1fr;
 
@@ -30,7 +31,16 @@ body {
   --oksolar-text-violet: oklch(57% 0.15 280);
   --oksolar-text-pink: oklch(57% 0.15 330);
   --oksolar-text-red: oklch(57% 0.15 20);
+  --oksolar-text-red-highlight: oklch(57% 0.15 20);
   --oksolar-text-orange: oklch(57% 0.15 60);
+}
+
+@media (max-width: 650px) {
+  body {
+    --dk-outer-padding: 4px;
+    --dk-small-padding: 6px;
+    --dk-medium-padding: 10px;
+  }
 }
 
 body.theme-dark {
@@ -78,18 +88,21 @@ main {
 .dk-config div {
   display: flex;
   flex-direction: column;
-  gap: var(--dk-medium-padding);
+  gap: var(--dk-large-padding);
 }
 
-.dk-config .dk-icon-button {
+.dk-config button {
   height: 2rem;
   border: 0;
   background: var(--oksolar-background);
   color: var(--oksolar-text);
   border-radius: var(--dk-small-radius);
+  display: grid;
+  justify-content: center;
+  align-items: center;
 }
 
-.dk-config .dk-icon-button:hover {
+.dk-config button:hover {
   color: var(--oksolar-text-highlight);
   background-color: var(--oksolar-background-highlight);
 }
@@ -158,6 +171,7 @@ main {
 .dk-tab {
   display: flex;
   flex-direction: row;
+  min-width: fit-content;
 }
 
 /* Regular tab button styles */
@@ -210,16 +224,40 @@ main {
 
 #session {
   display: none; /* JS sets as 'grid' to avoid resize flash */
-  grid-template-columns: var(--text-editor-panel-width) 10px minmax(200px, 1fr);
+  grid-template-rows: 1fr;
+  grid-template-columns: var(--text-editor-panel-width) 10px minmax(250px, 1fr);
+  grid-template-areas: 'editor divider viewer';
+}
+
+@media (max-width: 650px) {
+  #session {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'viewer' 'divider' 'editor';
+  }
+
+  #session.mobile-view-editor {
+    grid-template-rows: calc(2rem + var(--dk-small-padding)) 0 1fr;
+  }
+
+  #session.mobile-view-explorer {
+    grid-template-rows: 1fr 0 0;
+  }
 }
 
 #session-divider {
   cursor: ew-resize;
+  grid-area: divider;
+}
+
+@media (max-width: 650px) {
+  #session-divider {
+    display: none;
+  }
 }
 
 /** THE TEXT EDITOR **/
 
-.dk-edit {
+#codemirror-root {
   background-color: var(--oksolar-background);
   box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
   border-radius: var(--dk-small-radius);
@@ -227,103 +265,188 @@ main {
   padding-left: var(--dk-small-padding);
   padding-right: 0;
   display: grid;
+  grid-area: editor;
 }
 
-#codemirror-root.dk-edit .cm-editor {
+div#codemirror-root .cm-editor {
   height: calc(
     100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 2 * var(--dk-medium-padding) -
       3rem
   );
 }
 
-/** THE ENGINE VIEW **/
+@media (max-width: 650px) {
+  .mobile-view-explorer #codemirror-root {
+    display: none;
+  }
 
-.dk-view {
+  div#codemirror-root .cm-editor {
+    height: calc(
+      100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 2 *
+        var(--dk-medium-padding) - 3rem - 2rem - var(--dk-small-padding)
+    );
+  }
+}
+
+/** THE EXPLORER VIEW **/
+
+#react-root {
+  display: grid;
+  grid-template-rows: calc(2rem) 1fr;
+  gap: var(--dk-small-padding);
+  height: calc(100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 3rem);
+  grid-area: viewer;
+}
+
+@media (max-width: 650px) {
+  .mobile-view-editor #react-root {
+    height: 2rem;
+  }
+
+  .mobile-view-editor #explorer-view {
+    display: none;
+  }
+}
+
+/** Explorer header (treated differently by mobile view) **/
+
+#explorer-header {
   box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
   border-radius: var(--dk-small-radius);
-  display: grid;
-  grid-template-rows: calc(2rem + 1px) min-content 1fr;
-  height: calc(100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 3rem);
-}
-
-.dk-view-header {
   background-color: var(--oksolar-background);
-  display: grid;
-  border-top-right-radius: var(--dk-small-radius);
-  border-top-left-radius: var(--dk-small-radius);
-  justify-items: left;
-  border-bottom: solid 1px var(--oksolar-text-deemph-2);
   display: flex;
   flex-direction: row;
+  overflow-x: hidden;
 }
 
-.dk-view-header button {
-  width: 2rem;
+#explorer-header button {
   height: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
   border: none;
   border-radius: var(--dk-small-radius);
-  background-color: transparent;
   color: var(--oksolar-text);
-  display: grid;
-  align-items: center;
-  justify-content: center;
+  padding-right: var(--dk-small-padding);
+  white-space: nowrap;
+  min-width: fit-content;
+  flex-grow: 0;
 }
 
-.dk-view-header button:hover {
+#explorer-header button#explorer-view-code,
+#explorer-header button#explorer-explore-solutions {
+  display: none;
+}
+
+#explorer-header button.urgent {
+  color: var(--oksolar-text-red);
+}
+
+#explorer-header button.urgent:hover {
+  color: var(--oksolar-text-red-highlight);
+}
+
+#explorer-header #explorer-status {
+  margin-top: auto;
+  margin-bottom: auto;
+  text-align: right;
+  padding-inline: var(--dk-large-padding);
+  white-space: nowrap;
+  flex-grow: 1;
+}
+
+@media (max-width: 650px) {
+  .mobile-view-explorer #explorer-header button#explorer-load-program {
+    display: none;
+  }
+
+  .mobile-view-explorer #explorer-header button#explorer-view-code {
+    display: flex;
+  }
+
+  .mobile-view-editor #explorer-header button#explorer-explore-solutions {
+    display: flex;
+  }
+
+  #explorer-header #explorer-status .extended-status {
+    display: none;
+  }
+}
+
+#explorer-header button:hover {
   color: var(--oksolar-text-highlight);
   background-color: var(--oksolar-background-highlight);
 }
 
-.dk-view-status {
-  flex-grow: 1;
+/** Explorer view **/
+
+#explorer-view {
+  box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
+  border-radius: var(--dk-small-radius);
+}
+
+#explorer-view.errors {
+  background-color: var(--oksolar-background-red);
+  border-radius: var(--dk-small-radius);
+  padding: var(--dk-medium-padding);
+  padding-top: var(--dk-small-padding);
+  color: var(--oksolar-text-red);
+  overflow-y: scroll;
+}
+
+#explorer-view-header {
+  background-color: var(--oksolar-background);
+  border-top-left-radius: var(--dk-small-radius);
+  border-top-right-radius: var(--dk-small-radius);
+  overflow-x: hidden;
+  height: 2rem;
+  max-width: 100%;
+}
+
+.explorer-view-header {
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: right;
-  padding-right: var(--dk-medium-padding);
-}
-
-.dk-view-errors {
-  background-color: var(--oksolar-background-red);
-  border-bottom-left-radius: var(--dk-small-radius);
-  border-bottom-right-radius: var(--dk-small-radius);
-  padding: var(--dk-medium-padding);
-  padding-top: var(--dk-small-padding);
-  color: var(--oksolar-text-red);
-  overflow-y: scroll;
-}
-
-.dk-view-edit-warning {
+  height: 2rem;
+  min-width: 0;
   border-bottom: 1px solid var(--oksolar-text-deemph-2);
+}
+
+#explorer-view-header button {
+  min-width: 2rem;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dk-small-radius);
+  color: var(--oksolar-text);
+}
+
+#explorer-view-header button:hover {
+  background-color: var(--oksolar-background-highlight);
+  color: var(--oksolar-text-highlight);
+}
+
+#explorer-view-header button:disabled {
+  color: var(--oksolar-text-deemph-2);
+}
+
+#explorer-view-header .status {
+  margin-block: auto;
+  width: fit-content;
+  min-width: 9rem;
   text-align: center;
-  color: var(--oksolar-text-red);
-  background-color: var(--oksolar-background-red);
+  flex-shrink: 1;
+  overflow-x: hidden;
+  text-wrap: nowrap;
 }
 
-.dk-view-edit-warning a {
-  text-decoration-color: var(--oksolar-text-emph);
-  text-decoration-line: underline;
-  text-decoration-style: solid;
-  color: var(--oksolar-text-emph);
-}
-
-.dk-view-solutions {
-  display: grid;
+#explorer-view-data {
+  padding-top: var(--dk-medium-padding);
+  overflow-y: scroll;
   background-color: var(--oksolar-background);
+  height: calc(
+    100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 2 * var(--dk-medium-padding) -
+      3rem - 2rem - var(--dk-small-padding) * 2
+  );
   border-bottom-left-radius: var(--dk-small-radius);
   border-bottom-right-radius: var(--dk-small-radius);
-  padding: var(--dk-medium-padding);
-  padding-top: var(--dk-small-padding);
-  padding-bottom: var(--dk-medium-padding);
-  overflow-y: scroll;
-}
-
-.dk-icon-button {
-  display: grid;
-  justify-content: center;
-  align-items: center;
-}
-
-#sharebutton {
-  position: relative;
 }

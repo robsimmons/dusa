@@ -46,15 +46,17 @@ export default function Tabs({
           }
         </div>
       ))}
-      <button
-        className="dk-new-tab"
-        onClick={(event) => {
-          event.preventDefault();
-          addSession();
-        }}
-      >
-        <PlusIcon width={ICON_SIZE} height={ICON_SIZE} />
-      </button>
+      <div className="dk-tab">
+        <button
+          className="dk-new-tab"
+          onClick={(event) => {
+            event.preventDefault();
+            addSession();
+          }}
+        >
+          <PlusIcon width={ICON_SIZE} height={ICON_SIZE} />
+        </button>
+      </div>
     </>
   );
 }

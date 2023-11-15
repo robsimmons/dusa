@@ -28,7 +28,7 @@ export default function Config(props: Props) {
       <div className="bottom-config">
         <Tooltip.Root>
           <Tooltip.Trigger asChild className="dk-trigger-button">
-            <button className="dk-icon-button" onClick={() => props.share()}>
+            <button onClick={() => props.share()}>
               <Share1Icon width={ICON_SIZE} height={ICON_SIZE} />
             </button>
           </Tooltip.Trigger>
@@ -38,7 +38,7 @@ export default function Config(props: Props) {
         </Tooltip.Root>
         <Tooltip.Root>
           <Tooltip.Trigger asChild className="dk-trigger-button">
-            <button id="themeswitcher" className="dk-icon-button" onClick={toggle}>
+            <button id="themeswitcher" onClick={toggle}>
               {mode === 'light' && <SunIcon width={ICON_SIZE} height={ICON_SIZE} />}
               {mode === 'dark' && <MoonIcon width={ICON_SIZE} height={ICON_SIZE} />}{' '}
             </button>

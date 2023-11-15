@@ -116,6 +116,11 @@ function renderView() {
             renderView();
           });
         }}
+        setSolution={(index) => {
+          sessionManager.setSolution(index).then(() => {
+            renderView();
+          });
+        }}
       />
     </React.StrictMode>,
   );
@@ -159,7 +164,7 @@ let referenceSessionDividerStatus: null | {
   initialTextWidth: number;
   initialEngineWidth: number;
 } = null;
-const MIN_PANE_PIXEL = 200;
+const MIN_PANE_PIXEL = 250;
 function sessionDividerMove(event: MouseEvent) {
   const { mouseDownX, initialTextWidth, initialEngineWidth } = referenceSessionDividerStatus!;
   const deltaX = event.clientX - mouseDownX;
@@ -179,9 +184,6 @@ function sessionDividerStop() {
   const { currentDeltaX, initialTextWidth, initialEngineWidth } = referenceSessionDividerStatus!;
   const newTextWidth = initialTextWidth + currentDeltaX;
   const newEngineWidth = initialEngineWidth - currentDeltaX;
-  console.log(newTextWidth);
-  console.log(newEngineWidth);
-  console.log(((1 + newTextWidth) / (newTextWidth + newEngineWidth)) * 2);
   setDividerProportion(newTextWidth / newEngineWidth);
   localStorage.setItem(LS_SESSION_DIVIDER_PROPORTION, `${newTextWidth / newEngineWidth}`);
 }
