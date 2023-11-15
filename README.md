@@ -161,7 +161,180 @@ all of their negations to hold.)
 
 # Language definition
 
-## Lexical tokens
+A Dusa program is a sequence of declarations. This program has 2 declarations, and we read it
+as saying that `a` is immediately provable and that `a` implies `b`.
+
+    # a pound sign followed by a space is a line comment
+    a.
+    b :- a.
+
+## Terms
+
+Most declarations in Dusa contain terms, like numbers, strings, and constructors are all terms.
+When you write `edge a b` in Dusa, both `a` and `b` get treated as constructors that take no arguments
+(we'll usually call these "constants.")
+
+## Attributes and values
+
+A fact in Dusa always consist of an attribute --- a predicate plus zero or more
+terms --- and a value --- a single term. The predicate plus its terms is called an **attribute**,
+and every attribute must have at most one value: deriving both `attr is a` and `attr is b` will
+result in the database being invalidated for failing an integrity constraint.
+
+When we don't write an attribute, that's just syntactic sugar for saying that the attribute's value is
+actually `()`, a special term that is pronounced "unit." So our program above is actually shorthand
+for writing this:
+
+    a is ().
+    b is () :- a is ().
+
+## Closed rules
+
+The most important kinds of declarations in Dusa are rules, which we call **open** and **closed**. An closed rule looks like this:
+
+    <attribute> is { <value1>, ..., <valuen> } :- <premises>.
+
+and it means that, if the premises hold, Dusa must assign the attribute to one of the listed values.
+(If we've already given the attribute a value, then that attribute must be one of the listed values,
+or else the database will be invalidated.)
+
+It's quite common that we want, as the conclusion of a rule, to establish that a specific value
+is the case. In that case, we don't need to write the curly braces. The program
+
+    p is 1.
+    q is { 2, 3 }.
+
+is syntactic sugar for the program
+
+    p is { 1 }.
+    q is { 2, 3 }.
+
+That means that our example from before:
+
+    a is ().
+    b is () :- a is ().
+
+is, in its fully expanded form, written like this:
+
+    a is { () }.
+    b is { () } :- a is ().
+
+## Open rules
+
+Open rules include a question mark as one of the choices, or after the last choice. The
+following rules are all equivalent, though only the first two are recommended.
+
+    a is { 1, 2? } :- b..
+    a is { 1, 2, ? } :- b.
+    a is { 1, ?, 2 } :- b.
+    a is { ?, 1, ?, 2? } :- b.
+
+If all premises of an open rule hold, then Dusa will try to evaluate program further with each of the
+listed attributes, but will also leave open the option that some other chain of reasoning might assign
+some different value to the attribute.
+
+When Dusa considers the "question mark path" of a derivation, it does **not** treat the attribute
+as if it has some value that's not yet determined; instead, it treats the open rule as if
+it hasn't ever fired. To see why this matters, consider the following program:
+
+    a is { 1, 2, ? }.
+    b :- a is _.
+    a is { 3? } :- b.
+
+Procedurally, Dusa must follow three chains of logic. In the first chain of logic,
+Dusa derives `a is 1` as
+a fact, uses that to further derive `b`, and then considers the third rule, which opens up
+the possibility that `a is 3`, but this cannot be derived as it would conflict with the fact
+`a is 1`. In the second chain of logic, Dusa does the same thing, but for `a is 2`.
+
+In the final chain, if we acted like `a is ?` was true for an as-yet-unknown value, we'd
+be able to use that fact to derive `b` with the second rule and then `a is 3` with the third
+rule. That is **not** how Dusa works. In actuality, the third chain of reasoning will be rejected,
+because no subsequent reasoning will derive any no knowledge about the value assigned to the
+attribute `a`.
+
+## Variables
+
+Rules in Dusa may contain logic variables, which start with uppercase letters. The following
+rule says the `edge` relation is symmetric:
+
+    edge X Y :- edge Y X.
+
+If we have the fact `edge a b`, this rule will allow us to match `Y = a` and `X = b` in the premise,
+and then use the rule to derive the fact `edge b a`.
+
+Each variable can only be assigned one value. This rule:
+
+    self X :- edge X X.
+
+cannot make use of the fact `edge a b`, because there's no way to assign `X = a` and `X = b` simultaneously. However, if we have the fact `edge c c`, then we can match `X = c` and derive
+the fact `self c` using this rule.
+
+All the variables in the conclusion of a rule must appear in the premises.
+
+You can use and reuse the wildcard `_` in place of a variable you don't care about. `edge _ _` will
+match the fact `edge a b` and also the fact `edge c c`.
+
+If you don't care about a variable's value,
+you can precede the variable name with a wildcard: `edge _Left _Right` treats the variables
+`_Left` and `_Right` like wildcards. A wildcard with a given name can only appear once in a rule,
+and the only purpose of the wildcard is documentation.
+
+## Premises
+
+Premises to a rule can have the following form:
+
+- `<attr>` or `<attr> is <value>`, where the value-free form is again shorthand for `<attr> is ()`.
+  The attribute and value can both contain free variables.
+- `<term> == <term>`, which is only satisfied if the two terms can be made equal. Both sides of the
+  equation can contain variables, but all the variables on one side must have
+  been mentioned in a previous premise.
+- `<term> != <term>`, which is only satisfied if the two terms cannot be made equal. Both sides of the
+  equation can contain variables, but all the variables on one side must have
+  been mentioned in a previous premise, and variables first mentioned in an inequality premise
+  cannot be mentioned in subsequent premises or the conclusion.
+
+## Built-in values and constructors
+
+On their own, built-in numbers and strings act no different than random uninterpreted constants,
+but they can be manipualted with special constructors added by `#builtin` declarations.
+
+A `#builtin` declarations change the lexer to represent certain identifiers as operations on built-in
+types. If you write
+
+    #builtin INT_PLUS plus
+    #builtin NAT_SUCC s
+
+then the identifiers `plus` and `s` will be parsed as `<builtin-identifiers>` instead of as regular
+identifiers until those built-ins are redefined.
+
+- The `NAT_ZERO` builtin takes no arguments and represents the natural number zero.
+- The `NAT_SUCC` builtin takes one natural number argument, and adds one to it. If `NAT_SUCC` is `s`,
+  then the premise `s X == 0` will always fail, since `X` would have to be negative for that solution
+  to work.
+- The `INT_PLUS` builtin takes two or more integer arguments and adds them all.
+- The `INT_MINUS` builtin takes two integer arguments and returns an integer, subtracting the second
+  from the first.
+- The `STRING_CONCAT` builtin takes two or more string arguments and concatenates them.
+
+## Constraint declarations
+
+Besides rules and `#builtin` declarations, it's possible to add constraints about the shape
+of a solution.
+
+    #forbid <premises>.
+    #demand <premises>.
+
+If all the premises to any `#forbid` declaration can be simutaeously satisfied, the database
+is invalidaed.
+
+Conversely, an ostensible solution will be invalidated unless all the premises to every `#demand`
+declaration can be simultaneously satisfied.
+
+## Syntax and grammar specification
+
+The syntax of Dusa is not whitespace-sensitive, and comments, which begin with a pound sign followed
+by a space or end of line and continue to the end of the line, are treated like whitespace.
 
 - A `<variable>` matches `/[A-Z][a-zA-Z0-9_]*/`
 - A `<wildcard>` matches `/_[a-zA-Z0-9_]*/` and represents variable names that you wish to be ignored.
@@ -170,7 +343,7 @@ all of their negations to hold.)
   surrounding any ASCII character in the range 32-126 except for `"` and `\`.
 - An `<int-literal>` matches `/0|-?[1-9][0-9]*/`
 
-## Grammar
+The grammar of Dusa programs is as follows
 
     <program>      ::= <declaration> <program> | ""
     <declaration>  ::= "#builtin" <builtin> <identifier> [ "." ]
@@ -202,26 +375,3 @@ all of their negations to hold.)
     <builtin>     ::= "INT_PLUS" | "INT_MINUS"
                    |  "NAT_ZERO" | "NAT_SUCC"
                    |  "STRING_CONCAT"
-
-## Built-in values and constructors
-
-On their own, built-in numbers and strings act no different than random uninterpreted constants,
-but they can be manipualted with special constructors added by `#builtin` declarations.
-
-A `#builtin` declarations change the lexer to represent certain identifiers as operations on built-in
-types. If you write
-
-    #builtin INT_PLUS plus
-    #builtin NAT_SUCC s
-
-then the identifiers `plus` and `s` will be parsed as `<builtin-identifiers>` instead of as regular
-identifiers until those built-ins are redefined.
-
-- The `NAT_ZERO` builtin takes no arguments and represents the natural number zero.
-- The `NAT_SUCC` builtin takes one natural number argument, and adds one to it. If `NAT_SUCC` is `s`,
-  then the premise `s X == 0` will always fail, since `X` would have to be negative for that solution
-  to work.
-- The `INT_PLUS` builtin takes two or more integer arguments and adds them all.
-- The `INT_MINUS` builtin takes two integer arguments and returns an integer, subtracting the second
-  from the first.
-- The `STRING_CONCAT` builtin takes two or more string arguments and concatenates them.
