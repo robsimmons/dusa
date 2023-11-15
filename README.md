@@ -338,7 +338,7 @@ by a space or end of line and continue to the end of the line, are treated like 
 
 - A `<variable>` matches `/[A-Z][a-zA-Z0-9_]*/`
 - A `<wildcard>` matches `/_[a-zA-Z0-9_]*/` and represents variable names that you wish to be ignored.
-- An `<identifier>` matches `/[a-z][a-zA-Z0-9_]`
+- An `<identifier>` matches `/[a-z][a-zA-Z0-9_]*/`
 - A `<string-literal>` is a regular string constant with no escape characters: two double quotes `"`
   surrounding any ASCII character in the range 32-126 except for `"` and `\`.
 - An `<int-literal>` matches `/0|-?[1-9][0-9]*/`
