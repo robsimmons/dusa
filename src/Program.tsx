@@ -46,6 +46,7 @@ export default function Program({ load, run, pause, setSolution, session }: Prop
           title="View code"
           onClick={(event) => {
             event.preventDefault();
+            pause();
             document.getElementById('session')!.className = 'mobile-view-editor';
           }}
         >
@@ -64,12 +65,12 @@ export default function Program({ load, run, pause, setSolution, session }: Prop
           </button>
         )}
         {session.status === 'paused' && (
-          <button title="Search for more solutions" onClick={() => run()}>
+          <button title="Search for more solutions" className="control" onClick={() => run()}>
             <PlayIcon width={ICON_SIZE} height={ICON_SIZE} /> resume
           </button>
         )}
         {session.status === 'running' && (
-          <button title="Pause searching for solutions" onClick={() => pause()}>
+          <button title="Pause searching for solutions" className="control" onClick={() => pause()}>
             <PauseIcon width={ICON_SIZE} height={ICON_SIZE} /> pause
           </button>
         )}

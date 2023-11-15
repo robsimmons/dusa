@@ -379,6 +379,10 @@ div#codemirror-root .cm-scroller {
     display: flex;
   }
 
+  .mobile-view-editor #explorer-header .control {
+    display: none;
+  }
+
   #explorer-header #explorer-status .extended-status {
     display: none;
   }
