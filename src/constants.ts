@@ -1,4 +1,4 @@
-export const ICON_SIZE = '1.3rem';
+export const ICON_SIZE = '24px';
 
 // Priority queue treatment of facts
 export const FACT_PRIO = 30;

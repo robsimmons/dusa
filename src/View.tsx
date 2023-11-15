@@ -42,18 +42,12 @@ export default function View(props: Props) {
             )}
             {props.query !== null && (
               <>
-                {props.status === 'done' && (
-                  <>
-                    {props.stats.solutions === 1 && 'unique solution found'}
-                    {props.stats.solutions > 1 &&
-                      `solution ${reportedSolutionNumber} of ${props.stats.solutions}`}
-                  </>
-                )}
+                {props.status === 'done' && `${reportedSolutionNumber} of ${props.stats.solutions}`}
                 {props.status !== 'done' && (
                   <>
-                    {props.query.solution === null && `solution ${reportedSolutionNumber} of ?`}
+                    {props.query.solution === null && `${reportedSolutionNumber} of ?`}
                     {props.query.solution !== null &&
-                      `solution ${reportedSolutionNumber} of ${props.stats.solutions}+`}
+                      `${reportedSolutionNumber} of ${props.stats.solutions}+`}
                   </>
                 )}
               </>

@@ -6,8 +6,14 @@ body {
   --dk-outer-padding: 12px;
   --dk-small-padding: 8px;
   --dk-small-radius: 8px;
-  --dk-medium-padding: 12px;
-  --dk-large-padding: 16px;
+  --dk-medium-padding: 16px;
+  --dk-tab-bottom-padding: 10px;
+  --dk-button-size: 2rem;
+  --dk-header-divider-line: 1px;
+  --dk-session-height: calc(
+    100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - var(--dk-button-size) -
+      var(--dk-tab-bottom-padding)
+  );
 
   --text-editor-panel-width: 1fr;
 
@@ -33,6 +39,10 @@ body {
   --oksolar-text-red: oklch(57% 0.15 20);
   --oksolar-text-red-highlight: oklch(57% 0.15 20);
   --oksolar-text-orange: oklch(57% 0.15 60);
+}
+
+button {
+  padding: 0;
 }
 
 @media (max-width: 650px) {
@@ -71,9 +81,10 @@ main {
   width: 100%;
   min-height: 100%;
   display: grid;
-  grid-template-columns: calc(2rem + var(--dk-outer-padding) * 2) 1fr;
+  grid-template-columns: 2rem 1fr;
+  gap: var(--dk-small-padding);
   margin: 0;
-  padding: 0;
+  padding: var(--dk-outer-padding);
   background: var(--oksolar-background);
   color: var(--oksolar-text);
   /* caret-color: var(--oksolar-text-emph); */
@@ -82,17 +93,17 @@ main {
 .dk-config {
   display: grid;
   align-items: end;
-  padding: var(--dk-outer-padding);
+  padding-bottom: var(--dk-small-padding);
 }
 
 .dk-config div {
   display: flex;
   flex-direction: column;
-  gap: var(--dk-large-padding);
+  gap: var(--dk-medium-padding);
 }
 
 .dk-config button {
-  height: 2rem;
+  height: var(--dk-button-size);
   border: 0;
   background: var(--oksolar-background);
   color: var(--oksolar-text);
@@ -111,7 +122,7 @@ main {
   background-color: var(--oksolar-background-highlight);
   color: var(--oksolar-text-highlight);
   border-radius: var(--dk-small-radius);
-  height: 2rem;
+  height: var(--dk-button-size);
   display: grid;
   justify-content: center;
   align-items: center;
@@ -131,11 +142,9 @@ main {
   background-color: var(--oksolar-background-deemph);
   border-radius: calc(var(--dk-small-radius) + var(--dk-small-padding));
   padding: var(--dk-small-padding);
-  margin: var(--dk-outer-padding);
-  margin-left: 0;
+  margin: 0;
   display: grid;
-  grid-template-rows: 3rem 1fr;
-  height: calc(100vh - 2 * var(--dk-outer-padding));
+  grid-template-rows: calc(2rem + var(--dk-tab-bottom-padding)) 1fr;
 }
 
 .dk-header {
@@ -149,12 +158,17 @@ main {
   flex-direction: row;
   gap: var(--dk-small-padding);
   overflow-x: scroll;
-  padding: 0 0 10px 0;
+  padding: 0 0 var(--dk-tab-bottom-padding) 0;
 }
 
-.dk-logo a {
+.dk-logo {
   font-size: 1.5rem;
+  line-height: 1.5rem;
+  margin-block: auto;
+  padding-bottom: var(--dk-tab-bottom-padding);
   padding-right: var(--dk-medium-padding);
+}
+.dk-logo a {
   color: var(--oksolar-text-emph);
   text-decoration: none;
 }
@@ -225,7 +239,7 @@ main {
 #session {
   display: none; /* JS sets as 'grid' to avoid resize flash */
   grid-template-rows: 1fr;
-  grid-template-columns: var(--text-editor-panel-width) 10px minmax(250px, 1fr);
+  grid-template-columns: var(--text-editor-panel-width) var(--dk-medium-padding) minmax(250px, 1fr);
   grid-template-areas: 'editor divider viewer';
 }
 
@@ -261,18 +275,17 @@ main {
   background-color: var(--oksolar-background);
   box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
   border-radius: var(--dk-small-radius);
-  padding: var(--dk-medium-padding);
   padding-left: var(--dk-small-padding);
-  padding-right: 0;
   display: grid;
   grid-area: editor;
 }
 
 div#codemirror-root .cm-editor {
-  height: calc(
-    100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 2 * var(--dk-medium-padding) -
-      3rem
-  );
+  height: var(--dk-session-height);
+}
+
+div#codemirror-root .cm-scroller {
+  padding-block: var(--dk-medium-padding);
 }
 
 @media (max-width: 650px) {
@@ -281,10 +294,7 @@ div#codemirror-root .cm-editor {
   }
 
   div#codemirror-root .cm-editor {
-    height: calc(
-      100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 2 *
-        var(--dk-medium-padding) - 3rem - 2rem - var(--dk-small-padding)
-    );
+    height: calc(var(--dk-session-height) - var(--dk-button-size) - var(--dk-small-padding));
   }
 }
 
@@ -294,13 +304,12 @@ div#codemirror-root .cm-editor {
   display: grid;
   grid-template-rows: calc(2rem) 1fr;
   gap: var(--dk-small-padding);
-  height: calc(100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 3rem);
   grid-area: viewer;
 }
 
 @media (max-width: 650px) {
   .mobile-view-editor #react-root {
-    height: 2rem;
+    height: var(--dk-button-size);
   }
 
   .mobile-view-editor #explorer-view {
@@ -320,7 +329,7 @@ div#codemirror-root .cm-editor {
 }
 
 #explorer-header button {
-  height: 2rem;
+  height: var(--dk-button-size);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -332,6 +341,7 @@ div#codemirror-root .cm-editor {
   white-space: nowrap;
   min-width: fit-content;
   flex-grow: 0;
+  padding-inline: var(--dk-small-padding);
 }
 
 #explorer-header button#explorer-view-code,
@@ -351,7 +361,7 @@ div#codemirror-root .cm-editor {
   margin-top: auto;
   margin-bottom: auto;
   text-align: right;
-  padding-inline: var(--dk-large-padding);
+  padding-inline: var(--dk-medium-padding);
   white-space: nowrap;
   flex-grow: 1;
 }
@@ -400,21 +410,22 @@ div#codemirror-root .cm-editor {
   border-top-left-radius: var(--dk-small-radius);
   border-top-right-radius: var(--dk-small-radius);
   overflow-x: hidden;
-  height: 2rem;
+  height: calc(var(--dk-button-size) + var(--dk-header-divider-line));
   max-width: 100%;
 }
 
 .explorer-view-header {
   display: flex;
   flex-direction: row;
-  height: 2rem;
+  height: calc(var(--dk-button-size) + var(--dk-header-divider-line));
   min-width: 0;
-  border-bottom: 1px solid var(--oksolar-text-deemph-2);
+  border-bottom: var(--dk-header-divider-line) solid var(--oksolar-text-deemph-2);
 }
 
 #explorer-view-header button {
-  min-width: 2rem;
+  width: 24px;
   background-color: transparent;
+  padding: 0;
   border: none;
   border-radius: var(--dk-small-radius);
   color: var(--oksolar-text);
@@ -432,7 +443,7 @@ div#codemirror-root .cm-editor {
 #explorer-view-header .status {
   margin-block: auto;
   width: fit-content;
-  min-width: 9rem;
+  min-width: 7rem;
   text-align: center;
   flex-shrink: 1;
   overflow-x: hidden;
@@ -440,12 +451,12 @@ div#codemirror-root .cm-editor {
 }
 
 #explorer-view-data {
-  padding-top: var(--dk-medium-padding);
+  padding-block: var(--dk-medium-padding);
   overflow-y: scroll;
   background-color: var(--oksolar-background);
   height: calc(
-    100vh - 2 * var(--dk-outer-padding) - 2 * var(--dk-small-padding) - 2 * var(--dk-medium-padding) -
-      3rem - 2rem - var(--dk-small-padding) * 2
+    var(--dk-session-height) - 2 * var(--dk-button-size) - var(--dk-small-padding) -
+      var(--dk-header-divider-line)
   );
   border-bottom-left-radius: var(--dk-small-radius);
   border-bottom-right-radius: var(--dk-small-radius);
