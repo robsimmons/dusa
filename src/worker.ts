@@ -14,7 +14,7 @@ export type WorkerQuery = {
   type: 'list';
   solution: number | null;
   value: string[];
-};
+} ;
 
 export interface WorkerStats {
   cycles: number;

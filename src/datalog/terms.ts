@@ -294,12 +294,14 @@ export function termToString(t: Pattern, needsParens = true): string {
     case 'string':
       return `"${t.value}"`;
     case 'const':
-    case 'special':
+    case 'special': {
+      const name = t.type === 'const' ? t.name : `${t.symbol}<${t.name}>`;
       return t.args.length === 0
-        ? t.name
+        ? name
         : needsParens
-        ? `(${t.name} ${t.args.map((arg) => termToString(arg)).join(' ')})`
-        : `${t.name} ${t.args.map((arg) => termToString(arg)).join(' ')}`;
+        ? `(${name} ${t.args.map((arg) => termToString(arg)).join(' ')})`
+        : `${name} ${t.args.map((arg) => termToString(arg)).join(' ')}`;
+    }
     case 'var':
       return t.name;
   }

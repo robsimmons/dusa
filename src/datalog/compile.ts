@@ -1,14 +1,15 @@
 import { CHOICE_PRIO, CONSTRAINT_PRIO, DEMAND_PRIO, PREFIX_PRIO } from '../constants';
 import { CompiledProgram, InternalPartialRule, InternalPremise, Program } from './engine';
 import { Declaration, Premise, Proposition } from './syntax';
-import { freeVars } from './terms';
+import { Pattern, freeVars } from './terms';
 
-function indexToRuleName(index: number): string {
+export function indexToRuleName(index: number): string {
   if (index >= 26) {
     return `${indexToRuleName(Math.floor(index / 26))}${String.fromCharCode(97 + (index % 26))}`;
   }
   return String.fromCharCode(97 + index);
 }
+
 
 export function compilePremises(
   rule: string,
@@ -74,6 +75,7 @@ export function compilePremises(
     conclusion: `${rule}${premises.length}`,
   };
 }
+
 
 export function compile(decls: Declaration[]): CompiledProgram {
   const program: Program = {
