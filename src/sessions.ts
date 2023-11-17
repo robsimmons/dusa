@@ -6,10 +6,8 @@ import {
   GRAPH_GENERATION_EXAMPLE,
   ROCK_PAPER_SCISSORS,
 } from './examples';
-import { Declaration, check, declToString } from './datalog/syntax';
-import { compile, indexToRuleName } from './datalog/compile';
+import { Declaration, check } from './datalog/syntax';
 import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker';
-import { binarize, binarizedProgramToString } from './datalog/binarize';
 
 function decodeDusaHashURI(): null | { program: string } {
   if (!window.location.hash.startsWith('#')) return null;
@@ -453,21 +451,7 @@ class SessionTabs {
           return Promise.resolve();
         }
 
-        const namedDecls = decls.map<[string, Declaration]>((decl, i) => [
-          indexToRuleName(i),
-          decl,
-        ]);
-
-        console.log(`Form 1: checked program with named declarations
-${namedDecls.map(([name, decl]) => `${name}: ${declToString(decl)}`).join('\n')}`);
-
-        const binarizedProgram = binarize(namedDecls);
-        console.log(`Form 2: Binarized program
-${binarizedProgramToString(binarizedProgram)}`);
-
-        const program = compile(decls);
-
-        return this.messageWorker(worker, { type: 'load', program }).then((response) => {
+        return this.messageWorker(worker, { type: 'load', program: decls }).then((response) => {
           if (response.type === 'done' || response.type === 'running') {
             this.sessionData[activeSession] = {
               status: response.type,

@@ -209,7 +209,6 @@ sessionDivider.addEventListener('mousedown', (event) => {
   window.addEventListener('mouseup', sessionDividerStop);
   const actualWidth = codemirrorRoot.getBoundingClientRect().width;
   const bodyStyle = document.getElementById('root')!.style;
-  console.log({ actualWidth, bodyStyle });
   bodyStyle.setProperty('--text-editor-panel-width', `${actualWidth}px`);
 });
 

@@ -1,20 +1,23 @@
 import { Data } from './datalog/data';
+import { declToString } from './datalog/syntax';
 import {
   ChoiceTree,
   ChoiceTreeNode,
-  CompiledProgram,
-  Database,
-  Program,
   factToString,
-  makeInitialDb,
+  pathToString,
   stepTreeRandomDFS,
-} from './datalog/engine';
+} from './datalog/choiceengine';
+import { Database, listFacts, makeInitialDb } from './datalog/forwardengine';
+import { Declaration } from './datalog/syntax';
+import { IndexedProgram, indexedProgramToString, indexize } from './datalog/indexize';
+import { indexToRuleName } from './datalog/compile';
+import { binarize, binarizedProgramToString } from './datalog/binarize';
 
 export type WorkerQuery = {
   type: 'list';
   solution: number | null;
   value: string[];
-} ;
+};
 
 export interface WorkerStats {
   cycles: number;
@@ -34,13 +37,15 @@ export type AppToWorker =
   | { type: 'status' }
   | { type: 'setsolution'; solution: number | null }
   | { type: 'stop' }
-  | { type: 'load'; program: CompiledProgram }
+  | { type: 'load'; program: Declaration[] }
   | { type: 'start' }
   | { type: 'reset' };
 
+const DEBUG_TRANSFORM = true;
+const DEBUG_EXECUTION = false;
 const CYCLE_LIMIT = 10000;
 const TIME_LIMIT = 500;
-let program: Program | null = null;
+let program: IndexedProgram | null = null;
 let solutions: Database[] = [];
 let setSolution: number | null = null;
 
@@ -68,7 +73,9 @@ function cycle(): null | number {
   try {
     while (stats.cycles < limit && start + TIME_LIMIT > performance.now()) {
       if (tree === null) return null;
-      //(pathToString(tree, path));
+      if (DEBUG_EXECUTION) {
+        console.log(pathToString(tree, path));
+      }
       const result = stepTreeRandomDFS(program!, tree, path, stats);
       tree = result.tree;
       path = result.tree === null ? path : result.path;
@@ -101,12 +108,8 @@ function resolveQuery(index: number): WorkerQuery {
   return {
     type: 'list',
     solution: setSolution,
-    value: ([] as string[])
-      .concat(
-        ...Object.entries(solutions[index].facts).map(([name, values]) =>
-          values.map(([args, value]) => factToString({ type: 'Fact', name, args, value })),
-        ),
-      )
+    value: listFacts(solutions[index])
+      .map(({ name, args, value }) => factToString({ name, args, value }))
       .sort(),
   };
 }
@@ -148,17 +151,41 @@ onmessage = (event: MessageEvent<AppToWorker>): true => {
   }
 
   switch (event.data.type) {
-    case 'load':
+    case 'load': {
       stats = newStats();
       path = [];
-      program = event.data.program.program;
+
+      const namedDecls = event.data.program.map<[string, Declaration]>((decl, i) => [
+        indexToRuleName(i),
+        decl,
+      ]);
+
+      if (DEBUG_TRANSFORM) {
+        console.log(`Form 1: checked program with named declarations
+${namedDecls.map(([name, decl]) => `${name}: ${declToString(decl)}`).join('\n')}`);
+      }
+
+      const binarizedProgram = binarize(namedDecls);
+      if (DEBUG_TRANSFORM) {
+        console.log(`Form 2: Binarized program
+${binarizedProgramToString(binarizedProgram)}`);
+      }
+
+      const indexizedProgram = indexize(binarizedProgram);
+      if (DEBUG_TRANSFORM) {
+        console.log(`Form 3: Index-aware program
+${indexedProgramToString(indexizedProgram)}`);
+      }
+
+      program = indexizedProgram;
       try {
-        tree = { type: 'leaf', db: makeInitialDb(event.data.program) };
+        tree = { type: 'leaf', db: makeInitialDb(indexizedProgram) };
         return resume('running');
       } catch (e) {
         stats.error = `${e}`;
         return resume('done');
       }
+    }
     case 'start':
       if (state === 'paused') {
         return resume('running');

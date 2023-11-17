@@ -1,21 +1,61 @@
-import { InternalPremise } from './engine';
 import { Declaration, Premise } from './syntax';
 import { Pattern, freeVars, termToString } from './terms';
+
+/**
+ * Binarization transformation
+ *
+ * The binarization transformation is straightforward in implementation and
+ * concept. A rule of this form:
+ *
+ *     a: C :- P0, P2, ... Pn.
+ *
+ * is turned into a series of rule n+1 rules, each with either one or two premises:
+ *
+ *     $a1 <vars> :- $a0, P0.
+ *     ...
+ *     $a(i+1) <vars> :- $ai <vars>, Pi.
+ *     ...
+ *     C :- $a(n+1).
+ */
+
+export type BinarizedPremise =
+  | {
+      type: 'Proposition';
+      name: string;
+      args: Pattern[];
+      value: Pattern;
+    }
+  | {
+      type: 'Equality' | 'Inequality';
+      a: Pattern; // Must have no new free variables
+      b: Pattern; // May have new free variables
+    };
+
+export function freeVarsBinarizedPremise(premise: BinarizedPremise): Set<string> {
+  switch (premise.type) {
+    case 'Equality':
+    case 'Inequality':
+      return freeVars(premise.a, premise.b);
+    case 'Proposition':
+      return freeVars(...premise.args, premise.value);
+  }
+}
 
 export type BinarizedRule =
   | {
       type: 'Binary';
-      premise: InternalPremise;
-      next: string;
-      carriedVars: string[];
-      sharedVars: string[];
-      introducedVars: string[];
+      premise: BinarizedPremise;
+      inName: string;
+      inVars: string[];
+      outName: string;
+      outVars: string[];
       premiseNumber: number;
       totalPremises: number;
     }
   | {
       type: 'Conclusion';
-      carriedVars: string[];
+      inName: string;
+      inVars: string[];
       name: string;
       args: Pattern[];
       values: Pattern[];
@@ -24,12 +64,12 @@ export type BinarizedRule =
 
 export interface BinarizedProgram {
   seeds: string[];
-  rules: [string, BinarizedRule][];
+  rules: BinarizedRule[];
   forbids: string[];
   demands: string[];
 }
 
-function binarizedPremiseToString(premise: InternalPremise): string {
+function binarizedPremiseToString(premise: BinarizedPremise): string {
   switch (premise.type) {
     case 'Equality':
       return `${termToString(premise.a)} == ${termToString(premise.b)}`;
@@ -42,21 +82,18 @@ function binarizedPremiseToString(premise: InternalPremise): string {
   }
 }
 
-function binarizedRuleToString(name: string, rule: BinarizedRule): string {
+function binarizedRuleToString(rule: BinarizedRule): string {
   switch (rule.type) {
     case 'Binary':
-      return `$${rule.next}${rule.carriedVars
-        .concat(rule.introducedVars)
-        .map((v) => ` ${v}`)
-        .join('')} :- $${name}${rule.carriedVars
-        .map((v) => ` ${v}`)
-        .join('')}, ${binarizedPremiseToString(rule.premise)}.`;
+      return `$${rule.outName}${rule.outVars.map((v) => ` ${v}`).join('')} :- $${
+        rule.inName
+      }${rule.inVars.map((v) => ` ${v}`).join('')}, ${binarizedPremiseToString(rule.premise)}.`;
     case 'Conclusion':
       return `${rule.name}${rule.args
         .map((arg) => ` ${termToString(arg)}`)
         .join('')} is { ${rule.values.map((arg) => termToString(arg)).join(', ')}${
         rule.exhaustive ? '' : '?'
-      } } :- $${name}${rule.carriedVars.map((v) => ` ${v}`).join('')}.`;
+      } } :- $${rule.inName}${rule.inVars.map((v) => ` ${v}`).join('')}.`;
   }
 }
 
@@ -65,7 +102,7 @@ export function binarizedProgramToString(program: BinarizedProgram) {
 Demands to derive: ${program.demands.map((name) => `$${name}`).join(', ')}
 Forbids to derive: ${program.forbids.map((name) => `$${name}`).join(', ')}
 Rules:
-${program.rules.map(([name, rule]) => binarizedRuleToString(name, rule)).join('\n')}`;
+${program.rules.map((rule) => binarizedRuleToString(rule)).join('\n')}`;
 }
 
 function binarizePremises(
@@ -74,101 +111,72 @@ function binarizePremises(
 ): {
   seed: string;
   conclusion: string;
-  newRules: [string, BinarizedRule][];
+  newRules: BinarizedRule[];
   carriedVars: string[];
 } {
   const knownFreeVars = new Set<string>();
   const knownCarriedVars: string[] = [];
   const totalPremises = premises.length;
-  const newRules = premises.map((premise, premiseNumber): [string, BinarizedRule] => {
-    const thisPartial = `${name}${premiseNumber}`;
-    const next = `${name}${premiseNumber + 1}`;
+  const newRules = premises.map((premise, premiseNumber): BinarizedRule => {
+    const inName = `${name}${premiseNumber}`;
+    const outName = `${name}${premiseNumber + 1}`;
     switch (premise.type) {
       case 'Inequality': {
-        const fv = freeVars(premise.a, premise.b);
-        return [
-          thisPartial,
-          {
-            type: 'Binary',
-            premise,
-            next,
-            carriedVars: [...knownCarriedVars],
-            sharedVars: [...fv],
-            introducedVars: [],
-            premiseNumber,
-            totalPremises,
-          },
-        ];
+        return {
+          type: 'Binary',
+          premise,
+          inName,
+          inVars: [...knownCarriedVars],
+          outName,
+          outVars: [...knownCarriedVars],
+          premiseNumber,
+          totalPremises,
+        };
       }
 
       case 'Equality': {
-        const fvA = freeVars(premise.a); // Definitely a subset of known FV;
-        const fvB = freeVars(premise.b); // May introduce new vars
-        const carriedVars = [...knownCarriedVars];
-        const sharedVars: string[] = [];
-        const introducedVars: string[] = [];
-        for (const v of fvA) {
-          sharedVars.push(v);
-        }
-        for (const v of fvB) {
-          if (fvA.has(v)) {
-            // Do nothing, already pushed this in the last loop
-          } else if (knownFreeVars.has(v)) {
-            sharedVars.push(v);
-          } else {
-            introducedVars.push(v);
+        const inVars = [...knownCarriedVars];
+        for (const v of freeVars(premise.b)) {
+          if (!knownFreeVars.has(v)) {
             knownCarriedVars.push(v);
             knownFreeVars.add(v);
           }
         }
 
-        return [
-          thisPartial,
-          {
-            type: 'Binary',
-            premise,
-            next,
-            carriedVars,
-            sharedVars,
-            introducedVars,
-            premiseNumber,
-            totalPremises,
-          },
-        ];
+        return {
+          type: 'Binary',
+          premise,
+          inName,
+          inVars,
+          outName,
+          outVars: [...knownCarriedVars],
+          premiseNumber,
+          totalPremises,
+        };
       }
 
       case 'Proposition': {
-        const newPremise: InternalPremise = {
+        const newPremise: BinarizedPremise = {
           ...premise,
           value: premise.value ?? { type: 'triv' },
         };
-        const fv = freeVars(...newPremise.args, newPremise.value);
-        const carriedVars = [...knownCarriedVars];
-        const sharedVars: string[] = [];
-        const introducedVars: string[] = [];
-        for (const v of fv) {
-          if (knownFreeVars.has(v)) {
-            sharedVars.push(v);
-          } else {
-            introducedVars.push(v);
+        const inVars = [...knownCarriedVars];
+        for (const v of freeVars(...newPremise.args, newPremise.value)) {
+          if (!knownFreeVars.has(v)) {
             knownCarriedVars.push(v);
             knownFreeVars.add(v);
           }
         }
-
-        return [
-          thisPartial,
-          {
-            type: 'Binary',
-            premise: newPremise,
-            next,
-            carriedVars,
-            sharedVars,
-            introducedVars,
-            premiseNumber,
-            totalPremises,
-          },
-        ];
+        return {
+          type: 'Binary',
+          premise: newPremise,
+          inName,
+          inVars,
+          outName,
+          outVars: [...knownCarriedVars],
+          premiseNumber,
+          totalPremises,
+        };
       }
     }
   });
@@ -180,10 +188,9 @@ function binarizePremises(
     carriedVars: knownCarriedVars,
   };
 }
-
 export function binarize(decls: [string, Declaration][]): BinarizedProgram {
   const seeds: string[] = [];
-  const rules: [string, BinarizedRule][] = [];
+  const rules: BinarizedRule[] = [];
   const forbids: string[] = [];
   const demands: string[] = [];
 
@@ -208,17 +215,15 @@ export function binarize(decls: [string, Declaration][]): BinarizedProgram {
       case 'Rule': {
         const { seed, newRules, conclusion, carriedVars } = binarizePremises(name, decl.premises);
         seeds.push(seed);
-        rules.push(...newRules, [
-          conclusion,
-          {
-            type: 'Conclusion',
-            name: decl.conclusion.name,
-            args: decl.conclusion.args,
-            values: decl.conclusion.values ?? [{ type: 'triv' }],
-            exhaustive: decl.conclusion.exhaustive,
-            carriedVars,
-          },
-        ]);
+        rules.push(...newRules, {
+          type: 'Conclusion',
+          inName: conclusion,
+          inVars: carriedVars,
+          name: decl.conclusion.name,
+          args: decl.conclusion.args,
+          values: decl.conclusion.values ?? [{ type: 'triv' }],
+          exhaustive: decl.conclusion.exhaustive,
+        });
       }
     }
   }
