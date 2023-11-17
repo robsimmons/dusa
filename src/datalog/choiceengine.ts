@@ -199,7 +199,10 @@ export function stepTreeRandomDFS(
         case 'discard': {
           // Return only as far as possible
           stats.deadEnds += 1;
-          return cleanPath(path);
+          const result = cleanPath(path);
+          if (result.tree === null || result.path.length === 0) return result;
+          if (Math.random() > 0.01) return result;
+          return { tree: result.path[0][0], path: [] };
         }
 
         default:
