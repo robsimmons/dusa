@@ -1,8 +1,8 @@
-import { Data, TRIV_DATA, dataToString, hide } from './data';
-import { DataMap } from './datamap';
+import { Data, TRIV_DATA, dataToString, hide } from '../datastructures/data';
+import { DataMap } from '../datastructures/datamap';
 import { Database, dbToString, insertFact, listFacts, stepDb } from './forwardengine';
-import { IndexedProgram } from './indexize';
-import { equal } from './terms';
+import { IndexedProgram } from '../langauge/indexize';
+import { equal } from './dataterm';
 
 export interface ChoiceTreeLeaf {
   type: 'leaf';

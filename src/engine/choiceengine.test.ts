@@ -1,14 +1,12 @@
-import { binarize, binarizedProgramToString } from './binarize';
 import { execute, solutionsToStrings } from './choiceengine';
-import { indexToRuleName } from './compile';
-import { parse } from './dusa-parser';
+import { compile } from '../langauge/compile';
+import { parse } from '../langauge/dusa-parser';
 import { makeInitialDb } from './forwardengine';
-import { indexedProgramToString, indexize } from './indexize';
-import { Declaration, check, declToString } from './syntax';
+import { check } from '../langauge/syntax';
 import { test, expect } from 'vitest';
 
-function testExecution(program: string, debug = false) {
-  const parsed = parse(program);
+function testExecution(source: string, debug = false) {
+  const parsed = parse(source);
   if (parsed.errors !== null) {
     throw parsed.errors;
   }
@@ -18,25 +16,8 @@ function testExecution(program: string, debug = false) {
     throw checked.errors;
   }
 
-  const named = checked.decls.map<[string, Declaration]>((decl, i) => [indexToRuleName(i), decl]);
-  if (debug) {
-    console.log(`Form 1: checked program with named declarations
-${named.map(([name, decl]) => `${name}: ${declToString(decl)}`).join('\n')}`);
-  }
-
-  const binarized = binarize(named);
-  if (debug) {
-    console.log(`\nForm 2: Binarized program
-${binarizedProgramToString(binarized)}`);
-  }
-
-  const indexed = indexize(binarized);
-  if (debug) {
-    console.log(`\nForm 3: Index-aware program
-${indexedProgramToString(indexed)}`);
-  }
-
-  return execute(indexed, makeInitialDb(indexed), debug);
+  const program = compile(checked.decls, debug);
+  return execute(program, makeInitialDb(program), debug);
 }
 
 test('Multi-step declaration, basic nat (in)equality', () => {

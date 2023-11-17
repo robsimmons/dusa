@@ -7,7 +7,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Session } from './sessions';
 import { ICON_SIZE } from './constants';
-import View from './View';
+import SolutionViewer from './SolutionViewer';
 
 interface Props {
   session: Session;
@@ -17,7 +17,7 @@ interface Props {
   setSolution: (index: number | null) => void;
 }
 
-export default function Program({ load, run, pause, setSolution, session }: Props) {
+export default function SolutionsExplorer({ load, run, pause, setSolution, session }: Props) {
   const shouldReload =
     session.status !== 'unconnected' && session.status !== 'load-error' && session.textModified;
 
@@ -116,7 +116,7 @@ export default function Program({ load, run, pause, setSolution, session }: Prop
       )}
       {session.status !== 'load-error' && session.status !== 'unconnected' && (
         <div id="explorer-view">
-          <View
+          <SolutionViewer
             status={session.status}
             stats={session.stats}
             query={session.query}

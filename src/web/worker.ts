@@ -1,17 +1,15 @@
-import { Data } from './datalog/data';
-import { declToString } from './datalog/syntax';
+import { Data } from '../datastructures/data';
 import {
   ChoiceTree,
   ChoiceTreeNode,
   factToString,
   pathToString,
   stepTreeRandomDFS,
-} from './datalog/choiceengine';
-import { Database, listFacts, makeInitialDb } from './datalog/forwardengine';
-import { Declaration } from './datalog/syntax';
-import { IndexedProgram, indexedProgramToString, indexize } from './datalog/indexize';
-import { indexToRuleName } from './datalog/compile';
-import { binarize, binarizedProgramToString } from './datalog/binarize';
+} from '../engine/choiceengine';
+import { Database, listFacts, makeInitialDb } from '../engine/forwardengine';
+import { Declaration } from '../langauge/syntax';
+import { IndexedProgram } from '../langauge/indexize';
+import { compile } from '../langauge/compile';
 
 export type WorkerQuery = {
   type: 'list';
@@ -154,32 +152,9 @@ onmessage = (event: MessageEvent<AppToWorker>): true => {
     case 'load': {
       stats = newStats();
       path = [];
-
-      const namedDecls = event.data.program.map<[string, Declaration]>((decl, i) => [
-        indexToRuleName(i),
-        decl,
-      ]);
-
-      if (DEBUG_TRANSFORM) {
-        console.log(`Form 1: checked program with named declarations
-${namedDecls.map(([name, decl]) => `${name}: ${declToString(decl)}`).join('\n')}`);
-      }
-
-      const binarizedProgram = binarize(namedDecls);
-      if (DEBUG_TRANSFORM) {
-        console.log(`Form 2: Binarized program
-${binarizedProgramToString(binarizedProgram)}`);
-      }
-
-      const indexizedProgram = indexize(binarizedProgram);
-      if (DEBUG_TRANSFORM) {
-        console.log(`Form 3: Index-aware program
-${indexedProgramToString(indexizedProgram)}`);
-      }
-
-      program = indexizedProgram;
+      program = compile(event.data.program, DEBUG_TRANSFORM);
       try {
-        tree = { type: 'leaf', db: makeInitialDb(indexizedProgram) };
+        tree = { type: 'leaf', db: makeInitialDb(program) };
         return resume('running');
       } catch (e) {
         stats.error = `${e}`;

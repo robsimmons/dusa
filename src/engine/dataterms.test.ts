@@ -1,5 +1,5 @@
-import { hide } from './data';
-import { Substitution, match } from './terms';
+import { hide } from '../datastructures/data';
+import { Substitution, match } from './dataterm';
 import { test, expect } from 'vitest';
 
 test('Match patterns with data', () => {

@@ -1,5 +1,5 @@
-import { Issue } from './parsing/parser';
-import { SourceLocation } from './parsing/source-location';
+import { Issue } from '../parsing/parser';
+import { SourceLocation } from '../parsing/source-location';
 import { ParsedPattern, Pattern, freeParsedVars, repeatedWildcards, termToString } from './terms';
 
 export interface Proposition {

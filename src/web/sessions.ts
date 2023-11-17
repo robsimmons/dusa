@@ -1,12 +1,12 @@
-import { parse } from './datalog/dusa-parser';
-import { SourceLocation } from './datalog/parsing/source-location';
+import { parse } from '../langauge/dusa-parser';
+import { SourceLocation } from '../parsing/source-location';
 import {
   CHARACTER_CREATION_EXAMPLE,
   CKY_PARSING_EXAMPLE,
   GRAPH_GENERATION_EXAMPLE,
   ROCK_PAPER_SCISSORS,
 } from './examples';
-import { Declaration, check } from './datalog/syntax';
+import { Declaration, check } from '../langauge/syntax';
 import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker';
 
 function decodeDusaHashURI(): null | { program: string } {

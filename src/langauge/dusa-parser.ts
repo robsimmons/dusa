@@ -1,8 +1,8 @@
 import { Token, dusaTokenizer } from './dusa-tokenizer';
 import { ParsedPattern } from './terms';
 import { ParsedDeclaration, ParsedPremise } from './syntax';
-import { Issue, parseWithStreamParser } from './parsing/parser';
-import { SourceLocation, SourcePosition } from './parsing/source-location';
+import { Issue, parseWithStreamParser } from '../parsing/parser';
+import { SourceLocation, SourcePosition } from '../parsing/source-location';
 
 interface Istream<T> {
   next(): T | null;

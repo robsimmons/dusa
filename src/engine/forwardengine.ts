@@ -1,13 +1,13 @@
-import { AttributeMap } from './attributemap';
-import PQ from './binqueue';
-import { Data, dataToString } from './data';
+import { AttributeMap } from '../datastructures/attributemap';
+import PQ from '../datastructures/binqueue';
+import { Data, dataToString } from '../datastructures/data';
 import {
   IndexInsertionRule,
   IndexedBinaryRule,
   IndexedConclusion,
   IndexedProgram,
-} from './indexize';
-import { Substitution, apply, equal, match } from './terms';
+} from '../langauge/indexize';
+import { Substitution, apply, equal, match } from './dataterm';
 
 type Prefix = { type: 'prefix'; name: string; shared: Data[]; passed: Data[] };
 type NewFact = { type: 'fact'; name: string; args: Data[]; value: Data };

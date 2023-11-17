@@ -14,7 +14,7 @@ interface Props {
   setSolution: (index: number | null) => void;
 }
 
-export default function View(props: Props) {
+export default function SolutionViewer(props: Props) {
   const reportedSolutionNumber = (props.query?.solution ?? props.stats.solutions - 1) + 1;
 
   return (

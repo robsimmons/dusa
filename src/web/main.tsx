@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import Tabs from './Tabs.tsx';
 import Config from './Config.tsx';
-import { editorChangeListener, getEditorContents, setEditorContents } from './codemirror';
+import { editorChangeListener, getEditorContents, setEditorContents } from './codemirror.ts';
 import { sessionManager } from './sessions.ts';
-import Program from './Program.tsx';
+import Program from './SolutionsExplorer.tsx';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { LS_SESSION_DIVIDER_PROPORTION } from './constants.ts';
 
