@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "main": "lib/client.js",
+  "types": "lib/client.d.ts",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
