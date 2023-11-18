@@ -50,8 +50,8 @@ export function termToString(t: Pattern, needsParens = true): string {
       return t.args.length === 0
         ? name
         : needsParens
-          ? `(${name} ${t.args.map((arg) => termToString(arg)).join(' ')})`
-          : `${name} ${t.args.map((arg) => termToString(arg)).join(' ')}`;
+        ? `(${name} ${t.args.map((arg) => termToString(arg)).join(' ')})`
+        : `${name} ${t.args.map((arg) => termToString(arg)).join(' ')}`;
     }
     case 'var':
       return t.name;
