@@ -4,6 +4,7 @@
   "type": "module",
   "main": "lib/client.js",
   "types": "lib/client.d.ts",
+  "license": "GPL-3.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -36,7 +37,7 @@
     "eslint-plugin-react-refresh": "^0.4.3",
     "prettier": "^3.0.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0", 
+    "react-dom": "^18.2.0",
     "typescript": "^5.0.2",
     "vite": "^5.0.0",
     "vitest": "^0.34.6"
