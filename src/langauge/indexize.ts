@@ -90,6 +90,7 @@ function indexedRuleToString(rule: IndexedBinaryRule) {
     if (location === 'shared') return rule.shared[index];
     if (location === 'introduced') return rule.introduced[index];
     if (location === 'passed') return rule.passed[index];
+    return location; // location has type never
   }
 
   const premiseStr =

@@ -1,20 +1,17 @@
 {
   "name": "dusa",
-  "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "lib/engine/choiceengine.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "lib": "tsc --project tsconfig.nodemodule.json",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prettier": "prettier --write *.ts *.json *.html *.md **/*.ts* **/*.json **/*.css **/*.html **/*.md"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@codemirror/commands": "^6.3.0",
@@ -37,8 +34,13 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "prettier": "^3.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0", 
     "typescript": "^5.0.2",
-    "vite": "^4.4.5",
+    "vite": "^5.0.0",
     "vitest": "^0.34.6"
+  },
+  "dependencies": {
+    "batsat": "^0.0.2"
   }
 }
