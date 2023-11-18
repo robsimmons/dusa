@@ -2,7 +2,7 @@
   "name": "dusa",
   "version": "0.0.0",
   "type": "module",
-  "main": "lib/engine/choiceengine.js",
+  "main": "lib/client.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -39,8 +39,5 @@
     "typescript": "^5.0.2",
     "vite": "^5.0.0",
     "vitest": "^0.34.6"
-  },
-  "dependencies": {
-    "batsat": "^0.0.2"
   }
 }
