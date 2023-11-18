@@ -1,0 +1,14 @@
+*.test.js
+
+/.github
+/coverage
+/dist
+/public
+/src
+
+/.eslintrc.cjs
+/.prettierrc
+/index.html
+/tsconfig*.json
+/vite.config.ts
+/vitest.config.ts
