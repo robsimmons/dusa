@@ -33,7 +33,6 @@ export type ParsedPattern =
   | { type: 'wildcard'; name: null | string; loc: SourceLocation }
   | { type: 'var'; name: string; loc: SourceLocation };
 
-
 export function termToString(t: Pattern, needsParens = true): string {
   switch (t.type) {
     case 'triv':
@@ -51,8 +50,8 @@ export function termToString(t: Pattern, needsParens = true): string {
       return t.args.length === 0
         ? name
         : needsParens
-        ? `(${name} ${t.args.map((arg) => termToString(arg)).join(' ')})`
-        : `${name} ${t.args.map((arg) => termToString(arg)).join(' ')}`;
+          ? `(${name} ${t.args.map((arg) => termToString(arg)).join(' ')})`
+          : `${name} ${t.args.map((arg) => termToString(arg)).join(' ')}`;
     }
     case 'var':
       return t.name;
