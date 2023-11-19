@@ -4,7 +4,7 @@
   "type": "module",
   "main": "lib/client.js",
   "types": "lib/client.d.ts",
-  "license": "GPL-2.0",
+  "license": "GPL-3.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
