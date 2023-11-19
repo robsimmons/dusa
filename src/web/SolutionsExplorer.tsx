@@ -38,8 +38,8 @@ export default function SolutionsExplorer({ load, run, pause, setSolution, sessi
           {session.status === 'unconnected' || session.status === 'load-error'
             ? 'load program'
             : shouldReload
-            ? 'program changed! reload?'
-            : 'reload'}
+              ? 'program changed! reload?'
+              : 'reload'}
         </button>
         <button
           id="explorer-view-code"
