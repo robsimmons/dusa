@@ -5,7 +5,6 @@ sources:
  - https://git.sr.ht/~robsimmons/dusa
 tasks:
  - setup: |
-     false
      # From https://github.com/nodesource/distributions
      sudo apt-get update
      sudo apt-get install -y ca-certificates curl gnupg

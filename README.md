@@ -1,5 +1,7 @@
 # Dusa Language
 
+[![Build status](https://builds.sr.ht/~robsimmons/dusa.svg)](https://builds.sr.ht/~robsimmons/dusa?)
+
 [![Coverage Status](https://coveralls.io/repos/github/robsimmons/dusa/badge.svg?branch=main)](https://coveralls.io/github/robsimmons/dusa?branch=main)
 
 Dusa is a logic programming language that shares properties of Datalog (as implemented in systems like
