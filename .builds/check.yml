@@ -1,7 +1,7 @@
 image: ubuntu/jammy
 secrets:
   - c107faf9-3ef2-4ee0-83fa-e7693c38569b
-  - 3d8a7f2f-6e94-4dd9-9d6a-8cda8d63ab51
+  - 6394dd55-8d43-42dc-ab84-6ff2e006f37c
 sources:
   - https://git.sr.ht/~robsimmons/dusa
 tasks:
@@ -30,18 +30,16 @@ tasks:
       npm run build
       npm run lib
   - github: |
-      echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
-      cd dusa
       if [ "$GIT_REF" == "refs/heads/main" ]
       then
+        cd dusa
+        echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
         git remote add github git@github.com:robsimmons/dusa.git
         git push github main
       fi
   - publish: |
       if [ "$GIT_REF" == "refs/heads/publish" ]
       then
-        set +x
-        . ~/.buildsecrets
-        set -x
+        cd dusa
         npm publish
       fi
