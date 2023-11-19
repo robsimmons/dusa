@@ -14,9 +14,9 @@ Dusa lives online at [dusa.rocks](https://dusa.rocks/).
 
 ## Introduction to Datalog
 
-Datalog-like languages try to use logical implication to express the sorts of problems that, in a
-language like SQL, you would solve with database joins. The simplest declarations in Dusa are just
-declaring facts, like who a character's parent is.
+Datalog-like languages use logical implication to express the sorts of problems that, in a language like
+SQL, you would solve with database joins. The simplest declarations in Dusa are just declaring facts, like
+who a character's parent is.
 
     parent "Arya" "Catelyn".
     parent "Arya" "Eddard".
@@ -47,7 +47,7 @@ Rickard.
 The propositions in the previous section were all _relations_. Each of `parent`, `grandparent`,
 and `ancestor` were relations between two characters.
 
-It's also possible to have propositions that are functions.
+It's also possible to have propositions that are _functions_.
 
 - Relations look like this: `prop t1 t2 ... tn-1 tn`
 - Functions look like this: `prop t1 t2 ... tn-1 is tn` (`is` is a keyword)
@@ -67,8 +67,14 @@ Functional propositions create integrity constraints on the database of facts th
 If these constraints are violated by saying that multiple keys map to the same value, then the database
 is thrown out completely.
 
-Consider trying to make `sibling` a functional proposition instead of a relational proposition in our
-example, like this:
+If we try to give Arya two favorite weapons, for instance, the database will be invalidated for violating
+an integrity constraint.
+
+    weapon "Arya" is "smallsword".
+    weapon "Arya" is "greatsword".
+
+For a more subtle example, consider trying to make `sibling` a functional proposition instead of a
+relational proposition, like this:
 
     sibling A is B :- parent A P, parent B P, A != B.
 
@@ -77,8 +83,8 @@ we then add a seemingly innoccuous additional fact...
 
     parent "Bran" "Eddard".
 
-...then Dusa will throw out the database in its entirety, reporting that there are no solutions. By trying
-to derive both `sibling "Arya" is "Sansa"` and `sibling "Arya" is "Bran"`, the database failed an integrity
+...then Dusa will throw out the database in its entirety, reporting that there are no solutions. By
+deriving both `sibling "Arya" is "Sansa"` and `sibling "Arya" is "Bran"`, the database failed an integrity
 constraint and was completely invalidated.
 
 The takeway here is that we made a mistake: the `sibling` relationship should be a relation, not a
@@ -105,13 +111,12 @@ sets) that meet certain contraints. Whereas traditional Datalog aims to compute 
 zero databases, if an integrity constraint fails), answer set programming allows different choices to
 be made that let multiple possible databases diverge.
 
-Dusa allows this kind of programming by supporting mutually exclusive assignments to a functional
-predicate. Any assignment which satisfies all integrity constraints is a valid solution. (Answer set
-programming calls them "answer sets" or "models," Dusa calls them "solutions," but they're the same
-concept.)
+Dusa allows choices by supporting mutually exclusive assignments to a functional predicate. Any assignment
+which satisfies all integrity constraints is a valid solution. (Answer set programming calls them "answer
+sets" or "models," Dusa calls them "solutions," but they're the same concept.)
 
-If we have three suspects, Amy, Harry, and Sally, we can assign each of them guilt or
-innocence with the following program:
+If we have three suspects, Amy, Harry, and Sally, we can assign each of them guilt or innocence with the
+following program:
 
     suspect amy.
     suspect harry.
@@ -127,16 +132,16 @@ If we then add a constraint that only one suspect may be guilty...
     #forbid guilt Susp1 is guilty, guilt Susp2 is guilty, Susp1 != Susp2.
 
 ...Dusa will only be able to generate four solutions, one where each suspect is guilty and one where all
-suspects are innocent. If we want someone to be guilty, which would limit us to three models, we can specify
-that too:
+suspects are innocent. If we want someone to be guilty, which would limit us to three models, we can
+specify that too:
 
     #demand guilt _ is guilty.
 
 Answer set programming is sometimes compared to boolean satisfiability solving, and is sometimes
-implemented with general purpose satisfiablity solvers. We can also use Dusa as a (pretty bad) boolean
-satisfibility solver, by assigning every proposition we come across the value `true` or `false`. The
-[Wikipedia article describing a basic SAT-solving algorithm, DPLL](https://en.wikipedia.org/wiki/DPLL_algorithm),
-uses as its example the following SAT instance:
+implemented with general purpose boolean satisfiablity solvers. We can use Dusa as a (pretty bad) boolean
+satisfibility solver,by assigning every proposition we come across the value `true` or `false`. The
+[Wikipedia article describing a basic SAT-solving algorithm,
+DPLL](https://en.wikipedia.org/wiki/DPLL_algorithm), uses as its example the following SAT instance:
 
     (a' + b  + c ) * (a  + c  + d ) *
     (a  + c  + d') * (a  + c' + d ) *
@@ -144,8 +149,8 @@ uses as its example the following SAT instance:
     (a' + b  + c') * (a' + b' + c )
 
 We can ask Dusa to solve this problem by negating each the OR-ed together clauses and making each one
-a `#forbid` constraint. (Needing one of the literals in the clause to hold is the same as needing
-all of their negations to hold.)
+a `#forbid` constraint. (Needing one of the literals in a clause to hold is the same as needing
+all of the negations to hold.)
 
     a is { true, false }.
     b is { true, false }.
@@ -163,8 +168,8 @@ all of their negations to hold.)
 
 # Language definition
 
-A Dusa program is a sequence of declarations. This program has 2 declarations, and we read it
-as saying that `a` is immediately provable and that `a` implies `b`.
+A Dusa program is a sequence of declarations. This program has 2 declarations, and we read it as saying
+that `a` is immediately provable and that `a` implies `b`.
 
     # a pound sign followed by a space is a line comment
     a.
@@ -172,16 +177,16 @@ as saying that `a` is immediately provable and that `a` implies `b`.
 
 ## Terms
 
-Most declarations in Dusa contain terms, like numbers, strings, and constructors are all terms.
-When you write `edge a b` in Dusa, both `a` and `b` get treated as constructors that take no arguments
-(we'll usually call these "constants.")
+Most declarations in Dusa contain terms. Numbers, strings, and constructors are all terms. When you write
+`edge a b` in Dusa, both `a` and `b` get treated as constructors that take no arguments (we'll usually
+call these "constants.")
 
 ## Attributes and values
 
-A fact in Dusa always consist of an attribute --- a predicate plus zero or more
-terms --- and a value --- a single term. The predicate plus its terms is called an **attribute**,
-and every attribute must have at most one value: deriving both `attr is a` and `attr is b` will
-result in the database being invalidated for failing an integrity constraint.
+A fact in Dusa always consists of an attribute --- a predicate plus zero or more terms --- and a value ---
+a single term. The predicate plus its terms is called an **attribute**, and every attribute must have at
+most one value: deriving both `attr is a` and `attr is b` will result in the database being invalidated
+for failing an integrity constraint.
 
 When we don't write an attribute, that's just syntactic sugar for saying that the attribute's value is
 actually `()`, a special term that is pronounced "unit." So our program above is actually shorthand
@@ -192,7 +197,8 @@ for writing this:
 
 ## Closed rules
 
-The most important kinds of declarations in Dusa are rules, which we call **open** and **closed**. An closed rule looks like this:
+The most important declarations in Dusa are rules. There are two types of declarations, **open** and
+**closed**. An closed rule looks like this:
 
     <attribute> is { <value1>, ..., <valuen> } :- <premises>.
 
@@ -200,13 +206,13 @@ and it means that, if the premises hold, Dusa must assign the attribute to one o
 (If we've already given the attribute a value, then that attribute must be one of the listed values,
 or else the database will be invalidated.)
 
-It's quite common that we want, as the conclusion of a rule, to establish that a specific value
-is the case. In that case, we don't need to write the curly braces. The program
+It's quite common that we want, as the conclusion of a rule, to assign one specific value to an attribute.
+In that case, we don't need to write the curly braces. This program:
 
     p is 1.
     q is { 2, 3 }.
 
-is syntactic sugar for the program
+is syntactic sugar for theis program:
 
     p is { 1 }.
     q is { 2, 3 }.
@@ -221,39 +227,145 @@ is, in its fully expanded form, written like this:
     a is { () }.
     b is { () } :- a is ().
 
+### Closed rules are create intersections
+
+This program has two solutions: one just containing `a is blue` and one just containing `a is orange`:
+
+    a is { blue, orange, red }.
+    a is { blue, orange, green }.
+
+The rules of forward chaining logic programming say that every rule that can fire must fire, and this
+program has two rules that can fire. If we imagine the first rule firing "first," it creates three possible
+consistent databases: the first just containing `a is blue`, the second just containing `a is orange`, and
+the third just containing `a is red`.
+
+- In the first database, where `a is blue`, there's only one valid way for the first rule to fire
+  again: choosing blue. Choosing orange or red will just invalidate the database. Therefore, we've gotten
+  all the information we can get out of the first rule. The same is true for the second rule: choosing
+  orange or green will invalidate the database, so we've gotten all the information we can out of the
+  second rule.
+- Analagously, in the second database where `a is orange`, there's only one valid way for either rule to
+  fire.
+- In the third database, where `a is red`, every way of firing the second rule invalidates the database.
+  Because every rule that can fire must fire, this means that the second rule requires us to invalidate
+  the database where `a is red`.
+
 ## Open rules
 
-Open rules include a question mark as one of the choices, or after the last choice. The
-following rules are all equivalent, though only the first two are recommended.
+Open rules include a question mark after the last choice.
 
     a is { 1, 2? } :- b..
-    a is { 1, 2, ? } :- b.
-    a is { 1, ?, 2 } :- b.
-    a is { ?, 1, ?, 2? } :- b.
 
-If all premises of an open rule hold, then Dusa will try to evaluate program further with each of the
-listed attributes, but will also leave open the option that some other chain of reasoning might assign
+If all premises of an open rule hold, then Dusa will try to evaluate the program further with each of the
+listed attributes, but will **also** leave open the option that some other chain of reasoning might assign
 some different value to the attribute.
 
-When Dusa considers the "question mark path" of a derivation, it does **not** treat the attribute
-as if it has some value that's not yet determined; instead, it treats the open rule as if
-it hasn't ever fired. To see why this matters, consider the following program:
+    color is { brown, blue }.
+    species is { dolphin, fish? }.
+    species is { bear? } :- color is brown.
 
-    a is { 1, 2, ? }.
+When evaluating the first rule, the color must be blue or brown: no other possibility is allowed when
+dealing with a closed rule. When evaluating the second rule, however, there are three possibilities:
+the species is dolphin, the species is fish, and the species might be determined later by some other
+chain of reasoning if we don't commit. And indeed, the third rule allows us to derive that the species
+is potentially bear if the color is brown.
+
+The program has five total solutions:
+
+- `color is brown`, `species is dolphin`
+- `color is brown`, `species is fish`
+- `color is blue`, `species is dolphin`
+- `color is blue`, `species is fish`
+- `color is brown`, `species is bear`
+
+If we'd made the conclusion of the last rule `species is { bear }` --- or, equivalently, `species is bear`
+--- it would require that when the color is brown, the species is bear, invalidating the brown+dolphin and
+brown+fish solutions. By leaving the third rule open, it didn't invalidate solutions where a different
+chain of reasoning had assigned a different species.
+
+### Open rules create unions
+
+The following programs all have exactly 3 solutions: `a is 1`, `a is 2`, and `a is 3`.
+
+Program 1
+
+    a is { 1, 2, 3? }.
+
+Program 2
+
+    a is { 1? }.
+    a is { 2? }.
+    a is { 3? }.
+
+Program 3
+
+    a is { 1, 2? }.
+    a is { 2, 3? }.
+
+Open rules have the effect of
+
+### Open rules for picking from a different relation
+
+A common pattern in Dusa is having closed rules where the domain of the rule gets repeated:
+
+    nameOf hero is { "Celeste", "Nimbus", "Luna", "Terra" }.
+    nameOf sidekick is { "Celeste", "Nimbus", "Luna", "Terra" }.
+    nameOf villian is { "Celeste", "Nimbus", "Luna", "Terra" }.
+
+Instead of having to repeat the list of names every time, it's desirable to have one relation describe
+the possible names. Using a closed rule will not work:
+
+    name "Celeste".
+    name "Nimbus".
+    name "Luna".
+    name "Terra".
+
+    nameOf hero is { Name } :- name Name.
+
+This program will try to force mutually contradictory names on the hero! That program is equivalent to
+this one, which similarly has no solutions:
+
+    nameOf hero is "Celeste".
+    nameOf hero is "Nimbus".
+    nameOf hero is "Luna".
+    nameOf hero is "Terra".
+
+Forcing incompatible names on the hero, as the last two programs did, will invalidate the database
+and prevent there from being any solutions.
+
+Using an open rule does allow us to separate the set of names from their assignment to characters:
+
+    name "Celeste".
+    name "Nimbus".
+    name "Luna".
+    name "Terra".
+
+    nameOf hero is { Name? } :- name Name.
+    nameOf sidekick is { Name? } :- name Name.
+    nameOf villian is { Name? } :- name Name.
+
+The rules above allow for any of the valid names to be given to each character, but also provide for the
+possibility that a different name will get assigned to the character.
+
+### Open rules don't provide extra information
+
+When Dusa considers the "question mark path" of a derivation, it does **not** treat the attribute
+as if it has some value that's not yet determined; instead, it treats the open rule as if it hasn't ever
+fired. To see why this matters, consider the following program:
+
+    a is { 1, 2? }.
     b :- a is _.
     a is { 3? } :- b.
 
-Procedurally, Dusa must follow three chains of logic. In the first chain of logic,
-Dusa derives `a is 1` as
-a fact, uses that to further derive `b`, and then considers the third rule, which opens up
-the possibility that `a is 3`, but this cannot be derived as it would conflict with the fact
-`a is 1`. In the second chain of logic, Dusa does the same thing, but for `a is 2`.
+Procedurally, Dusa must follow three chains of logic. In the first chain of logic, Dusa derives `a is 1` as
+a fact, uses that to further derive `b`, and then considers the third rule, which opens up the possibility
+that `a is 3`, but this cannot be derived as it would conflict with the fact `a is 1`. In the second chain
+of logic, Dusa does the same thing, but for `a is 2`.
 
-In the final chain, if we acted like `a is ?` was true for an as-yet-unknown value, we'd
-be able to use that fact to derive `b` with the second rule and then `a is 3` with the third
-rule. That is **not** how Dusa works. In actuality, the third chain of reasoning will be rejected,
-because no subsequent reasoning will derive any no knowledge about the value assigned to the
-attribute `a`.
+In the final chain, if we acted like `a is ?` was true for an as-yet-unknown value, we'd be able to use
+that fact to derive `b` with the second rule and then `a is 3` with the third rule. That is **not** how
+Dusa works. In actuality, the third chain of reasoning will be rejected, because no subsequent reasoning
+will derive any no knowledge about the value assigned to the attribute `a`.
 
 ## Variables
 
