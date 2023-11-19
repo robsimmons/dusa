@@ -302,7 +302,8 @@ Program 3
     a is { 1, 2? }.
     a is { 2, 3? }.
 
-Open rules have the effect of
+Because open rules don't preclude other consistent assignments, the possible assignments are the union
+of the different assignments proposed by different open rules.
 
 ### Open rules for picking from a different relation
 
