@@ -1,7 +1,7 @@
 image: ubuntu/jammy
 secrets:
   - c107faf9-3ef2-4ee0-83fa-e7693c38569b
-  - 6394dd55-8d43-42dc-ab84-6ff2e006f37ca
+  - 6394dd55-8d43-42dc-ab84-6ff2e006f37c
 sources:
   - https://git.sr.ht/~robsimmons/dusa
 tasks:
