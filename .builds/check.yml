@@ -38,7 +38,8 @@ tasks:
       set +x
       . ~/.buildsecrets
       set -x
-      if [ "$GIT_REF" == "refs/heads/publish" ] then
+      if [ "$GIT_REF" == "refs/heads/publish" ]
+      then
         echo "publish?"
       else
         echo "No publish, push is to $GIT_REF"
