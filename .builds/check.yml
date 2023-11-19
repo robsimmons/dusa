@@ -41,8 +41,5 @@ tasks:
       if [ "$GIT_REF" == "refs/heads/publish" ]
       then
         cd dusa
-        set +x
-        . ~/.buildsecrets
-        set -x
         npm publish
       fi
