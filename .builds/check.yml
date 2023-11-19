@@ -1,6 +1,8 @@
 image: ubuntu/jammy
 secrets:
   - c107faf9-3ef2-4ee0-83fa-e7693c38569b
+  - 3d8a7f2f-6e94-4dd9-9d6a-8cda8d63ab51
+now
 sources:
   - https://git.sr.ht/~robsimmons/dusa
 tasks:
@@ -25,6 +27,7 @@ tasks:
       npm run lint
       npm run tsc
   - build: |
+      cd dusa
       npm run build
       npm run lib
   - github: |
@@ -32,3 +35,12 @@ tasks:
       cd dusa
       git remote add github git@github.com:robsimmons/dusa.git
       git push github main
+  - publish: |
+      set +x
+      . ~/.buildsecrets
+      set -x
+      if [ "$GIT_REF" == "refs/heads/publish" ] then
+        echo "publish?"
+      else
+        echo "No publish, push is to $GIT_REF"
+      fi
