@@ -6,6 +6,7 @@ like [Potassco](https://potassco.org/)).
 
 [![Build status](https://builds.sr.ht/~robsimmons/dusa.svg)](https://builds.sr.ht/~robsimmons/dusa?)
 [![Coverage Status](https://coveralls.io/repos/github/robsimmons/dusa/badge.svg?branch=main)](https://coveralls.io/github/robsimmons/dusa?branch=main)
+[![NPM Module](https://img.shields.io/npm/v/dusa.svg)](https://www.npmjs.com/package/dusa)
 
 Dusa lives online at [dusa.rocks](https://dusa.rocks/).
 

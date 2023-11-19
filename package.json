@@ -5,6 +5,13 @@
   "main": "lib/client.js",
   "types": "lib/client.d.ts",
   "homepage": "https://dusa.rocks/",
+  "repository": {
+    "type": "git",
+    "url": "https://git.sr.ht/~robsimmons/dusa"
+  },
+  "bugs": {
+    "url": "https://todo.sr.ht/~robsimmons/Dusa"
+  },
   "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsc && vite build",
