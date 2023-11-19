@@ -30,16 +30,17 @@ tasks:
       npm run build
       npm run lib
   - github: |
-      echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
-      cd dusa
       if [ "$GIT_REF" == "refs/heads/main" ]
       then
+        cd dusa
+        echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
         git remote add github git@github.com:robsimmons/dusa.git
         git push github main
       fi
   - publish: |
       if [ "$GIT_REF" == "refs/heads/publish" ]
       then
+        cd dusa
         set +x
         . ~/.buildsecrets
         set -x
