@@ -1,5 +1,6 @@
 *.test.js
 
+/.builds
 /.github
 /coverage
 /dist
