@@ -15,6 +15,7 @@
     "prettier:check": "prettier --check .",
     "preview": "vite preview",
     "test": "vitest run",
+    "tsc": "tsc",
     "watch": "vitest"
   },
   "devDependencies": {

@@ -16,15 +16,17 @@ tasks:
       sudo apt-get install nodejs -y
   - install: |
       cd dusa
+      npx --yes package-lock-utd@1.x.x
       npm ci
   - test: |
       cd dusa
-      npm run coverage
-      npm run prettier
+      npm run test
+      npm run prettier:check
       npm run lint
+      npm run tsc
+  - build: |
       npm run build
       npm run lib
-      npx --yes package-lock-utd@1.x.x
   - github: |
       echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
       cd dusa
