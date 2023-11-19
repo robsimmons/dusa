@@ -4,7 +4,8 @@
   "type": "module",
   "main": "lib/client.js",
   "types": "lib/client.d.ts",
-  "license": "GPL-3.0",
+  "homepage": "https://dusa.rocks/",
+  "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsc && vite build",
     "coverage": "vitest run --coverage",
