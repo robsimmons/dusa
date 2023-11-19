@@ -118,8 +118,8 @@ function resume(state: 'paused' | 'done' | 'running') {
     solutions.length === 0
       ? null
       : setSolution === null
-      ? resolveQuery(solutions.length - 1)
-      : resolveQuery(setSolution);
+        ? resolveQuery(solutions.length - 1)
+        : resolveQuery(setSolution);
 
   switch (state) {
     case 'paused': {

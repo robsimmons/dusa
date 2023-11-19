@@ -6,14 +6,16 @@
   "types": "lib/client.d.ts",
   "license": "GPL-3.0",
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
+    "coverage": "vitest run --coverage",
+    "dev": "vite",
     "lib": "tsc --project tsconfig.nodemodule.json",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "prettier": "prettier --write *.ts *.json *.html *.md **/*.ts* **/*.json **/*.css **/*.html **/*.md",
+    "prettier:check": "prettier --check .",
     "preview": "vite preview",
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "prettier": "prettier --write *.ts *.json *.html *.md **/*.ts* **/*.json **/*.css **/*.html **/*.md"
+    "test": "vitest run",
+    "watch": "vitest"
   },
   "devDependencies": {
     "@codemirror/commands": "^6.3.0",

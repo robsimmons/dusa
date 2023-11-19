@@ -98,7 +98,7 @@ export function dataToString(d: Data, needsParens = true): string {
       return view.args.length === 0
         ? view.name
         : needsParens
-        ? `(${view.name} ${view.args.map((arg) => dataToString(arg)).join(' ')})`
-        : `${view.name} ${view.args.map((arg) => dataToString(arg)).join(' ')}`;
+          ? `(${view.name} ${view.args.map((arg) => dataToString(arg)).join(' ')})`
+          : `${view.name} ${view.args.map((arg) => dataToString(arg)).join(' ')}`;
   }
 }

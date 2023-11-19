@@ -172,8 +172,8 @@ function nextPrefix(
     location === 'shared'
       ? shared[index]
       : location === 'passed'
-      ? passed[index]
-      : introduced[index];
+        ? passed[index]
+        : introduced[index];
 
   return {
     type: 'prefix',
