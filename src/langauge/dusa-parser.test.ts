@@ -26,7 +26,7 @@ test('Parser and pretty pretter idempotence', () => {
   expectRoundTripToParse('a is { ? }.');
   expectRoundTripToParse('a is { b? }.');
   expectRoundTripToParse('a is { b, c }.');
-  expectRoundTripToParse('a is { b, c, ? }.');
+  expectRoundTripToParse('a is { b, c? }.');
   expectRoundTripToParse('a is { b, c d }.');
   expectRoundTripToParse('a is { b, c ((d e)) }.', 'a is { b, c (d e) }.');
 });

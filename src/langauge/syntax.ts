@@ -81,7 +81,7 @@ function headToString(head: Conclusion) {
   } else if (head.values.length !== 1 || !head.exhaustive) {
     return `${head.name}${args} is { ${head.values
       .map((term) => termToString(term, false))
-      .join(', ')}${head.exhaustive ? '' : head.values.length < 2 ? '?' : ', ?'} }`;
+      .join(', ')}${head.exhaustive ? '' : '?'} }`;
   } else if (head.values[0].type === 'triv') {
     return `${head.name}${args}`;
   } else {

@@ -119,11 +119,7 @@ export function parseHeadValue(t: Istream<Token>): {
     }
     while ((tok = chomp(t, '}')) === null) {
       if (chomp(t, ',')) {
-        if (chomp(t, '?')) {
-          exhaustive = false;
-        } else {
-          values.push(forceFullTerm(t));
-        }
+        values.push(forceFullTerm(t));
       } else {
         force(t, '?');
         end = force(t, '}').loc.end;

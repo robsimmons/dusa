@@ -119,11 +119,11 @@ test('Overlapping non-exhaustive and exhaustive choices', () => {
     a.
     b.
     c is { a, b, d, e } :- a.
-    c is { a, b, ?, c } :- a.
+    c is { a, b, c? } :- a.
     c is { a, c, d, e } :- b.
     c is { c? }.
-    c is { a, ? }.
-    c is { ?, f }.
+    c is { a? }.
+    c is { f? }.
     `);
   expect(solutionsToStrings(solutions)).toEqual(['a, b, c is a', 'a, b, c is d', 'a, b, c is e']);
 });
