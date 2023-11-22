@@ -1,6 +1,7 @@
 import { AttributeMap } from '../datastructures/attributemap';
 import PQ from '../datastructures/binqueue';
 import { Data, dataToString } from '../datastructures/data';
+import { TrieMap } from '../datastructures/datamap';
 import {
   IndexInsertionRule,
   IndexedBinaryRule,
@@ -16,7 +17,7 @@ type Index = { type: 'index'; name: string; shared: Data[]; introduced: Data[] }
 type QueueMember = Prefix | Index | NewFact;
 
 export interface Database {
-  factValues: AttributeMap<{ type: 'is'; value: Data } | { type: 'is not'; value: Data[] }>;
+  factValues: TrieMap<Data, { type: 'is'; value: Data } | { type: 'is not'; value: Data[] }>;
   prefixes: AttributeMap<Data[][]>;
   indexes: AttributeMap<Data[][]>;
   queue: PQ<QueueMember>;
@@ -30,7 +31,7 @@ export function makeInitialDb(program: IndexedProgram): Database {
     AttributeMap.new<Data[][]>(),
   );
   return {
-    factValues: AttributeMap.new(),
+    factValues: TrieMap.new(),
     prefixes,
     indexes: AttributeMap.new(),
     queue: program.seeds.reduce(
@@ -88,7 +89,7 @@ export function insertFact(name: string, args: Data[], value: Data, db: Database
   }
 
   db.queue = db.queue.push(0, { type: 'fact', name, args, value });
-  db.factValues = db.factValues.set(name, args, { type: 'is', value });
+  db.factValues = db.factValues.set(name, args, { type: 'is', value }).result;
   return true;
 }
 
@@ -274,18 +275,30 @@ export function stepDb(program: IndexedProgram, db: Database): Database | null {
   }
 }
 
-/** Warning: inefficient */
-export function listFacts(db: Database): { name: string; args: Data[]; value: Data }[] {
-  return db.factValues
-    .entries()
-    .map(([name, args, { type, value }]) => {
-      if (type === 'is not') {
-        return null;
-      } else {
-        return { name, args, value };
+export function listFacts(
+  db: Database,
+): IterableIterator<{ name: string; args: Data[]; value: Data }> {
+  function* iterator() {
+    for (const { name, keys, value } of db.factValues.entries()) {
+      if (value.type === 'is') {
+        yield { name, args: keys, value: value.value };
       }
-    })
-    .filter((x): x is { name: string; args: Data[]; value: Data } => x !== null);
+    }
+  }
+
+  return iterator();
+}
+
+export function* lookup(
+  db: Database,
+  name: string,
+  args: Data[],
+): IterableIterator<{ args: Data[]; value: Data }> {
+  for (const { keys, value } of db.factValues.lookup(name, args)) {
+    if (value.type === 'is') {
+      yield { args: keys, value: value.value };
+    }
+  }
 }
 
 function argsetToString(args: Data[]) {
@@ -318,14 +331,13 @@ export function dbToString(db: Database) {
   return `Queue: 
 ${queueToString(db)}
 Facts known:
-${db.factValues
-  .entries()
-  .map(([pred, args, entry]) =>
-    entry.type === 'is'
-      ? `${pred}${args.map((arg) => ` ${dataToString(arg)}`)} is ${dataToString(entry.value)}\n`
-      : `${pred}${args.map(
+${[...db.factValues.entries()]
+  .map(({ name, keys, value }) =>
+    value.type === 'is'
+      ? `${name}${keys.map((arg) => ` ${dataToString(arg)}`)} is ${dataToString(value.value)}\n`
+      : `${name}${keys.map(
           (arg) =>
-            ` ${dataToString(arg)} is none of ${entry.value
+            ` ${dataToString(arg)} is none of ${value.value
               .map((value) => dataToString(value))
               .sort()
               .join(', ')}\n`,

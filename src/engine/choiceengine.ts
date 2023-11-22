@@ -31,7 +31,7 @@ function maybeStep(
       // something equivalent, and just check that the remaining un-asserted
       // fact set is null
       if (
-        ref.db.factValues.every((_name, _args, { type }) => type === 'is') &&
+        [...ref.db.factValues.entries()].every(({ value }) => value.type === 'is') &&
         ref.db.remainingDemands.length === 0
       ) {
         return 'solution';
@@ -178,7 +178,7 @@ export function stepTreeRandomDFS(
                   value: currentAssignment.value.concat(
                     values.filter((v1) => !currentAssignment.value.some((v2) => equal(v1, v2))),
                   ),
-                }),
+                }).result,
               },
             };
           }
@@ -268,7 +268,7 @@ export function execute(program: IndexedProgram, db: Database, debug = false) {
     path = result.tree === null ? path : result.path;
 
     if (result.solution) {
-      solutions.push({ facts: listFacts(result.solution) });
+      solutions.push({ facts: [...listFacts(result.solution)] });
     }
   }
 }

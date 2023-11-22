@@ -106,7 +106,7 @@ function resolveQuery(index: number): WorkerQuery {
   return {
     type: 'list',
     solution: setSolution,
-    value: listFacts(solutions[index])
+    value: [...listFacts(solutions[index])]
       .map(({ name, args, value }) => factToString({ name, args, value }))
       .sort(),
   };
