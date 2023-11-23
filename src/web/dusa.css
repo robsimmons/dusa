@@ -91,15 +91,21 @@ main {
 }
 
 .dk-config {
-  display: grid;
-  align-items: end;
-  padding-bottom: var(--dk-small-padding);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-block: var(--dk-small-padding);
+  align-items: stretch;
 }
 
 .dk-config div {
   display: flex;
   flex-direction: column;
   gap: var(--dk-medium-padding);
+}
+
+.dk-config div.top-config {
+  flex-grow: 1;
 }
 
 .dk-config button {

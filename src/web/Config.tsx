@@ -1,5 +1,5 @@
 import React from 'react';
-import { MoonIcon, Share1Icon, SunIcon } from '@radix-ui/react-icons';
+import { MoonIcon, QuestionMarkCircledIcon, Share1Icon, SunIcon } from '@radix-ui/react-icons';
 import { ICON_SIZE } from './constants';
 import * as Tooltip from '@radix-ui/react-tooltip';
 const LS_THEME = 'dusa-theme';
@@ -25,6 +25,19 @@ export default function Config(props: Props) {
 
   return (
     <>
+      <div className="top-config">
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild className="dk-trigger-button">
+            <button onClick={() => window.open('/docs/', '_blank')}>
+              <QuestionMarkCircledIcon width={ICON_SIZE} height={ICON_SIZE} />
+            </button>
+          </Tooltip.Trigger>
+          <Tooltip.Content className="dk-tooltip-button" side="right" sideOffset={8}>
+            View the docs
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </div>
+      <div />
       <div className="bottom-config">
         <Tooltip.Root>
           <Tooltip.Trigger asChild className="dk-trigger-button">
