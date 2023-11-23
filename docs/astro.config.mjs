@@ -11,6 +11,9 @@ export default defineConfig({
       social: {
         github: 'https://github.com/robsimmons/dusa',
       },
+      editLink: {
+        baseUrl: 'https://git.sr.ht/~robsimmons/dusa/tree/main/item/docs/',
+      },
       sidebar: [
         {
           label: 'Dusa is...',
