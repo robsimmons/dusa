@@ -29,6 +29,9 @@ tasks:
       cd dusa
       npm run build
       npm run lib
+      cd docs
+      npm install
+      npm run build
   - github: |
       if [ "$GIT_REF" == "refs/heads/main" ]
       then
