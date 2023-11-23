@@ -6,9 +6,9 @@
 
 Dusa lives online at [dusa.rocks](https://dusa.rocks/).
 
-- [Documentation](https://dusa.rocks/docs/)
-- [Source code](https://git.sr.ht/~robsimmons/dusa)
-- [Issue tracker](https://todo.sr.ht/~robsimmons/Dusa)
+- [Documentation at dusa.rocks/docs](https://dusa.rocks/docs/)
+- [Source code at sourcehut](https://git.sr.ht/~robsimmons/dusa)
+- [Issue tracker at sourcehut](https://todo.sr.ht/~robsimmons/Dusa)
 
 All documentation and examples are MIT-licensed, but the Dusa implementation in
 JavaScript is, at present, GPL-3.0 licensed.
