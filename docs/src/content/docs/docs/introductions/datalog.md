@@ -25,8 +25,13 @@ looks like this:
 
     grandparent X Z :- parent X Y, parent Y Z.
 
-It's also easy to have inferences that build on each other: an ancestor is
-either your parent or an ancestor of your parent. In Dusa, that looks like this:
+The uppercase characters are variables. To conclude that Arya's grandparent is
+Lyarra, Dusa will use this rule with `X` assigned `"Arya"`, `Y` assigned
+`"Eddard"`, and `Z` assigned `"Lyarra"`.
+
+It's also easy to have inferences that build on themselves in a recursive fashion:
+an ancestor is either your parent or an ancestor of your parent. In Dusa, that looks
+like this:
 
     ancestor X Y :- parent X Y.
     ancestor X Z :- parent X Y, ancestor Y Z.
@@ -55,8 +60,8 @@ favorite weapon.
     weapon "Sansa" is "bow".
 
 Functional propositions aren't unique to Dusa, but they're not too common in
-other Datalog-like languages. They were an important part of LogicBlox's LogiQL
-(RIP).
+other Datalog-like languages. (One Datalog-like language that used functional
+propositions extensively was LogicBlox's LogiQL language.)
 
 ## Integrity constraints
 
@@ -71,21 +76,21 @@ invalidated for violating an integrity constraint.
     weapon "Arya" is "greatsword".
 
 For a more subtle example, consider trying to make `sibling` a functional
-proposition instead of a relational proposition, like this:
+proposition like this:
 
     sibling A is B :- parent A P, parent B P, A != B.
 
 This will work initially, deriving that Arya and Sansa are siblings, as are
-Brandon and Eddard. But if we then add a seemingly innoccuous additional fact...
+Brandon and Eddard. But if we then add a seemingly innocuous additional fact...
 
     parent "Bran" "Eddard".
 
 ...then Dusa will throw out the database in its entirety, reporting that there
 are no solutions. By deriving both `sibling "Arya" is "Sansa"` and
-`sibling "Arya" is "Bran"`, the database failed an integrity constraint and was
+`sibling "Arya" is "Bran"`, the database fails an integrity constraint and is
 completely invalidated.
 
-The takeway here is that we made a mistake: the `sibling` relationship should
+The takeaway here is that we made a mistake: the `sibling` relationship should
 be a relation, not a function.
 
 Integrity constraints can also be added with the `#forbid` and `#demand`

@@ -27,6 +27,7 @@ export default defineConfig({
             { label: 'Terms and variables', link: '/docs/language/terms/' },
             { label: 'Facts', link: '/docs/language/facts/' },
             { label: 'Rules', link: '/docs/language/rules/' },
+            { label: 'Constraints', link: '/docs/language/constraints/' },
             { label: 'Builtins', link: '/docs/language/builtin/' },
             { label: 'Syntax specification', link: '/docs/language/syntax/' },
           ],

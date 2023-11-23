@@ -15,4 +15,4 @@ Dusa is a logic programming language.
 If you have no familarity with either of these, that's okay too! You may want
 to start by reading about how [Dusa is a graph exploration
 language](/docs/introductions/graph/). Then you can take a look at some of the
-other guides, or [fiddle with some of the default examples](/).
+other introductions, or [fiddle with some of the default examples](/).

@@ -2,7 +2,7 @@
 title: Syntax specification
 ---
 
-The syntax of Dusa is not whitespace-sensitive, and comments, which begin with a pound
+The syntax of Dusa is not whitespace-sensitive. Comments, which begin with a pound
 sign followed by a space or end of line and continue to the end of the line, are
 treated like whitespace.
 

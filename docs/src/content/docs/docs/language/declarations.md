@@ -2,11 +2,15 @@
 title: Declarations
 ---
 
-A Dusa program is a sequence of declarations. This program has 2 declarations, and we
-read it as saying that `a` is immediately provable and that `a` implies `b`.
+A Dusa program is a sequence of declarations. This program has 3 declarations, and we
+read it as saying that `a` and `b` are immediately provable and that `a` and `b`
+together imply `c`.
 
     # a pound sign followed by a space is a line comment
     a.
-    b :- a.
+    b.
+    c :- a, b.
 
-Both of these are rules
+All these declarations are [rules](/docs/language/rules/). The first two rules have
+no premises, and the third rule has two premises (`a` and `b`), with the conclusion
+`c`.

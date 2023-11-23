@@ -4,10 +4,10 @@ description: Introducing Dusa usage for ASP programmers.
 ---
 
 Answer set programming is a way of writing Datalog-like programs to compute
-acceptable models (answer sets) that meet certain contraints. Whereas
+acceptable models (answer sets) that meet certain constraints. Whereas
 traditional [datalog](/docs/introductions/datalog/) aims to compute just one
-database, answer set programming allows different choices to be made that let
-multiple possible databases diverge.
+solution, answer set programming introduces choices that let multiple possible
+solutions diverge.
 
 Dusa allows choices by supporting mutually exclusive assignments to a
 functional predicate. Any assignment which satisfies all integrity constraints
@@ -54,8 +54,8 @@ constraints:
     #demand guilt _ is innocent.
 
 These declarations demand that someone (the underscore means we don't care who)
-is innocent, and that someone else is guilty. This will cause us to reject the
-two solutions where everyone is innocent or guilty.
+is innocent, and that else is guilty. This will cause us to reject the two solutions
+where everyone is innocent or guilty.
 
 Those two constraints above are equivalent to the single constraint:
 
@@ -66,8 +66,10 @@ hold for the demand to be met. The uppercase `Someone` and `SomeoneElse` are
 variables that can be replaced by any suspect (Amy, Harry, or Sally).
 
 If we want to ensure that there's only one innocent, we could write a `#forbid`
-constraint. If every clause of a `#forbid` constraint can be satisfied, then
-the database will be rejected.
+constraint to forbid any solution where two or more suspects are innocent.
+
+If every clause of a `#forbid` constraint can be satisfied, then the solution will be
+rejected.
 
     #forbid guilt Someone is innocent,
         guilt SomeoneElse is innocent,
@@ -75,7 +77,7 @@ the database will be rejected.
 
 It's very important that we add `Someone != SomeoneElse`. If we do not, Dusa
 can assign the _same_ suspect to `Someone` and `SomeoneElse`, which means that
-this rule would forbid any solution where anyone was innocent.
+this rule would forbid any solution where _anyone_ was innocent.
 
 ### Rules
 
@@ -90,9 +92,9 @@ backwards, as is traditional. The logic above is handled like this:
     guilt harold is guilty :- guilt harry is guilty.
 
 This doesn't say that Harold is potentially guilty and potentially innocent, it
-provides specific conditions where Harold must be guilty.
+provides specific conditions where Harold **must** be guilty.
 
-But that's not everything! To complete our story, we want to say that harold is
+But that's not everything! To complete our story, we want to say that Harold is
 innocent **unless** Amy is innocent or Harry is guilty. We can capture this
 "unless" reasoning with an **open** rule. (All the rules we've seen so far have
 been **closed**, because they insist on only particular values for attributes.)
@@ -111,12 +113,11 @@ other conclusion.
 ## Boolean satisfiability
 
 Answer set programming is sometimes compared to boolean satisfiability solving,
-and is sometimes implemented with general purpose boolean satisfiablity
-solvers. We can use Dusa as a (pretty bad) boolean
-satisfibility solver,by assigning every proposition we come across the value
-`true` or `false`. The [Wikipedia article describing a basic SAT-solving
-algorithm, DPLL](https://en.wikipedia.org/wiki/DPLL_algorithm), uses this
-SAT instance as its example:
+and is sometimes implemented with general purpose boolean satisfiability
+solvers. We can use Dusa as a (pretty bad) boolean satisfiability solver by assigning
+every proposition we come across the value `true` or `false`. The [Wikipedia article
+describing a basic SAT-solving algorithm,
+DPLL](https://en.wikipedia.org/wiki/DPLL_algorithm) describes this SAT instance:
 
     (a' + b  + c ) * (a  + c  + d ) *
     (a  + c  + d') * (a  + c' + d ) *
@@ -158,6 +159,9 @@ We can use Dusa to simulate a single round of rock-paper-scissors.
     player player2.
     throw Player is { rock, paper, scissors } :- player Player.
 
+There's no "is" in the `player _` proposition: this is a relational proposition,
+instead of the functional propositions we've seen so far.
+
 This Dusa program has nine different solutions:
 
 - Player 1 throws rock, player 2 throws rock (Tie)
@@ -167,8 +171,8 @@ This Dusa program has nine different solutions:
 - Player 1 throws paper, player 2 throws rock (Player 1 wins, paper covers rock)
 - ...and so on...
 
-We can capture the information about _who_ wins with three facts and two more
-rules:
+We can capture the information about _who_ wins a new relational proposition
+`outcome _ _ _`, with three facts, and two more rules:
 
     outcome rock crushes scissors.
     outcome scissors cuts paper.
@@ -202,8 +206,9 @@ As before, as soon as a player casts a winning move, they win.
         throw Win Round is Victor,
         throw _ Round is Loser.
 
-If (and only if) the players pick the same answer, then we need to add another
-round. This uses builtin addition to use concise round numbers 1, 2, 3...
+If (and only if) the players pick the same answer, then we need to play another
+round. This uses [built-in addition](/docs/langauge/builtin/) to use concise round
+numbers 1, 2, 3...
 
     #builtin INT_PLUS plus
     round (plus Round 1) :-
@@ -212,8 +217,8 @@ round. This uses builtin addition to use concise round numbers 1, 2, 3...
 
 Now we have a working simulator for arbitrary games of rock-paper-scissors! If
 we want to control the amount of drama we're exploring, we can use constraints
-to control the number of rounds. This requires there to be at least three rounds
-but no more than eight.
+to control the number of rounds. These two constraints require there to be at least
+three rounds but no more than eight.
 
     #demand round 3.
     #forbid round 8.
