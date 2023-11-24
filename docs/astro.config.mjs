@@ -40,6 +40,14 @@ export default defineConfig({
             { label: 'Syntax specification', link: '/docs/language/syntax/' },
           ],
         },
+        {
+          label: 'JavaScript API',
+          items: [
+            { label: 'class Dusa', link: '/docs/api/dusa/' },
+            { label: 'class DusaSolution', link: '/docs/api/dusasolution/' },
+            { label: 'Terms', link: '/docs/api/terms/' },
+          ],
+        },
       ],
     }),
   ],

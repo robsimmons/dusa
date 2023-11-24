@@ -16,7 +16,12 @@ import { Issue } from './parsing/parser';
 export type { Issue, Stats };
 export type { SourcePosition, SourceLocation } from './parsing/source-location';
 
-export type Term = null | bigint | string | { name: string; args?: [Term, ...Term[]] };
+export type Term =
+  | null // Trivial type ()
+  | bigint // Natural numbers and integers
+  | string // Strings
+  | { name: string } // Constants
+  | { name: string; args: [Term, ...Term[]] };
 export interface Fact {
   name: string;
   args: Term[];
