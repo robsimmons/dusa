@@ -14,6 +14,10 @@ export default defineConfig({
       editLink: {
         baseUrl: 'https://git.sr.ht/~robsimmons/dusa/tree/main/item/docs/',
       },
+      head: [
+        { tag: 'link', attrs: { rel: 'icon', href: '/dusa-icon.svg' } },
+        { tag: 'link', attrs: { rel: 'mask-icon', href: '/dusa-icon.svg', color: '#158f44' } },
+      ],
       sidebar: [
         {
           label: 'Dusa is...',
