@@ -15,9 +15,9 @@ export default defineConfig({
         baseUrl: 'https://git.sr.ht/~robsimmons/dusa/tree/main/item/docs/',
       },
       head: [
-        { tag: 'link', attrs: { rel: 'icon', href: '/dusa-icon.svg' } },
-        { tag: 'link', attrs: { rel: 'shortcut icon', href: '/dusa-icon.svg' } },
-        { tag: 'link', attrs: { rel: 'mask-icon', href: '/dusa-icon.svg', color: '#158f44' } },
+        { tag: 'link', attrs: { rel: 'icon', href: '/dusa-icon-2.svg' } },
+        { tag: 'link', attrs: { rel: 'shortcut icon', href: '/dusa-icon-2.svg' } },
+        { tag: 'link', attrs: { rel: 'mask-icon', href: '/dusa-icon-2.svg', color: '#158f44' } },
       ],
       sidebar: [
         {
