@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { DataView, dataToString, expose, hide } from './data';
+import { DataView, dataToString, expose, hide } from './data.js';
 
 test('Internalizing basic types', () => {
   const testData: DataView[] = [

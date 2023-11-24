@@ -1,6 +1,6 @@
-import { Issue } from '../parsing/parser';
-import { SourceLocation } from '../parsing/source-location';
-import { ParsedPattern, Pattern, freeParsedVars, repeatedWildcards, termToString } from './terms';
+import { Issue } from '../parsing/parser.js';
+import { SourceLocation } from '../parsing/source-location.js';
+import { ParsedPattern, Pattern, freeParsedVars, repeatedWildcards, termToString } from './terms.js';
 
 export interface Proposition {
   type: 'Proposition';

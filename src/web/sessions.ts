@@ -1,13 +1,13 @@
-import { parse } from '../langauge/dusa-parser';
-import { SourceLocation } from '../parsing/source-location';
+import { parse } from '../language/dusa-parser.js';
+import { SourceLocation } from '../parsing/source-location.js';
 import {
   CHARACTER_CREATION_EXAMPLE,
   CKY_PARSING_EXAMPLE,
   GRAPH_GENERATION_EXAMPLE,
   ROCK_PAPER_SCISSORS,
-} from './examples';
-import { Declaration, check } from '../langauge/syntax';
-import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker';
+} from './examples.js';
+import { Declaration, check } from '../language/syntax.js';
+import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker.js';
 
 function decodeDusaHashURI(): null | { program: string } {
   if (!window.location.hash.startsWith('#')) return null;

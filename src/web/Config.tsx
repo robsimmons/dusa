@@ -1,6 +1,6 @@
 import React from 'react';
 import { MoonIcon, QuestionMarkCircledIcon, Share1Icon, SunIcon } from '@radix-ui/react-icons';
-import { ICON_SIZE } from './constants';
+import { ICON_SIZE } from './constants.js';
 import * as Tooltip from '@radix-ui/react-tooltip';
 const LS_THEME = 'dusa-theme';
 

@@ -1,5 +1,5 @@
-import { Declaration, Premise } from './syntax';
-import { Pattern, freeVars, termToString } from './terms';
+import { Declaration, Premise } from './syntax.js';
+import { Pattern, freeVars, termToString } from './terms.js';
 
 /**
  * Binarization transformation

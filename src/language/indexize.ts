@@ -1,5 +1,5 @@
-import { BinarizedProgram, freeVarsBinarizedPremise } from './binarize';
-import { Pattern, termToString } from './terms';
+import { BinarizedProgram, freeVarsBinarizedPremise } from './binarize.js';
+import { Pattern, termToString } from './terms.js';
 
 /**
  * Indexing transformation

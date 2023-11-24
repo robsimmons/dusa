@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
-import { DataMap } from './datamap';
-import { Data } from './data';
+import { DataMap } from './datamap.js';
+import { Data } from './data.js';
 
 test('Inserting increasing values', () => {
   let map: DataMap<bigint> = DataMap.new();

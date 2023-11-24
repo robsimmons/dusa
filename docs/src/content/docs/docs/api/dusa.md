@@ -50,7 +50,7 @@ const dusa = new Dusa(`
     path X Y :- edge X Y.
     path X Z :- edge X Y, path Y Z.`);
 dusa.solution; // Object of type DusaSolution
-[...dusa.solution.lookup('path', 'a')]; // [ "b", "c", "d" ]
+[...dusa.solution.lookup('path', 'a')]; // [ ["b"], ["c"], ["d"] ]
 [...dusa.solution.lookup('path', 'd')]; // []
 ```
 
@@ -116,8 +116,29 @@ re-runs solution search, potentially returning solutions in a different order.
 
 ## Modifying a Dusa instance
 
-TODO
+The Dusa implementation doesn't support adding and removing rules after a `Dusa`
+class instance has been created, but it does support adding additional **facts**,
+which can be just as powerful. This can be useful for applications where the actual
+set of facts isn't known ahead of time, but the desired analysis on those facts is
+known.
 
 ### assert() method
 
-TODO
+The `assert` method of a Dusa instance takes an arbitrary number of arguments, each
+one a Fact.
+
+```javascript
+const dusa = new Dusa(`
+    path X Y :- edge X Y.
+    path X Z :- edge X Y, path Y Z.`);
+
+[...dusa.solution.lookup('path', 'a')]; // []
+dusa.assert({ name: 'edge', args: ['a', 'b'] });
+[...dusa.solution.lookup('path', 'a')]; // [ { args: ['b'] } ]
+dusa.assert(
+  { name: 'edge', args: ['b', 'c'] },
+  { name: 'edge', args: ['e', 'b'] },
+  { name: 'edge', args: ['d', 'e'] },
+);
+[...dusa.solution.lookup('path', 'a')]; // [ { args: ['b'] }, { args: ['c'] } ]
+```

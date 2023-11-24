@@ -1,15 +1,15 @@
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView, ViewUpdate, keymap, lineNumbers, tooltips } from '@codemirror/view';
-import { ParserState, dusaTokenizer } from '../langauge/dusa-tokenizer';
-import { StringStream } from '../parsing/string-stream';
+import { ParserState, dusaTokenizer } from '../language/dusa-tokenizer.js';
+import { StringStream } from '../parsing/string-stream.js';
 import { classHighlighter, tags } from '@lezer/highlight';
 import { Diagnostic, linter } from '@codemirror/lint';
-import { SourcePosition } from '../parsing/source-location';
-import { Issue, parseWithStreamParser } from '../parsing/parser';
+import { SourcePosition } from '../parsing/source-location.js';
+import { Issue, parseWithStreamParser } from '../parsing/parser.js';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { parseTokens } from '../langauge/dusa-parser';
-import { ParsedDeclaration, check } from '../langauge/syntax';
+import { parseTokens } from '../language/dusa-parser.js';
+import { ParsedDeclaration, check } from '../language/syntax.js';
 
 const bogusPosition = {
   start: { line: 1, column: 1 },

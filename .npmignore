@@ -4,6 +4,7 @@
 /.github
 /coverage
 /dist
+/docs
 /public
 /src
 

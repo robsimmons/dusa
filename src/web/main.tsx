@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import Tabs from './Tabs.tsx';
-import Config from './Config.tsx';
-import { editorChangeListener, getEditorContents, setEditorContents } from './codemirror.ts';
-import { sessionManager } from './sessions.ts';
-import Program from './SolutionsExplorer.tsx';
+import Tabs from './Tabs.js';
+import Config from './Config.js';
+import { editorChangeListener, getEditorContents, setEditorContents } from './codemirror.js';
+import { sessionManager } from './sessions.js';
+import Program from './SolutionsExplorer.js';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { LS_SESSION_DIVIDER_PROPORTION } from './constants.ts';
+import { LS_SESSION_DIVIDER_PROPORTION } from './constants.js';
 
 async function addSession() {
   syncronizeCodeMirror();

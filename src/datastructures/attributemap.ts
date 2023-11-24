@@ -1,5 +1,5 @@
-import { Data, expose, hide } from './data';
-import { DataMap } from './datamap';
+import { Data, expose, hide } from './data.js';
+import { DataMap } from './datamap.js';
 
 export class AttributeMap<T> {
   map: DataMap<T>;

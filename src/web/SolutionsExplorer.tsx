@@ -5,9 +5,9 @@ import {
   PlayIcon,
   ReaderIcon,
 } from '@radix-ui/react-icons';
-import { Session } from './sessions';
-import { ICON_SIZE } from './constants';
-import SolutionViewer from './SolutionViewer';
+import { Session } from './sessions.js';
+import { ICON_SIZE } from './constants.js';
+import SolutionViewer from './SolutionViewer.js';
 
 interface Props {
   session: Session;

@@ -1,7 +1,7 @@
-import { SPECIAL_DEFAULTS } from './dusa-builtins';
-import { Issue, ParserResponse, StreamParser } from '../parsing/parser';
-import { SourceLocation } from '../parsing/source-location';
-import { StringStream } from '../parsing/string-stream';
+import { SPECIAL_DEFAULTS } from './dusa-builtins.js';
+import { Issue, ParserResponse, StreamParser } from '../parsing/parser.js';
+import { SourceLocation } from '../parsing/source-location.js';
+import { StringStream } from '../parsing/string-stream.js';
 
 type StateRoot =
   | {

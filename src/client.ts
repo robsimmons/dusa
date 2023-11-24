@@ -1,20 +1,20 @@
-import { Data, TRIV_DATA, expose, hide } from './datastructures/data';
+import { Data, TRIV_DATA, expose, hide } from './datastructures/data.js';
 import {
   ChoiceTree,
   ChoiceTreeNode,
   Stats,
   pathToString,
   stepTreeRandomDFS,
-} from './engine/choiceengine';
-import { Database, insertFact, listFacts, lookup, makeInitialDb } from './engine/forwardengine';
-import { compile } from './langauge/compile';
-import { parse } from './langauge/dusa-parser';
-import { IndexedProgram } from './langauge/indexize';
-import { check } from './langauge/syntax';
-import { Issue } from './parsing/parser';
+} from './engine/choiceengine.js';
+import { Database, insertFact, listFacts, lookup, makeInitialDb } from './engine/forwardengine.js';
+import { compile } from './language/compile.js';
+import { parse } from './language/dusa-parser.js';
+import { IndexedProgram } from './language/indexize.js';
+import { check } from './language/syntax.js';
+import { Issue } from './parsing/parser.js';
 
 export type { Issue, Stats };
-export type { SourcePosition, SourceLocation } from './parsing/source-location';
+export type { SourcePosition, SourceLocation } from './parsing/source-location.js';
 
 export type Term =
   | null // Trivial type ()
@@ -77,10 +77,10 @@ export class DusaSolution {
     return map(listFacts(this.db));
   }
 
-  lookup(name: string, ...args: InputTerm[]): IterableIterator<{ args: Term[]; value: Term }> {
+  lookup(name: string, ...args: InputTerm[]): IterableIterator<Term[]> {
     function* map(iter: IterableIterator<{ args: Data[]; value: Data }>) {
       for (const { args, value } of iter) {
-        yield { args: args.map(dataToTerm), value: dataToTerm(value) };
+        yield [...args.map(dataToTerm), dataToTerm(value)];
       }
     }
     return map(lookup(this.db, name, args.map(termToData)));

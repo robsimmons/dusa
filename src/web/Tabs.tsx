@@ -1,5 +1,5 @@
 import { Cross2Icon, PlusIcon } from '@radix-ui/react-icons';
-import { ICON_SIZE } from './constants';
+import { ICON_SIZE } from './constants.js';
 
 interface Props {
   activeSessionKey: string;

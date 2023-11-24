@@ -1,5 +1,5 @@
-import { SourceLocation } from '../parsing/source-location';
-import { SPECIAL_DEFAULTS } from './dusa-builtins';
+import { SourceLocation } from '../parsing/source-location.js';
+import { SPECIAL_DEFAULTS } from './dusa-builtins.js';
 
 export type Pattern =
   | { type: 'triv' }

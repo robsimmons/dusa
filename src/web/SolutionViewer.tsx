@@ -4,8 +4,8 @@ import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
 } from '@radix-ui/react-icons';
-import { WorkerQuery, WorkerStats } from './worker';
-import { ICON_SIZE } from './constants';
+import { WorkerQuery, WorkerStats } from './worker.js';
+import { ICON_SIZE } from './constants.js';
 
 interface Props {
   status: 'done' | 'running' | 'paused';

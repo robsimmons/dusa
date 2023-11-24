@@ -1,8 +1,8 @@
-import { execute, solutionsToStrings } from './choiceengine';
-import { compile } from '../langauge/compile';
-import { parse } from '../langauge/dusa-parser';
-import { makeInitialDb } from './forwardengine';
-import { check } from '../langauge/syntax';
+import { execute, solutionsToStrings } from './choiceengine.js';
+import { compile } from '../language/compile.js';
+import { parse } from '../language/dusa-parser.js';
+import { makeInitialDb } from './forwardengine.js';
+import { check } from '../language/syntax.js';
 import { test, expect } from 'vitest';
 
 function testExecution(source: string, debug = false) {

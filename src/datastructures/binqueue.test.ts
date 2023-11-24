@@ -1,4 +1,4 @@
-import PQ from './binqueue';
+import PQ from './binqueue.js';
 import { test, expect } from 'vitest';
 
 test(`Priority queue insertion and removal`, () => {

@@ -1,6 +1,6 @@
-import { binarize, binarizedProgramToString } from './binarize';
-import { IndexedProgram, indexedProgramToString, indexize } from './indexize';
-import { Declaration, declToString } from './syntax';
+import { binarize, binarizedProgramToString } from './binarize.js';
+import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
+import { Declaration, declToString } from './syntax.js';
 
 export function indexToRuleName(index: number): string {
   if (index >= 26) {

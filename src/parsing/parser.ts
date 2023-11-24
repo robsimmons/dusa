@@ -1,5 +1,5 @@
-import { makeStream, StringStream } from './string-stream';
-import { SourceLocation } from './source-location';
+import { makeStream, StringStream } from './string-stream.js';
+import { SourceLocation } from './source-location.js';
 
 export interface StreamParser<State, Tree> {
   startState: State;

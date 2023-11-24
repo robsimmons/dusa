@@ -1,4 +1,4 @@
-import { SourceLocation } from './source-location';
+import { SourceLocation } from './source-location.js';
 
 /** Simplified variant of the Codemirror StringStream.
  *

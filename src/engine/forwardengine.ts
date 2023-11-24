@@ -1,14 +1,14 @@
-import { AttributeMap } from '../datastructures/attributemap';
-import PQ from '../datastructures/binqueue';
-import { Data, dataToString } from '../datastructures/data';
-import { TrieMap } from '../datastructures/datamap';
+import { AttributeMap } from '../datastructures/attributemap.js';
+import PQ from '../datastructures/binqueue.js';
+import { Data, dataToString } from '../datastructures/data.js';
+import { TrieMap } from '../datastructures/datamap.js';
 import {
   IndexInsertionRule,
   IndexedBinaryRule,
   IndexedConclusion,
   IndexedProgram,
-} from '../langauge/indexize';
-import { Substitution, apply, equal, match } from './dataterm';
+} from '../language/indexize.js';
+import { Substitution, apply, equal, match } from './dataterm.js';
 
 type Prefix = { type: 'prefix'; name: string; shared: Data[]; passed: Data[] };
 type NewFact = { type: 'fact'; name: string; args: Data[]; value: Data };

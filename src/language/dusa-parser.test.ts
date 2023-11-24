@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
-import { parse } from './dusa-parser';
-import { declToString } from './syntax';
+import { parse } from './dusa-parser.js';
+import { declToString } from './syntax.js';
 
 function expectRoundTripToParse(input: string, output?: string) {
   if (output === undefined) output = input;

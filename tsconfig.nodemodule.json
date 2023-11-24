@@ -18,5 +18,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts", "src/web/*", "node_modules/@types/react/*"]
+  "exclude": ["src/**/*.test.ts", "src/web/*"]
 }

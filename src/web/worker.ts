@@ -1,15 +1,15 @@
-import { Data } from '../datastructures/data';
+import { Data } from '../datastructures/data.js';
 import {
   ChoiceTree,
   ChoiceTreeNode,
   factToString,
   pathToString,
   stepTreeRandomDFS,
-} from '../engine/choiceengine';
-import { Database, listFacts, makeInitialDb } from '../engine/forwardengine';
-import { Declaration } from '../langauge/syntax';
-import { IndexedProgram } from '../langauge/indexize';
-import { compile } from '../langauge/compile';
+} from '../engine/choiceengine.js';
+import { Database, listFacts, makeInitialDb } from '../engine/forwardengine.js';
+import { Declaration } from '../language/syntax.js';
+import { IndexedProgram } from '../language/indexize.js';
+import { compile } from '../language/compile.js';
 
 export type WorkerQuery = {
   type: 'list';

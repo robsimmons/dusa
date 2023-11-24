@@ -1,8 +1,8 @@
-import { Token, dusaTokenizer } from './dusa-tokenizer';
-import { ParsedPattern } from './terms';
-import { ParsedDeclaration, ParsedPremise } from './syntax';
-import { Issue, parseWithStreamParser } from '../parsing/parser';
-import { SourceLocation, SourcePosition } from '../parsing/source-location';
+import { Token, dusaTokenizer } from './dusa-tokenizer.js';
+import { ParsedPattern } from './terms.js';
+import { ParsedDeclaration, ParsedPremise } from './syntax.js';
+import { Issue, parseWithStreamParser } from '../parsing/parser.js';
+import { SourceLocation, SourcePosition } from '../parsing/source-location.js';
 
 interface Istream<T> {
   next(): T | null;

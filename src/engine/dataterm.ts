@@ -1,5 +1,5 @@
-import { Data, expose, hide } from '../datastructures/data';
-import { Pattern } from '../langauge/terms';
+import { Data, expose, hide } from '../datastructures/data.js';
+import { Pattern } from '../language/terms.js';
 
 export type Substitution = { [varName: string]: Data };
 
