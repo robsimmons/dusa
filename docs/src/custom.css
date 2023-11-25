@@ -74,7 +74,6 @@
   --sl-color-black: var(--oksolar-background);
 }
 
-
 .expressive-code .frame pre {
   --code-background: var(--oksolar-background-deemph);
   box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
