@@ -15,3 +15,6 @@ set programming.
 All documentation and examples in the `docs` directory and subdirectories are
 MIT-licensed, but the Dusa implementation in JavaScript is, at present, GPL 3.0
 licensed.
+
+Dusa was initially developed by Rob Simmons at [Recurse
+Center](https://www.recurse.com/) in Fall 2023. 

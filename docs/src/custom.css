@@ -1,0 +1,120 @@
+:root[data-theme='dark'],
+[data-theme='dark'] ::backdrop {
+  --oksolar-background: oklch(27% 0 0);
+  --oksolar-background-highlight: oklch(32% 0 0);
+  --oksolar-background-deemph: oklch(37% 0 0);
+  --oksolar-background-deemph-highlight: oklch(42% 0 0);
+  --oksolar-text-deemph-2: oklch(47% 0 0);
+  --oksolar-text-deemph-2-highlight: oklch(52% 0 0);
+  --oksolar-text-deemph: oklch(57% 0 0);
+  --oksolar-text-deemph-highlight: oklch(62% 0 0);
+  --oksolar-text: oklch(67% 0 0);
+  --oksolar-text-highlight: oklch(72% 0 0);
+  --oksolar-text-emph: oklch(77% 0 0);
+  --oksolar-text-emph-highlight: oklch(82% 0 0);
+
+  --oksolar-background-red: oklch(27% 0.015 20);
+
+  --oksolar-text-green: oklch(67% 0.15 150);
+  --oksolar-text-blue: oklch(67% 0.15 240);
+  --oksolar-text-violet: oklch(67% 0.15 280);
+  --oksolar-text-pink: oklch(67% 0.15 330);
+  --oksolar-text-red: oklch(67% 0.15 20);
+  --oksolar-text-orange: oklch(67% 0.15 60);
+}
+
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+  --oksolar-background: oklch(97% 0 0);
+  --oksolar-background-highlight: oklch(92% 0 0);
+  --oksolar-background-deemph: oklch(87% 0 0);
+  --oksolar-background-deemph-highlight: oklch(82% 0 0);
+  --oksolar-text-deemph-2: oklch(77% 0 0);
+  --oksolar-text-deemph-2-highlight: oklch(72% 0 0);
+  --oksolar-text-deemph: oklch(67% 0 0);
+  --oksolar-text-deemph-highlight: oklch(62% 0 0);
+  --oksolar-text: oklch(57% 0 0);
+  --oksolar-text-highlight: oklch(52% 0 0);
+  --oksolar-text-emph: oklch(47% 0 0);
+  --oksolar-text-emph-highlight: oklch(42% 0 0);
+
+  --oksolar-background-red: oklch(97% 0.015 20);
+
+  --oksolar-text-green: oklch(57% 0.15 150);
+  --oksolar-text-blue: oklch(57% 0.15 240);
+  --oksolar-text-violet: oklch(57% 0.15 280);
+  --oksolar-text-pink: oklch(57% 0.15 330);
+  --oksolar-text-red: oklch(57% 0.15 20);
+  --oksolar-text-red-highlight: oklch(57% 0.15 20);
+  --oksolar-text-orange: oklch(57% 0.15 60);
+}
+
+:root[data-theme='dark'],
+:root[data-theme='light'],
+[data-theme='dark'] ::backdrop,
+[data-theme='light'] ::backdrop {
+  --sl-color-accent: var(--oksolar-text-green);
+  --sl-color-accent-high: var(--oksolar-text-green);
+  --sl-color-bg-nav: var(--oksolar-background-deemph);
+  --sl-color-bg-sidebar: var(--oksolar-background-deemph);
+  --sl-color-bg: var(--oksolar-background);
+  --sl-color-text: var(--oksolar-text);
+  --sl-color-bg-inline-code: var(--oksolar-background-highlight);
+  --sl-color-text-invert: var(--oksolar-background-deemph);
+  --sl-color-hairline-shade: var(--oksolar-text-deemph-2);
+
+  --sl-color-white: var(--oksolar-text-emph-highlight);
+  --sl-color-gray-1: var(--oksolar-text-emph);
+  --sl-color-gray-2: var(--oksolar-text-highlight);
+  --sl-color-gray-3: var(--oksolar-text-deemph);
+  --sl-color-gray-4: var(--oksolar-text-blue);
+  --sl-color-gray-5: var(--oksolar-background-deemph-highlight);
+  --sl-color-gray-6: var(--oksolar-background-deemph);
+  --sl-color-gray-7: var(--oksolar-background-highlight);
+  --sl-color-black: var(--oksolar-background);
+}
+
+
+.expressive-code .frame pre {
+  --code-background: var(--oksolar-background-deemph);
+  box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
+  border: none;
+}
+
+:root[data-theme='dark'],
+[data-theme='dark'] ::backdrop {
+}
+
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+}
+
+/* Dark mode colors. */
+:rootdd {
+  --sl-color-accent-low: #460b05;
+  --sl-color-accent: #c60e00;
+  --sl-color-accent-high: #feb3a6;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #f3ecea;
+  --sl-color-gray-2: #c8c0be;
+  --sl-color-gray-3: #978784;
+  --sl-color-gray-4: #635451;
+  --sl-color-gray-5: #423432;
+  --sl-color-gray-6: #302321;
+  --sl-color-black: #1d1715;
+}
+/* Light mode colors. */
+:rootdd[data-theme='light'] {
+  --sl-color-accent-low: #ffc8be;
+  --sl-color-accent: #c90e00;
+  --sl-color-accent-high: #640300;
+  --sl-color-white: #1d1715;
+  --sl-color-gray-1: #302321;
+  --sl-color-gray-2: #423432;
+  --sl-color-gray-3: #635451;
+  --sl-color-gray-4: #978784;
+  --sl-color-gray-5: #c8c0be;
+  --sl-color-gray-6: #f3ecea;
+  --sl-color-gray-7: #f9f5f5;
+  --sl-color-black: #ffffff;
+}

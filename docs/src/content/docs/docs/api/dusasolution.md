@@ -7,7 +7,7 @@ A `DusaSolution` is a queryable solution to a Dusa program returned by
 
 ## Checking facts
 
-### `has()`method
+### `has()` method
 
 The `has()` method is intended to check whether a relational proposition
 exists in a solution.
