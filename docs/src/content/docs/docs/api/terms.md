@@ -16,7 +16,7 @@ All Dusa terms have a correspondence with JavaScript types:
 - An uninterpreted function with arguments like `h 9 "fish"` in Dusa corresponds
   to an object `{ name: 'h', args: [9n, 'fish'] }` in JavaScript.
 
-### `Term`
+### type `Term`
 
 ```typescript
 export type Term =
@@ -27,7 +27,7 @@ export type Term =
   | { name: string; args: [Term, ...Term[]] };
 ```
 
-### `Fact`
+### type `Fact`
 
 ```typescript
 export interface Fact {
@@ -43,7 +43,7 @@ The Dusa and DusaSolution methods that take terms and facts as argument accept
 inputs that are more flexible than the outputs that Dusa will return (see the
 [Robustness Principle](https://en.wikipedia.org/wiki/Robustness_principle)).
 
-### `InputTerm`
+### type `InputTerm`
 
 Dusa will accept numbers of type `number` and convert them to
 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
@@ -53,7 +53,7 @@ to Dusa.
 An input constant like `a` can also be given as `{ name: 'a', args: [] }`, even
 though that constant will always be output as `{ name: 'a' }`.
 
-### `InputFact`
+### type `InputFact`
 
 ```typescript
 export interface InputFact {

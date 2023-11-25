@@ -5,39 +5,39 @@ title: class DusaSolution
 A `DusaSolution` is a queryable solution to a Dusa program returned by
 [solving a `Dusa` instance](docs/api/dusa/#solving-a-dusa-instance).
 
-## `facts` getter
+## Checking facts
 
-The `facts` getter provides an iterator over all the [facts](/docs/api/terms/#fact)
-in a solution.
-
-```javascript
-const dusa = new Dusa(`
-    #builtin INT_MINUS minus
-    digit 9.
-    digit (minus N 1) :- digit N, N != 0.`);
-
-for (const fact of dusa.solution.facts) {
-  console.log(fact);
-}
-```
-
-## `has()` and `get()`
+### `has()`method
 
 The `has()` method is intended to check whether a relational proposition
-exists in the database, and the `get()` method is intended to check the value
-of a functional proposition. (But since [these are actually the same
-thing](/docs/language/facts/#everythings-secretly-functional), either can be used
-for either one.) The `has()` method checks for the presence of an attribute (with
-any value), returning a `boolean`. The `get()` method checks for the value
-associated with an attribute, returning the value or `undefined`.
+exists in a solution.
 
-Both methods take a string as the first argument, and then one additional
-[`InputTerm`](/docs/api/terms/#inputterm) argument for every non-value
-argument for the predicate.
+```typescript
+has(name: string, ...args: InputTerm): boolean;
+```
+
+An error will be raised if the number of `args` is not equal to the number of
+arguments that the proposition has.
+
+### `get()` method
+
+The `get()` method is intended to check the value assigned to a functional
+proposition.
+
+```typescript
+get(name: string, ...args: InputTerm): undefined | Term;
+```
+
+An error will be raised if the number of `args` is not equal to the number of
+arguments that the proposition has (not counting the value).
 
 ### Example
 
-In a database with propositions of the form, `node _`, `edge _ _`, and
+Since [functional and relational propositions are actually the same
+thing](/docs/language/facts/#everythings-secretly-functional), either `has()`
+or `get()` can be used with any proposition.
+
+In a solution with propositions of the form `node _`, `edge _ _`, and
 `color _ is _`, the implied Typescript types for `has()` and `get()` are as follows:
 
 ```typescript
@@ -72,7 +72,27 @@ dusa.solution.get('color', 1); // === "blue"
 dusa.solution.get('color', 9); // === undefined
 ```
 
-## `lookup()` method
+## Enumerating all facts
+
+### `facts` getter
+
+The `facts` getter provides an iterator over all the [facts](/docs/api/terms/#type-fact)
+in a solution.
+
+```javascript
+const dusa = new Dusa(`
+    #builtin INT_MINUS minus
+    digit 9.
+    digit (minus N 1) :- digit N, N != 0.`);
+
+for (const fact of dusa.solution.facts) {
+  console.log(fact);
+}
+```
+
+## Querying solutions
+
+### `lookup()` method
 
 The `lookup()` method on solutions is a powerful query mechanism. If your program
 has a relational proposition `path _ _`, then given only the first argument
