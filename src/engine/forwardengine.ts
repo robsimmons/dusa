@@ -294,11 +294,31 @@ export function* lookup(
   name: string,
   args: Data[],
 ): IterableIterator<{ args: Data[]; value: Data }> {
+  const arity = db.factValues.arity(name);
+  if (arity !== null && arity < args.length) {
+    throw new TypeError(
+      `${name} takes ${arity} argument${arity === 1 ? '' : 's'}, but ${args.length} were given`,
+    );
+  }
   for (const { keys, value } of db.factValues.lookup(name, args)) {
     if (value.type === 'is') {
       yield { args: keys, value: value.value };
     }
   }
+}
+
+export function get(db: Database, name: string, args: Data[]): undefined | Data {
+  const arity = db.factValues.arity(name);
+  if (arity === null) return undefined;
+  if (args.length !== arity) {
+    throw new TypeError(
+      `${name} takes ${arity} argument${arity === 1 ? '' : 's'}, but ${args.length} were given`,
+    );
+  }
+  for (const { value } of db.factValues.lookup(name, args)) {
+    if (value.type === 'is') return value.value;
+  }
+  return undefined;
 }
 
 function argsetToString(args: Data[]) {

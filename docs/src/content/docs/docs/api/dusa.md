@@ -50,8 +50,8 @@ const dusa = new Dusa(`
     path X Y :- edge X Y.
     path X Z :- edge X Y, path Y Z.`);
 dusa.solution; // Object of type DusaSolution
-[...dusa.solution.lookup('path', 'a')]; // [ ["b"], ["c"], ["d"] ]
-[...dusa.solution.lookup('path', 'd')]; // []
+[...dusa.solution.lookup('path', 'b')]; // [['c', null], ['d', null]]
+[...dusa.solution.lookup('path', 'c')]; // [['d', null]]
 ```
 
 If no solutions exist, the `solution` getter will return `null`.
@@ -87,8 +87,8 @@ Each call to `sample()` re-computes the program, so even if there are only a fin
 const dusa = new Dusa(`name is { "one", "two" }.`);
 
 for (let i = 0; i < 1000; i++) {
-  for (const { args } of dusa.sample().lookup('name')) {
-    console.log(args[0]);
+  for (const [name] of dusa.sample().lookup('name')) {
+    console.log(name);
   }
 }
 ```
@@ -101,7 +101,7 @@ will print `"two"` about 500 times.
 
 The `solutions` getter iterates through all the possible distinct solutions of a Dusa
 program. The iterator works in an arbitrary order: this program will either print
-`"one"` and then `"two"` or else it will print `"two"` and then `"one"`.
+`[["one"]]` and then `[["two"]]` or else it will print `[["two"]]` and then `[["one"]]`.
 
 ```javascript
 const dusa = new Dusa(`name is { "one", "two" }.`);
@@ -134,11 +134,11 @@ const dusa = new Dusa(`
 
 [...dusa.solution.lookup('path', 'a')]; // []
 dusa.assert({ name: 'edge', args: ['a', 'b'] });
-[...dusa.solution.lookup('path', 'a')]; // [ { args: ['b'] } ]
+[...dusa.solution.lookup('path', 'a')]; // [['b', null]]
 dusa.assert(
   { name: 'edge', args: ['b', 'c'] },
   { name: 'edge', args: ['e', 'b'] },
   { name: 'edge', args: ['d', 'e'] },
 );
-[...dusa.solution.lookup('path', 'a')]; // [ { args: ['b'] }, { args: ['c'] } ]
+[...dusa.solution.lookup('path', 'a')]; // [['b', null], ['c', null]]
 ```

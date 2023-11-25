@@ -43,4 +43,62 @@ test('Client fundamentals', () => {
     [3n, null],
     [7n, null],
   ]);
+
+  expect(dusa.solution!.get('path', 0, -5)).toEqual(null);
+  expect(dusa.solution!.get('path', 0, 99)).toEqual(undefined);
+  expect(dusa.solution!.has('path', 0, 1)).toEqual(true);
+  expect(dusa.solution!.has('path', 0, 4)).toEqual(false);
+});
+
+test('Fact enumeration', () => {
+  const singleton = new Dusa(`fact 1 2 3 is "yo".`);
+  expect(singleton.solution).not.toBeNull();
+  expect([...singleton.solution!.facts]).toEqual([
+    { name: 'fact', args: [1n, 2n, 3n], value: 'yo' },
+  ]);
+
+  const digits = new Dusa(`
+    #builtin INT_MINUS minus
+    digit 9.
+    digit (minus N 1) :- digit N, N != 0.`);
+
+  expect(digits.solution).not.toBeNull();
+  expect([...digits.solution!.facts]).toEqual([
+    { name: 'digit', args: [0n], value: null },
+    { name: 'digit', args: [1n], value: null },
+    { name: 'digit', args: [2n], value: null },
+    { name: 'digit', args: [3n], value: null },
+    { name: 'digit', args: [4n], value: null },
+    { name: 'digit', args: [5n], value: null },
+    { name: 'digit', args: [6n], value: null },
+    { name: 'digit', args: [7n], value: null },
+    { name: 'digit', args: [8n], value: null },
+    { name: 'digit', args: [9n], value: null },
+  ]);
+});
+
+test('Has and get', () => {
+  const dusa = new Dusa(`
+    edge 1 2.
+    node 1.
+    node 2.
+    node 3.
+    color 1 is "blue".
+    color 2 is "red".`);
+
+  expect(dusa.solution!.has('node', 1)).toBeTruthy();
+  expect(dusa.solution!.has('node', 7)).toBeFalsy();
+  expect(dusa.solution!.has('node', null)).toBeFalsy();
+  expect(dusa.solution!.get('node', 3)).toBeNull();
+  expect(dusa.solution!.get('node', 'hello')).toBeUndefined();
+
+  expect(dusa.solution!.has('edge', 1, 2)).toBeTruthy();
+  expect(dusa.solution!.has('edge', 2, 1)).toBeFalsy();
+  expect(dusa.solution!.get('edge', 1, 2)).toBeNull();
+  expect(dusa.solution!.get('edge', 2, 1)).toBeUndefined();
+
+  expect(dusa.solution!.has('color', 1)).toBeTruthy();
+  expect(dusa.solution!.has('color', 4)).toBeFalsy();
+  expect(dusa.solution!.get('color', 2)).toEqual('red');
+  expect(dusa.solution!.get('color', 5)).toBeUndefined();
 });

@@ -6,7 +6,14 @@ import {
   pathToString,
   stepTreeRandomDFS,
 } from './engine/choiceengine.js';
-import { Database, insertFact, listFacts, lookup, makeInitialDb } from './engine/forwardengine.js';
+import {
+  Database,
+  get,
+  insertFact,
+  listFacts,
+  lookup,
+  makeInitialDb,
+} from './engine/forwardengine.js';
 import { compile } from './language/compile.js';
 import { parse } from './language/dusa-parser.js';
 import { IndexedProgram } from './language/indexize.js';
@@ -84,6 +91,17 @@ export class DusaSolution {
       }
     }
     return map(lookup(this.db, name, args.map(termToData)));
+  }
+
+  get(name: string, ...args: InputTerm[]): Term | undefined {
+    const value = get(this.db, name, args.map(termToData));
+    if (value === undefined) return undefined;
+    return dataToTerm(value);
+  }
+
+  has(name: string, ...args: InputTerm[]): boolean {
+    const value = get(this.db, name, args.map(termToData));
+    return value !== undefined;
   }
 }
 
