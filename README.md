@@ -16,7 +16,7 @@ All documentation and examples in the `docs` directory and subdirectories are
 MIT-licensed, but the Dusa implementation in JavaScript is, at present, GPL 3.0
 licensed.
 
-Dusa was initially developed by Rob Simmons at [Recurse
-Center](https://www.recurse.com/) in Fall 2023. Recurse center is a great place to
-think about ambitious projects like this in a supportive environment full of
-interesting people!
+Dusa was initially developed by Rob Simmons and Chris Martens wile Rob attended
+[Recurse Center](https://www.recurse.com/) in Fall 2023. Recurse center is a
+great place to think about ambitious projects like this in a supportive
+environment full of interesting people!
