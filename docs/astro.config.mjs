@@ -14,7 +14,21 @@ export default defineConfig({
       editLink: {
         baseUrl: 'https://git.sr.ht/~robsimmons/dusa/tree/main/item/docs/',
       },
-      customCss: ['./src/custom.css'],
+      customCss: [
+        './src/custom.css',
+        '@fontsource/fira-mono/400.css',
+        '@fontsource/fira-mono/500.css',
+        '@fontsource/fira-mono/700.css',
+        '@fontsource/fira-sans/100.css',
+        '@fontsource/fira-sans/200.css',
+        '@fontsource/fira-sans/300.css',
+        '@fontsource/fira-sans/400.css',
+        '@fontsource/fira-sans/500.css',
+        '@fontsource/fira-sans/600.css',
+        '@fontsource/fira-sans/700.css',
+        '@fontsource/fira-sans/800.css',
+        '@fontsource/fira-sans-condensed/400.css',
+      ],
       head: [
         { tag: 'link', attrs: { rel: 'icon', href: '/dusa-icon-2.svg' } },
         { tag: 'link', attrs: { rel: 'shortcut icon', href: '/dusa-icon-2.svg' } },

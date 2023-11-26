@@ -72,12 +72,24 @@
   --sl-color-gray-6: var(--oksolar-background-deemph);
   --sl-color-gray-7: var(--oksolar-background-highlight);
   --sl-color-black: var(--oksolar-background);
+
+  --sl-font: 'Fira Sans';
+  --sl-font-mono: 'Fira Mono';
 }
 
 .expressive-code .frame pre {
   --code-background: var(--oksolar-background-deemph);
   box-shadow: 0 0 0.3rem 0 var(--oksolar-text-deemph);
   border: none;
+}
+
+.expressive-code .frame pre code {
+  font-family: 'Fira Mono', monospace;
+}
+
+.site-title {
+  font-family: 'Fira Sans Condensed';
+  font-weight: 400;
 }
 
 :root[data-theme='dark'],
