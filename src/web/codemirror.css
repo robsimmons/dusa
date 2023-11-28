@@ -31,11 +31,16 @@
 }
 
 .tok-variableName {
+  color: var(--oksolar-text-violet);
+}
+
+.tok-predicate .tok-variableName,
+.tok-variableName .tok-predicate {
   color: var(--oksolar-text-blue);
 }
 
 .tok-variableName2 {
-  color: var(--oksolar-text-violet);
+  color: var(--oksolar-text-pink);
 }
 
 .tok-variableName.tok-local {

@@ -122,6 +122,97 @@ export function declToString(decl: Declaration): string {
   }
 }
 
+export function* visitPropsInProgram(decls: (Issue | ParsedDeclaration)[]) {
+  for (const decl of decls) {
+    if (decl.type === 'Rule') {
+      yield decl.conclusion;
+    }
+    if (decl.type === 'Demand' || decl.type === 'Forbid' || decl.type === 'Rule') {
+      for (const premise of decl.premises) {
+        if (premise.type === 'Proposition') {
+          yield premise;
+        }
+      }
+    }
+  }
+}
+
+function* visitSubterms(term: ParsedPattern): IterableIterator<ParsedPattern> {
+  yield term;
+  switch (term.type) {
+    case 'special':
+    case 'const':
+      for (const subterm of term.args) {
+        yield* visitSubterms(subterm);
+      }
+  }
+}
+
+export function* visitTermsinProgram(decls: (Issue | ParsedDeclaration)[]) {
+  for (const decl of decls) {
+    if (decl.type === 'Rule') {
+      for (const term of decl.conclusion.args) {
+        yield* visitSubterms(term);
+      }
+      for (const term of decl.conclusion.values ?? []) {
+        yield* visitSubterms(term);
+      }
+    }
+    if (decl.type === 'Demand' || decl.type === 'Forbid' || decl.type === 'Rule') {
+      for (const premise of decl.premises) {
+        if (premise.type === 'Proposition') {
+          for (const term of premise.args) {
+            yield* visitSubterms(term);
+          }
+          if (premise.value) {
+            yield* visitSubterms(premise.value);
+          }
+        } else {
+          yield* visitSubterms(premise.a);
+          yield* visitSubterms(premise.b);
+        }
+      }
+    }
+  }
+}
+
+function checkPropositionArity(
+  decls: (Issue | ParsedDeclaration)[],
+): { issues: null; arities: { [pred: string]: number } } | { issues: Issue[] } {
+  const arities: Map<string, Map<number, SourceLocation[]>> = new Map();
+  for (const prop of visitPropsInProgram(decls)) {
+    if (!arities.get(prop.name)) arities.set(prop.name, new Map());
+    if (!arities.get(prop.name)!.get(prop.args.length)) {
+      arities.get(prop.name)!.set(prop.args.length, [prop.loc]);
+    } else {
+      arities.get(prop.name)!.get(prop.args.length)!.push(prop.loc);
+    }
+  }
+
+  const actualArities: { [pred: string]: number } = {};
+  const issues: Issue[] = [];
+  for (const [pred, map] of arities.entries()) {
+    const arityList = [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+    const expectedArity = arityList[0][0];
+    actualArities[pred] = expectedArity;
+    for (let i = 1; i < arityList.length; i++) {
+      const [arity, occurrences] = arityList[i];
+      for (const occurrence of occurrences) {
+        issues.push({
+          type: 'Issue',
+          msg: `Predicate '${pred}' usually has ${expectedArity} argument${
+            expectedArity === 1 ? '' : 's'
+          }, but here it has ${arity}`,
+          loc: occurrence,
+        });
+      }
+    }
+  }
+
+  if (issues.length > 0) return { issues };
+  return { issues: null, arities: actualArities };
+}
+
 /**
  * Gathers uses of free variables in premises and checks that
  * free variables are being used correctly and that named wildcards
@@ -295,7 +386,8 @@ export function checkFreeVarsInDecl(
 export function check(
   decls: ParsedDeclaration[],
 ): { errors: Issue[] } | { errors: null; decls: ParsedDeclaration[] } {
-  const errors: Issue[] = [];
+  const arityInfo = checkPropositionArity(decls);
+  const errors: Issue[] = arityInfo.issues || [];
   const newDecls = decls.map((decl) => {
     const res = checkFreeVarsInDecl(decl);
     if (res.errors !== null) {

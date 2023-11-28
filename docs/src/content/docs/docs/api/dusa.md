@@ -78,7 +78,6 @@ dusa.solution; // raises DusaError
 
 [Explore this example on StackBlitz](https://stackblitz.com/edit/node-ybvpcq?file=index.js&view=editor)
 
-
 For programs with multiple solutions, use the `sample()` method or the `solutions`
 getter, which returns an iterator.
 
@@ -121,7 +120,6 @@ for (const solution of dusa.solutions) {
 ```
 
 [Explore this example on StackBlitz](https://stackblitz.com/edit/node-cysbcb?file=index.js&view=editor)
-
 
 Each time the `dusa.solutions` getter is accessed, an iterator is returned that
 re-runs solution search, potentially returning solutions in a different order.

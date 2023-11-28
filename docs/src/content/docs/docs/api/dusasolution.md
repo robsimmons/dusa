@@ -74,7 +74,6 @@ dusa.solution.get('color', 9); // === undefined
 
 [Explore this example on StackBlitz](https://stackblitz.com/edit/node-kk2qno?file=index.js&view=editor)
 
-
 ## Enumerating all facts
 
 ### `facts` getter
@@ -94,7 +93,6 @@ for (const fact of dusa.solution.facts) {
 ```
 
 [Explore this example on StackBlitz](https://stackblitz.com/edit/node-4fvfea?file=index.js&view=editor)
-
 
 ## Querying solutions
 
@@ -117,7 +115,6 @@ for (const [a, b] of dusa.solution.lookup('path')) {
 ```
 
 [Explore this example on StackBlitz](https://stackblitz.com/edit/node-xhjrt3?file=index.js&view=editor)
-
 
 This will print the following:
 

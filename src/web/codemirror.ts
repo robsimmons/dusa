@@ -1,6 +1,15 @@
 import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
-import { EditorState } from '@codemirror/state';
-import { EditorView, ViewUpdate, keymap, lineNumbers, tooltips } from '@codemirror/view';
+import { EditorState, RangeSet, StateEffect, StateField } from '@codemirror/state';
+import {
+  Decoration,
+  DecorationSet,
+  EditorView,
+  ViewPlugin,
+  ViewUpdate,
+  keymap,
+  lineNumbers,
+  tooltips,
+} from '@codemirror/view';
 import { ParserState, dusaTokenizer } from '../language/dusa-tokenizer.js';
 import { StringStream } from '../parsing/string-stream.js';
 import { classHighlighter, tags } from '@lezer/highlight';
@@ -9,13 +18,13 @@ import { SourcePosition } from '../parsing/source-location.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { parseTokens } from '../language/dusa-parser.js';
-import { ParsedDeclaration, check } from '../language/syntax.js';
+import { ParsedDeclaration, check, visitPropsInProgram } from '../language/syntax.js';
 
 const bogusPosition = {
   start: { line: 1, column: 1 },
   end: { line: 1, column: 2 },
 };
-/** Create a Codemirror-compliant parser from our streamparser.
+/** Create a Codemirror-compliant parser from our stream parser.
  * The token method is given a Codemirror-style StringStream,
  * and we have to use that to implement the StringStream interface
  * that our parser expects. Because we're not using the syntax
@@ -116,6 +125,77 @@ function dusaLinter(view: EditorView): readonly Diagnostic[] {
   return issueToDiagnostic(checkedDecls.errors ?? []);
 }
 
+/** highlightPredicates is based on simplifying the Linter infrastructure */
+const highlightPredicatesUpdateEffect = StateEffect.define<[number, number][]>();
+const highlightPredicatesState = StateField.define<DecorationSet>({
+  create() {
+    return RangeSet.empty;
+  },
+  update(value, transaction) {
+    if (transaction.docChanged) {
+      value = value.map(transaction.changes);
+    }
+
+    for (const effect of transaction.effects) {
+      if (effect.is(highlightPredicatesUpdateEffect)) {
+        return RangeSet.of(
+          effect.value.map(([from, to]) => ({
+            from,
+            to,
+            value: Decoration.mark({ inclusive: true, class: 'tok-predicate' }),
+          })),
+          true,
+        );
+      }
+    }
+    return value;
+  },
+  provide(field) {
+    return EditorView.decorations.from(field);
+  },
+});
+const highlightPredicatesPlugin = ViewPlugin.define((view: EditorView) => {
+  const delay = 750;
+  let timeout: null | ReturnType<typeof setTimeout> = setTimeout(() => run(), delay);
+  let nextUpdateCanHappenOnlyAfter = Date.now() + delay;
+  function run() {
+    const now = Date.now();
+    // Debounce logic, part 1
+    if (now < nextUpdateCanHappenOnlyAfter - 5) {
+      timeout = setTimeout(run, nextUpdateCanHappenOnlyAfter - now);
+    } else {
+      timeout = null;
+      const contents = view.state.doc.toString();
+      const tokens = parseWithStreamParser(dusaTokenizer, contents);
+      if (tokens.issues.length > 0) return;
+      const parsed = parseTokens(tokens.document);
+      const ranges: [number, number][] = [];
+      for (const prop of visitPropsInProgram(parsed)) {
+        const start = position(view.state, prop.loc.start);
+        ranges.push([start, start + prop.name.length]);
+      }
+      view.dispatch({ effects: [highlightPredicatesUpdateEffect.of(ranges)] });
+    }
+  }
+
+  return {
+    update(update: ViewUpdate) {
+      if (update.docChanged) {
+        // Debounce logic, part 2
+        nextUpdateCanHappenOnlyAfter = Date.now() + delay;
+        if (timeout === null) {
+          timeout = setTimeout(run, delay);
+        }
+      }
+    },
+    destroy() {
+      if (timeout !== null) {
+        clearTimeout(timeout);
+      }
+    },
+  };
+});
+
 export const editorChangeListener: { current: null | ((update: ViewUpdate) => void) } = {
   current: null,
 };
@@ -135,6 +215,8 @@ const state = EditorState.create({
     }),
     linter(dusaLinter),
     tooltips({ parent: document.body }),
+    highlightPredicatesPlugin,
+    highlightPredicatesState,
     keymap.of([...defaultKeymap, ...historyKeymap]),
   ],
 });
