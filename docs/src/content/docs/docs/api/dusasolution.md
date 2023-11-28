@@ -72,6 +72,9 @@ dusa.solution.get('color', 1); // === "blue"
 dusa.solution.get('color', 9); // === undefined
 ```
 
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-kk2qno?file=index.js&view=editor)
+
+
 ## Enumerating all facts
 
 ### `facts` getter
@@ -89,6 +92,9 @@ for (const fact of dusa.solution.facts) {
   console.log(fact);
 }
 ```
+
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-4fvfea?file=index.js&view=editor)
+
 
 ## Querying solutions
 
@@ -109,6 +115,9 @@ for (const [a, b] of dusa.solution.lookup('path')) {
   console.log(`Path from ${a} to ${b}`);
 }
 ```
+
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-xhjrt3?file=index.js&view=editor)
+
 
 This will print the following:
 
@@ -134,6 +143,8 @@ for (const [b] of dusa.solution.lookup('path', 2n)) {
   console.log(`Path from 2 to ${b}`);
 }
 ```
+
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-15xb9l?file=index.js&view=editor)
 
 This will print the following:
 

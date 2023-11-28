@@ -54,6 +54,8 @@ dusa.solution; // Object of type DusaSolution
 [...dusa.solution.lookup('path', 'c')]; // [['d', null]]
 ```
 
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-kmrbac?file=index.js&view=editor)
+
 If no solutions exist, the `solution` getter will return `null`.
 
 ```javascript
@@ -63,6 +65,8 @@ const dusa = new Dusa(`
 dusa.solution; // null
 ```
 
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-qmaf3y?file=index.js&view=editor)
+
 This getter can only be used if a single solution exists. Dusa will check for
 additional solutions when the `solution` getter is accessed, and will throw an
 exception if there are other solutions.
@@ -71,6 +75,9 @@ exception if there are other solutions.
 const dusa = new Dusa(`name is { "one", "two" }.`);
 dusa.solution; // raises DusaError
 ```
+
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-ybvpcq?file=index.js&view=editor)
+
 
 For programs with multiple solutions, use the `sample()` method or the `solutions`
 getter, which returns an iterator.
@@ -93,6 +100,8 @@ for (let i = 0; i < 1000; i++) {
 }
 ```
 
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-dqe9g4?file=index.js&view=editor)
+
 The current Dusa interpreter does not have a well-defined probabilistic semantics for
 complex programs, but the simple program above will print `"one"` about 500 times and
 will print `"two"` about 500 times.
@@ -107,9 +116,12 @@ program. The iterator works in an arbitrary order: this program will either prin
 const dusa = new Dusa(`name is { "one", "two" }.`);
 
 for (const solution of dusa.solutions) {
-  console.log([...solution.lookup('name')].args[0]);
+  console.log([...solution.lookup('name')]);
 }
 ```
+
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-cysbcb?file=index.js&view=editor)
+
 
 Each time the `dusa.solutions` getter is accessed, an iterator is returned that
 re-runs solution search, potentially returning solutions in a different order.
@@ -125,7 +137,7 @@ known.
 ### assert() method
 
 The `assert` method of a Dusa instance takes an arbitrary number of arguments, each
-one a Fact.
+one a Fact, and adds them to the database.
 
 ```javascript
 const dusa = new Dusa(`
@@ -142,3 +154,5 @@ dusa.assert(
 );
 [...dusa.solution.lookup('path', 'a')]; // [['b', null], ['c', null]]
 ```
+
+[Explore this example on StackBlitz](https://stackblitz.com/edit/node-7k1apl?file=index.js&view=editor)
