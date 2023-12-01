@@ -79,19 +79,64 @@ test('Multi-step declaration, basic nat (in)equality, simplified', () => {
 
 test(`Built-in functions get flattened`, () => {
   const { solutions, deadEnds } = testExecution(`
-  #builtin NAT_SUCC s
+    #builtin NAT_SUCC s
 
-  a N :- N == 4.
-  b N :- N == s 5.
-  c N :- s N == 8.
-  d N :- s N == s 0.
-  e N :- 3 == N.
-  f N :- s 6 == N.
-  g N :- 9 == s N.
-  h N :- s 3 == s N.
-  i N :- 0 == s N.  `);
+    a N :- N == 4.
+    b N :- N == s 2.
+    c N :- s N == 1.
+    d N :- s N == s 0.
+    e N :- 3 == N.
+    f N :- s 1 == N.
+    g N :- 4 == s N.
+    h N :- s 3 == s N.
+    i N :- 0 == s N. `);
   expect(deadEnds).toEqual(0);
-  expect(solutionsToStrings(solutions)).toEqual(['a 4, b 6, c 7, d 0, e 3, f 7, g 8, h 3']);
+  expect(solutionsToStrings(solutions)).toEqual(['a 4, b 3, c 0, d 0, e 3, f 2, g 3, h 3']);
+});
+
+test(`Functional predicates get flattened in match position`, () => {
+  const { solutions, deadEnds } = testExecution(`
+    s 0 is 1.
+    s 1 is 2.
+    s 2 is 3.
+    s 3 is 4.
+
+    a N :- N == 4.
+    b N :- N == s 2.
+    c N :- s N == 1.
+    d N :- s N == s 0.
+    e N :- 3 == N.
+    f N :- s 1 == N.
+    g N :- 4 == s N.
+    h N :- s 3 == s N.
+    i N :- 0 == s N.`);
+  expect(deadEnds).toEqual(0);
+  expect(solutionsToStrings(solutions)).toEqual([
+    'a 4, b 3, c 0, d 0, e 3, f 2, g 3, h 3, s 0 is 1, s 1 is 2, s 2 is 3, s 3 is 4',
+  ]);
+});
+
+test(`Functional predicates get flattened in ground position`, () => {
+  const { solutions, deadEnds } = testExecution(`
+    s 0 is 1.
+    s 1 is 2.
+    s 2 is 3.
+    s 3 is 4.
+    
+    a N :- N == 4, N == 4.
+    b N :- N == 3, N == s 2.
+    c N :- N == 0, s N == 1.
+    d N :- N == 0, s N == s 0.
+    e N :- N == 3, 3 == N.
+    f N :- N == 2, s 1 == N.
+    g N :- N == 3, 4 == s N.
+    h N :- N == 3, s 3 == s N.
+    i N :- N == 0, s 0 == N.
+    i N :- N == 0, N == s 0.`);
+  expect(deadEnds).toEqual(0);
+  expect(solutionsToStrings(solutions)).toEqual([
+    'a 4, b 3, c 0, d 0, e 3, f 2, g 3, h 3, s 0 is 1, s 1 is 2, s 2 is 3, s 3 is 4',
+  ]);
 });
 
 test('Long chain of inferences', () => {

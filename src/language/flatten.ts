@@ -159,7 +159,26 @@ function flattenNonGroundPattern(
           args.push(sub.pattern);
         }
       }
-      return { before, after, pattern: { type: 'const', name: parsedPattern.name, args } };
+      if (!preds.has(parsedPattern.name)) {
+        return { before, after, pattern: { type: 'const', name: parsedPattern.name, args } };
+      } else {
+        const replacementVar = `#${counter.current++}`;
+        return {
+          before: [],
+          after: [
+            ...before,
+            {
+              type: 'Proposition',
+              name: parsedPattern.name,
+              args,
+              value: { type: 'var', name: replacementVar },
+              loc: parsedPattern.loc,
+            },
+            ...after,
+          ],
+          pattern: { type: 'var', name: replacementVar },
+        };
+      }
     }
     case 'special': {
       // Exactly one of the subterms must be non-ground
