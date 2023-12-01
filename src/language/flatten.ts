@@ -167,25 +167,28 @@ function flattenNonGroundPattern(
         (arg) => !theseVarsGroundThisPattern(boundVars, arg),
       );
       const replacementVar = `#${counter.current++}`;
-      const nonGroundVar = `#${counter.current++}`;
       const before: FlatPremise[] = [];
       const args: Pattern[] = [];
+      const nonGroundSubterm = flattenNonGroundPattern(
+        preds,
+        counter,
+        boundVars,
+        parsedPattern.args[nonGroundIndex],
+      );
       for (const [i, arg] of parsedPattern.args.entries()) {
         if (i !== nonGroundIndex) {
           const sub = flattenGroundPattern(preds, counter, arg);
           args.push(sub.pattern);
           before.push(...sub.before);
         } else {
-          args.push({ type: 'var', name: nonGroundVar });
+          args.push(nonGroundSubterm.pattern);
         }
       }
-      const nonGroundPattern = parsedPattern.args[nonGroundIndex];
-      const sub = flattenNonGroundPattern(preds, counter, boundVars, nonGroundPattern);
       return {
         pattern: { type: 'var', name: replacementVar },
         before,
         after: [
-          ...sub.before,
+          ...nonGroundSubterm.before,
           {
             type: 'Builtin',
             name: parsedPattern.name,
@@ -195,7 +198,7 @@ function flattenNonGroundPattern(
             matchPosition: nonGroundIndex,
             loc: parsedPattern.loc,
           },
-          ...sub.after,
+          ...nonGroundSubterm.after,
         ],
       };
     }

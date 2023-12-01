@@ -232,7 +232,6 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
         if ((index = inPrefixIndexing.introduced.findIndex((v2) => v === v2)) !== -1) {
           return ['introduced', index];
         }
-        console.log(inPrefixIndexing);
         throw new Error(`Could not find ${v} in lookup`);
       };
 
@@ -258,15 +257,8 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
       });
 
       for (const [index, v] of outVars.entries()) {
-        // console.log(`Pre-transformation, argument #${index} to $${rule.outName} was ${v}.`);
         const destination = outPrefixIndexing.permutation[index];
-        // console.log(
-        //   `That position ${index} argument of $${rule.outName} becomes the ${destination.position} position ${destination.index} argument to $${rule.outName}prefix.`,
-        // );
         const [source, sourceIndex] = lookup(v);
-        // console.log(
-        //   `To derive the ${destination.position} position ${destination.index} argument $${rule.outName}prefix, ${v} is pulled from position ${sourceIndex} of the rule's ${source} variables`,
-        // );
         if (destination.position === 'shared') {
           outShared[destination.index] = [source, sourceIndex];
         } else {

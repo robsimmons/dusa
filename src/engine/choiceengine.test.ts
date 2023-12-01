@@ -20,6 +20,11 @@ function testExecution(source: string, debug = false) {
   return execute(program, makeInitialDb(program), debug);
 }
 
+// Broken in 0.0.8, because (s (s Q)) != 1 no longer works as a premise -
+// we need to disallow functional predicates in non-ground inequalities (issue #10),
+// since we can't in general count on those predicates being injective
+
+/*
 test('Multi-step declaration, basic nat (in)equality', () => {
   const { solutions, deadEnds } = testExecution(`
     #builtin NAT_ZERO z
@@ -36,6 +41,57 @@ test('Multi-step declaration, basic nat (in)equality', () => {
     `);
   expect(deadEnds).toEqual(0);
   expect(solutionsToStrings(solutions)).toEqual(['a, b, c']);
+});
+
+test('Matching nats', () => {
+  const { solutions } = testExecution(`
+    #builtin NAT_SUCC s
+  
+    a 2.
+    a 4.
+    b X :- a Y, Y == s X.
+    c X :- a Y, X == s Y.
+    d X :- b X, X != s (s Y).
+    e (s (s X)) :- a X, s (s (s _)) != X.
+    e (s X) :- a X, X != s (s (s _Y)).`);
+
+  expect(solutionsToStrings(solutions)).toEqual(['a 2, a 4, b 1, b 3, c 3, c 5, d 1, e 3, e 4']);
+});
+*/
+
+test('Multi-step declaration, basic nat (in)equality, simplified', () => {
+  const { solutions, deadEnds } = testExecution(`
+    #builtin NAT_ZERO z
+    #builtin NAT_SUCC s
+  
+    a :- 1 == 1, 0 != s z, 1 == s z, 0 == z, 1 == s 0, 2 == s _, s _Y == 1, s Q == 1.
+    b :- a, a.
+    c :- b.
+    d :- c, z == 1.
+    d :- c, s z == 0.
+    d :- c, z != 0.
+    d :- c, s z != 1.
+    e :- d.
+    `);
+  expect(deadEnds).toEqual(0);
+  expect(solutionsToStrings(solutions)).toEqual(['a, b, c']);
+});
+
+test(`Built-in functions get flattened`, () => {
+  const { solutions, deadEnds } = testExecution(`
+  #builtin NAT_SUCC s
+
+  a N :- N == 4.
+  b N :- N == s 5.
+  c N :- s N == 8.
+  d N :- s N == s 0.
+  e N :- 3 == N.
+  f N :- s 6 == N.
+  g N :- 9 == s N.
+  h N :- s 3 == s N.
+  i N :- 0 == s N.  `);
+  expect(deadEnds).toEqual(0);
+  expect(solutionsToStrings(solutions)).toEqual(['a 4, b 6, c 7, d 0, e 3, f 7, g 8, h 3']);
 });
 
 test('Long chain of inferences', () => {
@@ -105,43 +161,43 @@ test('Non-exhaustive choice', () => {
 
 test('Overlapping exhaustive choices', () => {
   const { solutions } = testExecution(`
-    a.
-    b.
-    c is { a, b, d, e }.
-    c is { a, b, c, e } :- a.
-    c is { a, c, d, e} :- b.
+    p.
+    q.
+    r is { a, b, d, e }.
+    r is { a, b, c, e } :- p.
+    r is { a, c, d, e} :- q.
     `);
-  expect(solutionsToStrings(solutions)).toEqual(['a, b, c is a', 'a, b, c is e']);
+  expect(solutionsToStrings(solutions)).toEqual(['p, q, r is a', 'p, q, r is e']);
 });
 
 test('Overlapping non-exhaustive and exhaustive choices', () => {
   const { solutions } = testExecution(`
-    a.
-    b.
-    c is { a, b, d, e } :- a.
-    c is { a, b, c? } :- a.
-    c is { a, c, d, e } :- b.
-    c is { c? }.
-    c is { a? }.
-    c is { f? }.
+    p.
+    q.
+    r is { a, b, d, e } :- p.
+    r is { a, b, c? } :- p.
+    r is { a, c, d, e } :- q.
+    r is { c? }.
+    r is { a? }.
+    r is { f? }.
     `);
-  expect(solutionsToStrings(solutions)).toEqual(['a, b, c is a', 'a, b, c is d', 'a, b, c is e']);
+  expect(solutionsToStrings(solutions)).toEqual(['p, q, r is a', 'p, q, r is d', 'p, q, r is e']);
 });
 
 test('Overlapping non-exhaustive choices', () => {
   const { solutions } = testExecution(`
-    a.
-    b.
-    c is { a, b, c? } :- a.
-    c is { a, c, d? } :- b.
-    c is { f? }.
+    p.
+    q.
+    r is { a, b, c? } :- p.
+    r is { a, c, d? } :- q.
+    r is { f? }.
     `);
   expect(solutionsToStrings(solutions)).toEqual([
-    'a, b, c is a',
-    'a, b, c is b',
-    'a, b, c is c',
-    'a, b, c is d',
-    'a, b, c is f',
+    'p, q, r is a',
+    'p, q, r is b',
+    'p, q, r is c',
+    'p, q, r is d',
+    'p, q, r is f',
   ]);
 });
 
@@ -176,13 +232,8 @@ test('INT_MINUS via equality', () => {
   expect(solutionsToStrings(solutions)).toEqual(['a 0, a 4, b -4, b 0, b 4, c -4, c 0']);
 });
 
-/* 
-// Broken by move to the forward+choice engines
-// Need to fix with a program transformation that turns d (plus X Y)
-// into two premises, plus X Y is $a and d $a
-
 test('Plus is okay if grounded by previous rules', () => {
-  const { solutions, deadEnds } = testExecution(    `
+  const { solutions, deadEnds } = testExecution(`
     #builtin INT_PLUS plus
   
     a 2.
@@ -191,8 +242,7 @@ test('Plus is okay if grounded by previous rules', () => {
     d 9.
     d 19.
     d 6.
-    e X Y :- a X, a Y, d (plus X Y).`,
-  );
+    e X Y :- a X, a Y, d (plus X Y).`);
 
   expect(deadEnds).toEqual(0);
   expect(solutionsToStrings(solutions)).toEqual([
@@ -201,7 +251,7 @@ test('Plus is okay if grounded by previous rules', () => {
 });
 
 test('INT_MINUS', () => {
-    const { solutions } = testExecution(`
+  const { solutions } = testExecution(`
     #builtin INT_MINUS minus
   
     a 0.
@@ -210,24 +260,7 @@ test('INT_MINUS', () => {
     b (minus X Y) :- a X, a Y.
     c X :- b X, a (minus 0 X).
     `);
-    expect(solutionsToStrings(solutions)).toEqual(['a 0, a 4, b -4, b 0, b 4, c -4, c 0']);
-  });
-
-*/
-
-test('Matching nats', () => {
-  const { solutions } = testExecution(`
-    #builtin NAT_SUCC s
-  
-    a 2.
-    a 4.
-    b X :- a Y, Y == s X.
-    c X :- a Y, X == s Y.
-    d X :- b X, X != s (s Y).
-    e (s (s X)) :- a X, s (s (s _)) != X.
-    e (s X) :- a X, X != s (s (s _Y)).`);
-
-  expect(solutionsToStrings(solutions)).toEqual(['a 2, a 4, b 1, b 3, c 3, c 5, d 1, e 3, e 4']);
+  expect(solutionsToStrings(solutions)).toEqual(['a 0, a 4, b -4, b 0, b 4, c -4, c 0']);
 });
 
 test('Terms that are zero', () => {

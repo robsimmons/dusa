@@ -79,14 +79,24 @@ ${program.rules.map((rule) => binarizedRuleToString(rule)).join('\n')}`;
 function binarizePremises(
   name: string,
   premises: FlatPremise[],
+  liveVars: Set<string>,
 ): {
   seed: string;
   conclusion: string;
   newRules: BinarizedRule[];
   carriedVars: string[];
 } {
+  const knownLiveVarsArr: Set<string>[] = Array.from({ length: premises.length });
+  let workingLiveVars = new Set(liveVars);
+  for (let i = premises.length - 1; i >= 0; i--) {
+    knownLiveVarsArr[i] = new Set(workingLiveVars);
+    for (const v of freeVars(...premises[i].args, premises[i].value)) {
+      workingLiveVars.add(v);
+    }
+  }
+
   const knownFreeVars = new Set<string>();
-  const knownCarriedVars: string[] = [];
+  let knownCarriedVars: string[] = [];
   const totalPremises = premises.length;
   const newRules = premises.map((premise, premiseNumber): BinarizedRule => {
     const inName = `${name}${premiseNumber}`;
@@ -99,6 +109,7 @@ function binarizePremises(
         knownFreeVars.add(v);
       }
     }
+    knownCarriedVars = knownCarriedVars.filter((v) => knownLiveVarsArr[premiseNumber].has(v));
     return {
       type: 'Binary',
       premise: premise,
@@ -115,7 +126,7 @@ function binarizePremises(
     seed: `${name}0`,
     conclusion: `${name}${premises.length}`,
     newRules,
-    carriedVars: knownCarriedVars,
+    carriedVars: knownCarriedVars.filter((v) => liveVars.has(v)),
   };
 }
 export function binarize(decls: [string, FlatDeclaration][]): BinarizedProgram {
@@ -127,7 +138,7 @@ export function binarize(decls: [string, FlatDeclaration][]): BinarizedProgram {
   for (const [name, decl] of decls) {
     switch (decl.type) {
       case 'Forbid': {
-        const { seed, newRules, conclusion } = binarizePremises(name, decl.premises);
+        const { seed, newRules, conclusion } = binarizePremises(name, decl.premises, new Set());
         seeds.push(seed);
         rules.push(...newRules);
         forbids.push(conclusion);
@@ -135,7 +146,7 @@ export function binarize(decls: [string, FlatDeclaration][]): BinarizedProgram {
       }
 
       case 'Demand': {
-        const { seed, newRules, conclusion } = binarizePremises(name, decl.premises);
+        const { seed, newRules, conclusion } = binarizePremises(name, decl.premises, new Set());
         seeds.push(seed);
         rules.push(...newRules);
         demands.push(conclusion);
@@ -143,7 +154,11 @@ export function binarize(decls: [string, FlatDeclaration][]): BinarizedProgram {
       }
 
       case 'Rule': {
-        const { seed, newRules, conclusion, carriedVars } = binarizePremises(name, decl.premises);
+        const { seed, newRules, conclusion, carriedVars } = binarizePremises(
+          name,
+          decl.premises,
+          freeVars(...decl.conclusion.args, ...(decl.conclusion.values ?? [])),
+        );
         seeds.push(seed);
         rules.push(...newRules, {
           type: 'Conclusion',
