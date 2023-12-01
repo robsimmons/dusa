@@ -18,7 +18,6 @@ import { check } from './language/check.js';
 import { compile } from './language/compile.js';
 import { parse } from './language/dusa-parser.js';
 import { IndexedProgram } from './language/indexize.js';
-import { Declaration } from './language/syntax.js';
 import { Issue } from './parsing/parser.js';
 
 export type { Issue, Stats };

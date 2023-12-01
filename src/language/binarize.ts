@@ -1,7 +1,4 @@
-import { SourceLocation } from '../client.js';
-import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { FlatDeclaration, FlatPremise, flatPremiseToString } from './flatten.js';
-import { Declaration, Premise } from './syntax.js';
 import { Pattern, freeVars, termToString } from './terms.js';
 
 /**
@@ -87,7 +84,7 @@ function binarizePremises(
   carriedVars: string[];
 } {
   const knownLiveVarsArr: Set<string>[] = Array.from({ length: premises.length });
-  let workingLiveVars = new Set(liveVars);
+  const workingLiveVars = new Set(liveVars);
   for (let i = premises.length - 1; i >= 0; i--) {
     knownLiveVarsArr[i] = new Set(workingLiveVars);
     for (const v of freeVars(...premises[i].args, premises[i].value)) {

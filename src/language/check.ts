@@ -1,7 +1,19 @@
 import { Issue } from '../parsing/parser.js';
 import { SourceLocation } from '../parsing/source-location.js';
-import { ParsedDeclaration, ParsedPremise, visitPropsInProgram } from './syntax.js';
-import { ParsedPattern, freeParsedVars, repeatedWildcards } from './terms.js';
+import {
+  ParsedDeclaration,
+  ParsedPremise,
+  freeVarsPremise,
+  visitPropsInProgram,
+  visitTermsInPremises,
+} from './syntax.js';
+import {
+  ParsedPattern,
+  freeParsedVars,
+  repeatedWildcards,
+  termToString,
+  theseVarsGroundThisPattern,
+} from './terms.js';
 
 export function checkPropositionArity(
   decls: (Issue | ParsedDeclaration)[],
@@ -200,7 +212,74 @@ export function checkFreeVarsInDecl(decl: ParsedDeclaration): Issue[] {
  * builtins get flattened out into separate premises.
  */
 export function checkBuiltinPatternsDecl(decl: ParsedDeclaration): Issue[] {
-  return [];
+  const boundVars = new Set<string>();
+  const issues: Issue[] = [];
+  for (const premise of decl.premises) {
+    for (const pattern of visitTermsInPremises(premise)) {
+      if (pattern.type === 'special') {
+        switch (pattern.name) {
+          case 'BOOLEAN_FALSE':
+          case 'BOOLEAN_TRUE':
+          case 'NAT_ZERO':
+            if (pattern.args.length !== 0) {
+              issues.push({
+                type: 'Issue',
+                loc: pattern.loc,
+                msg: `Built-in ${pattern.name} (${pattern.symbol}) expects no argument, has ${pattern.args.length}`,
+              });
+            }
+            break;
+          case 'INT_MINUS':
+            if (pattern.args.length !== 2) {
+              issues.push({
+                type: 'Issue',
+                loc: pattern.loc,
+                msg: `Built-in ${pattern.name} (${pattern.symbol}) expects two arguments, has ${pattern.args.length}`,
+              });
+            }
+            if (
+              !theseVarsGroundThisPattern(boundVars, pattern.args[0]) ||
+              !theseVarsGroundThisPattern(boundVars, pattern.args[1])
+            ) {
+              issues.push({
+                type: 'Issue',
+                loc: pattern.loc,
+                msg: `Built-in ${pattern.name} (${pattern.symbol}) needs to have one of its arguments grounded by previous premises, and that is not the case here.`,
+              });
+            }
+            break;
+          case 'EQUAL':
+          case 'INT_PLUS':
+          case 'NAT_SUCC':
+          case 'STRING_CONCAT': {
+            let nonGround: ParsedPattern | null = null;
+            for (const arg of pattern.args) {
+              if (!theseVarsGroundThisPattern(boundVars, arg)) {
+                if (nonGround === null) {
+                  nonGround = arg;
+                } else {
+                  issues.push({
+                    type: 'Issue',
+                    loc: pattern.loc,
+                    msg: `Built-in ${pattern.name} (${
+                      pattern.symbol
+                    }) needs to have all but one of its arguments grounded by previous premises, but the arguments '${termToString(
+                      nonGround,
+                    )}' and '${termToString(arg)}' are both not ground.`,
+                  });
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    for (const fv of freeVarsPremise(premise)) {
+      boundVars.add(fv);
+    }
+  }
+  return issues;
 }
 
 export function check(decls: ParsedDeclaration[]): Issue[] {

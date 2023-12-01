@@ -145,14 +145,32 @@ export function* visitPropsInProgram(decls: (Issue | ParsedDeclaration)[]) {
   }
 }
 
-function* visitSubterms(term: ParsedPattern): IterableIterator<ParsedPattern> {
-  yield term;
-  switch (term.type) {
-    case 'special':
-    case 'const':
-      for (const subterm of term.args) {
-        yield* visitSubterms(subterm);
+export function* visitSubterms(...terms: ParsedPattern[]): IterableIterator<ParsedPattern> {
+  for (const term of terms) {
+    yield term;
+    switch (term.type) {
+      case 'special':
+      case 'const':
+        for (const subterm of term.args) {
+          yield* visitSubterms(subterm);
+        }
+    }
+  }
+}
+
+export function* visitTermsInPremises(...premises: ParsedPremise[]) {
+  for (const premise of premises) {
+    if (premise.type === 'Proposition') {
+      for (const term of premise.args) {
+        yield* visitSubterms(term);
       }
+      if (premise.value) {
+        yield* visitSubterms(premise.value);
+      }
+    } else {
+      yield* visitSubterms(premise.a);
+      yield* visitSubterms(premise.b);
+    }
   }
 }
 
@@ -167,19 +185,7 @@ export function* visitTermsinProgram(decls: (Issue | ParsedDeclaration)[]) {
       }
     }
     if (decl.type === 'Demand' || decl.type === 'Forbid' || decl.type === 'Rule') {
-      for (const premise of decl.premises) {
-        if (premise.type === 'Proposition') {
-          for (const term of premise.args) {
-            yield* visitSubterms(term);
-          }
-          if (premise.value) {
-            yield* visitSubterms(premise.value);
-          }
-        } else {
-          yield* visitSubterms(premise.a);
-          yield* visitSubterms(premise.b);
-        }
-      }
+      yield* visitTermsInPremises(...decl.premises);
     }
   }
 }

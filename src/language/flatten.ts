@@ -91,7 +91,7 @@ function flattenGroundPattern(
     case 'special': {
       const before: FlatPremise[] = [];
       const args = [];
-      for (let arg of parsedPattern.args) {
+      for (const arg of parsedPattern.args) {
         const sub = flattenGroundPattern(preds, counter, arg);
         before.push(...sub.before);
         args.push(sub.pattern);
@@ -318,7 +318,7 @@ function flattenDecl(preds: Set<string>, decl: ParsedDeclaration): FlatDeclarati
         args.push(result.pattern);
         premises.push(...result.before);
       }
-      let values: Pattern[] = [];
+      const values: Pattern[] = [];
       if (decl.conclusion.values === null) {
         values.push({ type: 'triv' });
       } else {
