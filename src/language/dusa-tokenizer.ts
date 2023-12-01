@@ -1,4 +1,4 @@
-import { SPECIAL_DEFAULTS } from './dusa-builtins.js';
+import { BUILT_IN_MAP, BUILT_IN_PRED } from './dusa-builtins.js';
 import { Issue, ParserResponse, StreamParser } from '../parsing/parser.js';
 import { SourceLocation } from '../parsing/source-location.js';
 import { StringStream } from '../parsing/string-stream.js';
@@ -6,18 +6,18 @@ import { StringStream } from '../parsing/string-stream.js';
 type StateRoot =
   | {
       type: 'Normal' | 'Beginning' | 'Builtin3';
-      defaults: typeof SPECIAL_DEFAULTS;
+      defaults: typeof BUILT_IN_MAP;
     }
   | {
       type: 'Builtin1';
       hashloc: SourceLocation;
-      defaults: typeof SPECIAL_DEFAULTS;
+      defaults: typeof BUILT_IN_MAP;
     }
   | {
       type: 'Builtin2';
       hashloc: SourceLocation;
-      defaults: typeof SPECIAL_DEFAULTS;
-      builtin: keyof typeof SPECIAL_DEFAULTS;
+      defaults: typeof BUILT_IN_MAP;
+      builtin: BUILT_IN_PRED;
     };
 
 const punct = ['...', ',', '.', '{', '}', '(', ')', ':-', '!=', '==', '?'] as const;
@@ -28,7 +28,12 @@ export type Token =
   | { loc: SourceLocation; type: 'is' }
   | { loc: SourceLocation; type: 'in' }
   | { loc: SourceLocation; type: 'const'; value: string }
-  | { loc: SourceLocation; type: 'builtin'; value: string; builtin: keyof typeof SPECIAL_DEFAULTS }
+  | {
+      loc: SourceLocation;
+      type: 'builtin';
+      value: string;
+      builtin: BUILT_IN_PRED;
+    }
   | { loc: SourceLocation; type: 'var'; value: string }
   | { loc: SourceLocation; type: 'wildcard'; value: string }
   | { loc: SourceLocation; type: 'triv' }
@@ -55,7 +60,7 @@ function issue(stream: StringStream, msg: string): Issue {
 }
 
 export const dusaTokenizer: StreamParser<ParserState, Token> = {
-  startState: { type: 'Beginning', defaults: SPECIAL_DEFAULTS },
+  startState: { type: 'Beginning', defaults: BUILT_IN_MAP },
   advance: (stream, state): ParserResponse<ParserState, Token> => {
     let tok: string | null;
 
@@ -107,14 +112,14 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
 
       case 'Builtin1':
         tok = stream.eat(META_TOKEN);
-        if (!Object.keys(SPECIAL_DEFAULTS).some((name) => name === tok)) {
+        if (!Object.keys(BUILT_IN_MAP).some((name) => name === tok)) {
           return {
             state: { type: 'Normal', defaults: state.defaults },
             issues: [
               {
                 type: 'Issue',
                 msg: `Expected token following #builtin to be one of ${Object.keys(
-                  SPECIAL_DEFAULTS,
+                  BUILT_IN_MAP,
                 ).join(', ')}`,
                 loc: { start: state.hashloc.start, end: stream.matchedLocation().end },
               },
@@ -124,7 +129,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
         }
 
         return {
-          state: { ...state, type: 'Builtin2', builtin: tok as keyof typeof SPECIAL_DEFAULTS },
+          state: { ...state, type: 'Builtin2', builtin: tok as keyof typeof BUILT_IN_MAP },
           tag: 'meta',
         };
 

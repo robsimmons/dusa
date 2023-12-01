@@ -2,8 +2,8 @@ import { execute, solutionsToStrings } from './choiceengine.js';
 import { compile } from '../language/compile.js';
 import { parse } from '../language/dusa-parser.js';
 import { makeInitialDb } from './forwardengine.js';
-import { check } from '../language/syntax.js';
 import { test, expect } from 'vitest';
+import { check } from '../language/check.js';
 
 function testExecution(source: string, debug = false) {
   const parsed = parse(source);
@@ -11,12 +11,12 @@ function testExecution(source: string, debug = false) {
     throw parsed.errors;
   }
 
-  const checked = check(parsed.document);
-  if (checked.errors !== null) {
-    throw checked.errors;
+  const errors = check(parsed.document);
+  if (errors.length !== 0) {
+    throw errors;
   }
 
-  const program = compile(checked.decls, debug);
+  const program = compile(parsed.document, debug);
   return execute(program, makeInitialDb(program), debug);
 }
 

@@ -14,14 +14,15 @@ export function match(
       if (pattern.type !== dv.type) return null;
       return substitution;
     case 'int':
-    case 'nat':
       if (dv.type !== 'int') return null;
       if (BigInt(pattern.value) !== dv.value) return null;
       return substitution;
     case 'string':
+    case 'bool':
       if (pattern.type !== dv.type) return null;
       if (pattern.value !== dv.value) return null;
       return substitution;
+    /*
     case 'special':
       if (pattern.name === 'NAT_ZERO' && pattern.args.length === 0) {
         if (dv.type !== 'int') {
@@ -130,6 +131,7 @@ export function match(
           pattern.args.length === 1 ? '' : 's'
         }`,
       );
+        */
 
     case 'const':
       if (dv.type !== 'const' || pattern.name !== dv.name || pattern.args.length !== dv.args.length)
@@ -155,13 +157,14 @@ export function match(
 export function apply(substitution: Substitution, pattern: Pattern): Data {
   switch (pattern.type) {
     case 'triv':
+    case 'bool':
     case 'string': {
       return hide(pattern);
     }
     case 'int':
-    case 'nat':
       return hide({ type: 'int', value: BigInt(pattern.value) });
 
+    /*
     case 'special': {
       if (pattern.name === 'NAT_ZERO' && pattern.args.length === 0) {
         return hide({ type: 'int', value: 0n });
@@ -219,7 +222,7 @@ export function apply(substitution: Substitution, pattern: Pattern): Data {
           pattern.args.length === 1 ? '' : 's'
         }`,
       );
-    }
+    } */
 
     case 'const': {
       return hide({

@@ -8,6 +8,7 @@ import {
   IndexedConclusion,
   IndexedProgram,
 } from '../language/indexize.js';
+import { runBuiltinBackward, runBuiltinForward } from './builtin.js';
 import { Substitution, apply, equal, match } from './dataterm.js';
 
 type Prefix = { type: 'prefix'; name: string; shared: Data[]; passed: Data[] };
@@ -157,6 +158,7 @@ function stepFact(rules: IndexInsertionRule[], args: Data[], value: Data, db: Da
       const shared = rule.shared.map((v) => substitution![v]);
       const introduced = rule.introduced.map((v) => substitution![v]);
       const known = db.indexes.get(rule.indexName, shared) ?? [];
+      // TODO deeply suspicious of this concat
       db.indexes = db.indexes.set(rule.indexName, shared, known.concat([introduced]));
       db.queue = db.queue.push(0, { type: 'index', name: rule.indexName, shared, introduced });
     }
@@ -187,7 +189,7 @@ function nextPrefix(
 function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): void {
   for (const prefix of candidatePrefixList) {
     if (db.prefixes.get(prefix.name, prefix.shared.concat(prefix.passed)) === null) {
-      // TODO ugh I don't like this copy
+      // TODO deeply suspicious of this concat
       const known = db.prefixes.get(prefix.name, prefix.shared)?.concat([prefix.passed]) ?? [
         prefix.passed,
       ];
@@ -202,30 +204,49 @@ function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): void
 function stepPrefix(rule: IndexedBinaryRule, shared: Data[], passed: Data[], db: Database): void {
   const newPrefixes: Prefix[] = [];
 
-  if (rule.type === 'FunctionalLookup') {
+  if (rule.type === 'IndexLookup') {
+    for (const introduced of db.indexes.get(rule.indexName, shared) ?? []) {
+      newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
+    }
+  } else {
     const substitution: Substitution = {};
     for (const [index, v] of rule.shared.entries()) {
       substitution[v] = shared[index];
     }
-    const grounded = apply(substitution, rule.function.ground);
-    const matched = match(substitution, rule.function.match, grounded);
-
-    if (rule.function.type === 'Equality') {
-      if (matched !== null) {
-        const introduced = rule.introduced.map((v) => matched[v]);
-        newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
+    if (rule.matchPosition === null) {
+      const args = rule.args.map((arg) => apply(substitution, arg));
+      const result = runBuiltinForward(rule.name, args);
+      if (result !== null) {
+        const outputSubst = match(substitution, rule.value, result);
+        if (outputSubst !== null) {
+          const introduced = rule.introduced.map((v) => outputSubst[v]);
+          newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
+        }
       }
     } else {
-      if (matched === null) {
-        newPrefixes.push(nextPrefix(rule, shared, passed, []));
+      const prefixArgs: Data[] = [];
+      const postfixArgs: Data[] = [];
+      let i = 0;
+      for (; i < rule.matchPosition; i++) {
+        prefixArgs.push(apply(substitution, rule.args[i]));
+      }
+      const matchedPosition = rule.args[i++];
+      for (; i < rule.args.length; i++) {
+        postfixArgs.push(apply(substitution, rule.args[i]));
+      }
+      for (const outputSubst of runBuiltinBackward(
+        rule.name,
+        prefixArgs,
+        matchedPosition,
+        postfixArgs,
+        apply(substitution, rule.value),
+        substitution,
+      )) {
+        const introduced = rule.introduced.map((v) => outputSubst[v]);
+        newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
       }
     }
-  } else {
-    for (const introduced of db.indexes.get(rule.indexName, shared) ?? []) {
-      newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
-    }
   }
-
   extendDbWithPrefixes(newPrefixes, db);
 }
 

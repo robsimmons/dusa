@@ -1,6 +1,7 @@
 import { binarize, binarizedProgramToString } from './binarize.js';
+import { flatProgramToString, flattenAndName } from './flatten.js';
 import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
-import { Declaration, declToString } from './syntax.js';
+import { Declaration, ParsedDeclaration, declToString } from './syntax.js';
 
 export function indexToRuleName(index: number): string {
   if (index >= 26) {
@@ -10,14 +11,14 @@ export function indexToRuleName(index: number): string {
 }
 
 /** Compiles a *checked* program */
-export function compile(decls: Declaration[], debug = false): IndexedProgram {
-  const named = decls.map<[string, Declaration]>((decl, i) => [indexToRuleName(i), decl]);
+export function compile(decls: ParsedDeclaration[], debug = false): IndexedProgram {
+  const flattened = flattenAndName(decls);
   if (debug) {
-    console.log(`Form 1: checked program with named declarations
-${named.map(([name, decl]) => `${name}: ${declToString(decl)}`).join('\n')}`);
+    console.log(`Form 1: flattened program
+${flatProgramToString(flattened)}`);
   }
 
-  const binarized = binarize(named);
+  const binarized = binarize(flattened);
   if (debug) {
     console.log(`\nForm 2: Binarized program
 ${binarizedProgramToString(binarized)}`);

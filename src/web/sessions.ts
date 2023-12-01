@@ -6,8 +6,9 @@ import {
   GRAPH_GENERATION_EXAMPLE,
   ROCK_PAPER_SCISSORS,
 } from './examples.js';
-import { Declaration, check } from '../language/syntax.js';
+import { Declaration, ParsedDeclaration } from '../language/syntax.js';
 import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker.js';
+import { check } from '../language/check.js';
 
 function decodeDusaHashURI(): null | { program: string } {
   if (!window.location.hash.startsWith('#')) return null;
@@ -424,17 +425,13 @@ class SessionTabs {
       })
       .then(({ worker, activeSession, text }) => {
         const ast = parse(text);
-        let decls: Declaration[] | null = null;
+        let decls: ParsedDeclaration[] | null = null;
         let issues: { msg: string; loc?: SourceLocation }[] = [];
         if (ast.errors !== null) {
           issues = ast.errors;
         } else {
-          const result = check(ast.document);
-          if (result.errors !== null) {
-            issues = result.errors;
-          } else {
-            decls = result.decls;
-          }
+          issues = check(ast.document);
+          decls = ast.document;
         }
 
         if (issues.length > 0 || decls === null) {

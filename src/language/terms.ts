@@ -1,31 +1,24 @@
 import { SourceLocation } from '../parsing/source-location.js';
-import { SPECIAL_DEFAULTS } from './dusa-builtins.js';
+import { BUILT_IN_PRED } from './dusa-builtins.js';
 
 export type Pattern =
   | { type: 'triv' }
   | { type: 'int'; value: number }
-  | { type: 'nat'; value: number }
+  | { type: 'bool'; value: boolean }
   | { type: 'string'; value: string }
   | { type: 'const'; name: string; args: Pattern[] }
-  | {
-      type: 'special';
-      name: keyof typeof SPECIAL_DEFAULTS;
-      symbol: string;
-      args: Pattern[];
-      nonground?: number;
-    }
   | { type: 'wildcard'; name: null | string }
   | { type: 'var'; name: string };
 
 export type ParsedPattern =
   | { type: 'triv'; loc: SourceLocation }
   | { type: 'int'; value: number; loc: SourceLocation }
-  | { type: 'nat'; value: number; loc: SourceLocation }
+  | { type: 'bool'; value: boolean; loc: SourceLocation }
   | { type: 'string'; value: string; loc: SourceLocation }
   | { type: 'const'; name: string; args: ParsedPattern[]; loc: SourceLocation }
   | {
       type: 'special';
-      name: keyof typeof SPECIAL_DEFAULTS;
+      name: BUILT_IN_PRED;
       symbol: string;
       args: ParsedPattern[];
       loc: SourceLocation;
@@ -33,15 +26,16 @@ export type ParsedPattern =
   | { type: 'wildcard'; name: null | string; loc: SourceLocation }
   | { type: 'var'; name: string; loc: SourceLocation };
 
-export function termToString(t: Pattern, needsParens = true): string {
+export function termToString(t: Pattern | ParsedPattern, needsParens = true): string {
   switch (t.type) {
     case 'triv':
       return `()`;
     case 'wildcard':
       return `_`;
     case 'int':
-    case 'nat':
       return `${t.value}`;
+    case 'bool':
+      return `#${t.value ? 'tt' : 'ff'}`;
     case 'string':
       return `"${t.value}"`;
     case 'const':
@@ -55,6 +49,23 @@ export function termToString(t: Pattern, needsParens = true): string {
     }
     case 'var':
       return t.name;
+  }
+}
+
+export function theseVarsGroundThisPattern(vars: Set<string>, t: ParsedPattern): boolean {
+  switch (t.type) {
+    case 'triv':
+    case 'int':
+    case 'bool':
+    case 'string':
+      return true;
+    case 'wildcard':
+      return false;
+    case 'const':
+    case 'special':
+      return t.args.every((arg: ParsedPattern) => theseVarsGroundThisPattern(vars, arg));
+    case 'var':
+      return vars.has(t.name);
   }
 }
 
@@ -95,7 +106,7 @@ export function repeatedWildcards(
   return [...repeatedWildcards.entries()];
 }
 
-function freeVarsAccum(s: Set<string>, p: Pattern) {
+function freeVarsAccum(s: Set<string>, p: Pattern | ParsedPattern) {
   switch (p.type) {
     case 'var':
       s.add(p.name);
@@ -114,7 +125,7 @@ function freeVarsAccum(s: Set<string>, p: Pattern) {
   }
 }
 
-export function freeVars(...patterns: Pattern[]): Set<string> {
+export function freeVars(...patterns: (Pattern | ParsedPattern)[]): Set<string> {
   const s = new Set<string>();
   for (const pattern of patterns) {
     freeVarsAccum(s, pattern);

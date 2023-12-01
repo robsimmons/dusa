@@ -3,13 +3,20 @@ export type Data = ViewsIndex | bigint;
 export type DataView =
   | { type: 'triv' }
   | { type: 'int'; value: bigint }
+  | { type: 'bool'; value: boolean }
   | { type: 'string'; value: string }
   | { type: 'const'; name: string; args: Data[] };
 
 type ViewsIndex = number;
-const views: DataView[] = [{ type: 'triv' }];
+const views: DataView[] = [
+  { type: 'triv' },
+  { type: 'bool', value: true },
+  { type: 'bool', value: false },
+];
 
 export const TRIV_DATA = 0;
+export const BOOL_TRUE = 1;
+export const BOOL_FALSE = 2;
 
 export function expose(d: Data): DataView {
   if (typeof d === 'bigint') return { type: 'int', value: d };
@@ -66,6 +73,8 @@ export function hide(d: DataView): Data {
       return 0;
     case 'int':
       return d.value;
+    case 'bool':
+      return d.value ? 1 : 2;
     case 'string': {
       const candidate = strings[d.value];
       if (candidate) return candidate;
@@ -92,6 +101,8 @@ export function dataToString(d: Data, needsParens = true): string {
       return `()`;
     case 'int':
       return `${view.value}`;
+    case 'bool':
+      return `#${view.value ? 'tt' : 'ff'}`;
     case 'string':
       return `"${view.value}"`;
     case 'const':

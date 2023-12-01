@@ -7,7 +7,7 @@ import {
   stepTreeRandomDFS,
 } from '../engine/choiceengine.js';
 import { Database, listFacts, makeInitialDb } from '../engine/forwardengine.js';
-import { Declaration } from '../language/syntax.js';
+import { ParsedDeclaration } from '../language/syntax.js';
 import { IndexedProgram } from '../language/indexize.js';
 import { compile } from '../language/compile.js';
 
@@ -35,7 +35,7 @@ export type AppToWorker =
   | { type: 'status' }
   | { type: 'setsolution'; solution: number | null }
   | { type: 'stop' }
-  | { type: 'load'; program: Declaration[] }
+  | { type: 'load'; program: ParsedDeclaration[] }
   | { type: 'start' }
   | { type: 'reset' };
 
@@ -86,6 +86,7 @@ function cycle(): null | number {
     }
   } catch (e) {
     stats.error = `${e}`;
+    console.log(e);
     return null;
   }
 
@@ -158,6 +159,7 @@ onmessage = (event: MessageEvent<AppToWorker>): true => {
         return resume('running');
       } catch (e) {
         stats.error = `${e}`;
+        console.log(e);
         return resume('done');
       }
     }

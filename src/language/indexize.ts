@@ -1,4 +1,7 @@
+import { SourceLocation } from '../client.js';
 import { BinarizedProgram, freeVarsBinarizedPremise } from './binarize.js';
+import { BUILT_IN_PRED } from './dusa-builtins.js';
+import { flatPremiseToString } from './flatten.js';
 import { Pattern, termToString } from './terms.js';
 
 /**
@@ -29,29 +32,33 @@ import { Pattern, termToString } from './terms.js';
  * requires a lot of bookkeeping, which is why this ends up being tedious.
  */
 
-export type IndexedBinaryRule =
-  | {
-      type: 'IndexLookup';
-      inName: string;
-      shared: string[];
-      passed: string[];
-      indexName: string;
-      introduced: string[];
-      outName: string;
-      outShared: ['shared' | 'passed' | 'introduced', number][];
-      outPassed: ['shared' | 'passed' | 'introduced', number][];
-    }
-  | {
-      type: 'FunctionalLookup';
-      inName: string;
-      shared: string[];
-      passed: string[];
-      introduced: string[];
-      function: { type: 'Equality' | 'Inequality'; ground: Pattern; match: Pattern };
-      outName: string;
-      outShared: ['shared' | 'passed' | 'introduced', number][];
-      outPassed: ['shared' | 'passed' | 'introduced', number][];
-    };
+export interface IndexedBinaryRuleBase {
+  type: string;
+  inName: string;
+  shared: string[];
+  passed: string[];
+  introduced: string[];
+  outShared: ['shared' | 'passed' | 'introduced', number][];
+  outPassed: ['shared' | 'passed' | 'introduced', number][];
+  outName: string;
+}
+
+export interface IndexedLookup extends IndexedBinaryRuleBase {
+  type: 'IndexLookup';
+  indexName: string;
+}
+
+export interface FunctionLookup extends IndexedBinaryRuleBase {
+  type: 'Builtin';
+  name: BUILT_IN_PRED;
+  symbol: null | string;
+  matchPosition: null | number;
+  args: Pattern[];
+  value: Pattern;
+  loc: SourceLocation;
+}
+
+export type IndexedBinaryRule = IndexedLookup | FunctionLookup;
 
 export interface IndexInsertionRule {
   name: string;
@@ -96,9 +103,7 @@ function indexedRuleToString(rule: IndexedBinaryRule) {
   const premiseStr =
     rule.type === 'IndexLookup'
       ? `$${rule.indexName}index [ ${rule.shared.join(', ')} ] [ ${rule.introduced.join(', ')} ]`
-      : `${termToString(rule.function.ground)} ${
-          rule.function.type === 'Equality' ? '==' : '!='
-        } ${termToString(rule.function.match)}`;
+      : flatPremiseToString(rule);
 
   return `$${rule.outName}prefix [ ${rule.outShared.map(lookup).join(', ')} ] [ ${rule.outPassed
     .map(lookup)
@@ -285,22 +290,21 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
           passed: inPrefixIndexing.passed,
           introduced: inPrefixIndexing.introduced,
           inName: rule.inName,
-          indexName: rule.inName,
           outName: rule.outName,
           outShared,
           outPassed,
+          indexName: rule.inName,
         });
       } else {
         binaryRules.push({
-          type: 'FunctionalLookup',
-          inName: rule.inName,
           shared: inPrefixIndexing.shared,
           passed: inPrefixIndexing.passed,
           introduced: inPrefixIndexing.introduced,
-          function: { type: rule.premise.type, ground: rule.premise.a, match: rule.premise.b },
+          inName: rule.inName,
           outName: rule.outName,
           outShared,
           outPassed,
+          ...rule.premise,
         });
       }
     }

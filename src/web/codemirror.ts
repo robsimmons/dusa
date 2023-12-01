@@ -18,7 +18,8 @@ import { SourcePosition } from '../parsing/source-location.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { parseTokens } from '../language/dusa-parser.js';
-import { ParsedDeclaration, check, visitPropsInProgram } from '../language/syntax.js';
+import { ParsedDeclaration, visitPropsInProgram } from '../language/syntax.js';
+import { check } from '../language/check.js';
 
 const bogusPosition = {
   start: { line: 1, column: 1 },
@@ -121,8 +122,8 @@ function dusaLinter(view: EditorView): readonly Diagnostic[] {
   if (parsedIssues.length > 0) {
     return issueToDiagnostic(parsedIssues);
   }
-  const checkedDecls = check(parsedDecls);
-  return issueToDiagnostic(checkedDecls.errors ?? []);
+  const errors = check(parsedDecls);
+  return issueToDiagnostic(errors);
 }
 
 /** highlightPredicates is based on simplifying the Linter infrastructure */
