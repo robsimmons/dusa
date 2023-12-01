@@ -301,7 +301,7 @@ export function parseTerm(t: Istream<Token>): ParsedPattern | null {
 
   if (tok.type === 'int') {
     t.next();
-    return { type:  'int', value: tok.value, loc: tok.loc };
+    return { type: 'int', value: tok.value, loc: tok.loc };
   }
 
   if (tok.type === 'string') {

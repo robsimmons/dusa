@@ -23,7 +23,7 @@
     "datalog",
     "immutable",
     "logic programming",
-    "persistent" 
+    "persistent"
   ],
   "license": "GPL-3.0-only",
   "scripts": {
