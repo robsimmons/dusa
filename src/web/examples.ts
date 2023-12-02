@@ -141,7 +141,7 @@ round (plus Round 1) :-
 # If the players make different moves, outcomes tells us who won.
 # The "wins" and "round" constants are just a cheap hack to make
 # the result look like a sentence without string concatenation.
-eventually Winner wins round Round Move1 Defeats Move2 :-
+eventually Winner "wins in round" Round "when" Move1 Defeats Move2 :-
   outcome Move1 Defeats Move2,
   plays Winner Round is Move1,
   plays _ Round is Move2.
