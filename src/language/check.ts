@@ -209,9 +209,9 @@ export function checkFreeVarsInDecl(decl: ParsedDeclaration): Issue[] {
 /**
  * This check assumes that the first free variable checks have passed, and serves
  * only to check that the flattening transformation will produce a well-moded program when
- * builtins get flattened out into separate premises.
+ * functional predicates get flattened out into separate premises.
  */
-export function checkBuiltinPatternsDecl(decl: ParsedDeclaration): Issue[] {
+export function checkFunctionalPredicatesInDecl(decl: ParsedDeclaration): Issue[] {
   const boundVars = new Set<string>();
   const issues: Issue[] = [];
   for (const premise of decl.premises) {
@@ -288,7 +288,7 @@ export function check(decls: ParsedDeclaration[]): Issue[] {
   for (const decl of decls) {
     const declErrors = checkFreeVarsInDecl(decl);
     if (declErrors.length === 0) {
-      declErrors.push(...checkBuiltinPatternsDecl(decl));
+      declErrors.push(...checkFunctionalPredicatesInDecl(decl));
     }
     errors.push(...declErrors);
   }
