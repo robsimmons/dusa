@@ -38,6 +38,7 @@ export default function Tabs({
                     event.preventDefault();
                     deleteSession(key);
                   }}
+                  aria-label="Close tab"
                 >
                   <Cross2Icon />
                 </button>

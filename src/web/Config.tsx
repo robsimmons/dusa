@@ -28,7 +28,7 @@ export default function Config(props: Props) {
       <div className="top-config">
         <Tooltip.Root>
           <Tooltip.Trigger asChild className="dk-trigger-button">
-            <button onClick={() => window.open('/docs/', '_blank')}>
+            <button onClick={() => window.open('/docs/', '_blank')} aria-label="Docs">
               <QuestionMarkCircledIcon width={ICON_SIZE} height={ICON_SIZE} />
             </button>
           </Tooltip.Trigger>
@@ -41,7 +41,7 @@ export default function Config(props: Props) {
       <div className="bottom-config">
         <Tooltip.Root>
           <Tooltip.Trigger asChild className="dk-trigger-button">
-            <button onClick={() => props.share()}>
+            <button onClick={() => props.share()} aria-label="Copy sharable link to clipboard">
               <Share1Icon width={ICON_SIZE} height={ICON_SIZE} />
             </button>
           </Tooltip.Trigger>
@@ -51,7 +51,11 @@ export default function Config(props: Props) {
         </Tooltip.Root>
         <Tooltip.Root>
           <Tooltip.Trigger asChild className="dk-trigger-button">
-            <button id="themeswitcher" onClick={toggle}>
+            <button
+              id="themeswitcher"
+              onClick={toggle}
+              aria-label="Switch between light and dark mode"
+            >
               {mode === 'light' && <SunIcon width={ICON_SIZE} height={ICON_SIZE} />}
               {mode === 'dark' && <MoonIcon width={ICON_SIZE} height={ICON_SIZE} />}{' '}
             </button>
