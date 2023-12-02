@@ -1,7 +1,7 @@
 import { binarize, binarizedProgramToString } from './binarize.js';
 import { flatProgramToString, flattenAndName } from './flatten.js';
 import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
-import {  ParsedDeclaration } from './syntax.js';
+import { ParsedDeclaration } from './syntax.js';
 
 export function indexToRuleName(index: number): string {
   if (index >= 26) {

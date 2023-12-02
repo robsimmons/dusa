@@ -6,7 +6,7 @@ import {
   GRAPH_GENERATION_EXAMPLE,
   ROCK_PAPER_SCISSORS,
 } from './examples.js';
-import {  ParsedDeclaration } from '../language/syntax.js';
+import { ParsedDeclaration } from '../language/syntax.js';
 import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker.js';
 import { check } from '../language/check.js';
 
