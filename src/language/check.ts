@@ -210,7 +210,7 @@ export function checkFreeVarsInDecl(decl: ParsedDeclaration): Issue[] {
 function checkFunctionalPredicatesInTerm(
   preds: Map<string, number>,
   boundVars: Set<string>,
-  pattern: Pattern,
+  pattern: ParsedPattern,
 ): Issue[] {
   if (pattern.type === 'const') {
     const expectedNum = preds.get(pattern.name);
@@ -318,7 +318,6 @@ export function checkFunctionalPredicatesInDecl(
       ...decl.conclusion.args,
       ...(decl.conclusion.values ?? []),
     )) {
-      console.log(pattern);
       issues.push(...checkFunctionalPredicatesInTerm(preds, boundVars, pattern));
     }
   }
