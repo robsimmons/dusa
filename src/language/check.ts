@@ -5,6 +5,7 @@ import {
   ParsedPremise,
   freeVarsPremise,
   visitPropsInProgram,
+  visitSubterms,
   visitTermsInPremises,
 } from './syntax.js';
 import {
@@ -206,77 +207,119 @@ export function checkFreeVarsInDecl(decl: ParsedDeclaration): Issue[] {
   }
 }
 
-/**
- * This check assumes that the first free variable checks have passed, and serves
- * only to check that the flattening transformation will produce a well-moded program when
- * functional predicates get flattened out into separate premises.
- */
-export function checkFunctionalPredicatesInDecl(decl: ParsedDeclaration): Issue[] {
-  const boundVars = new Set<string>();
-  const issues: Issue[] = [];
-  for (const premise of decl.premises) {
-    for (const pattern of visitTermsInPremises(premise)) {
-      if (pattern.type === 'special') {
-        switch (pattern.name) {
-          case 'BOOLEAN_FALSE':
-          case 'BOOLEAN_TRUE':
-          case 'NAT_ZERO':
-            if (pattern.args.length !== 0) {
-              issues.push({
-                type: 'Issue',
-                loc: pattern.loc,
-                msg: `Built-in ${pattern.name} (${pattern.symbol}) expects no argument, has ${pattern.args.length}`,
-              });
-            }
-            break;
-          case 'INT_MINUS':
-            if (pattern.args.length !== 2) {
-              issues.push({
-                type: 'Issue',
-                loc: pattern.loc,
-                msg: `Built-in ${pattern.name} (${pattern.symbol}) expects two arguments, has ${pattern.args.length}`,
-              });
-            }
-            if (
-              !theseVarsGroundThisPattern(boundVars, pattern.args[0]) ||
-              !theseVarsGroundThisPattern(boundVars, pattern.args[1])
-            ) {
-              issues.push({
-                type: 'Issue',
-                loc: pattern.loc,
-                msg: `Built-in ${pattern.name} (${pattern.symbol}) needs to have one of its arguments grounded by previous premises, and that is not the case here.`,
-              });
-            }
-            break;
-          case 'EQUAL':
-          case 'INT_PLUS':
-          case 'NAT_SUCC':
-          case 'STRING_CONCAT': {
-            let nonGround: ParsedPattern | null = null;
-            for (const arg of pattern.args) {
-              if (!theseVarsGroundThisPattern(boundVars, arg)) {
-                if (nonGround === null) {
-                  nonGround = arg;
-                } else {
-                  issues.push({
-                    type: 'Issue',
-                    loc: pattern.loc,
-                    msg: `Built-in ${pattern.name} (${
-                      pattern.symbol
-                    }) needs to have all but one of its arguments grounded by previous premises, but the arguments '${termToString(
-                      nonGround,
-                    )}' and '${termToString(arg)}' are both not ground.`,
-                  });
-                  break;
-                }
-              }
+function checkFunctionalPredicatesInTerm(
+  preds: Map<string, number>,
+  boundVars: Set<string>,
+  pattern: Pattern,
+): Issue[] {
+  if (pattern.type === 'const') {
+    const expectedNum = preds.get(pattern.name);
+    if (expectedNum !== undefined && expectedNum !== pattern.args.length) {
+      return [
+        {
+          type: 'Issue',
+          loc: pattern.loc,
+          msg: `The functional predicate '${pattern.name}' should be given ${expectedNum} argument${
+            expectedNum === 1 ? '' : 's'
+          }, but is given ${pattern.args.length} here`,
+        },
+      ];
+    }
+  } else if (pattern.type === 'special') {
+    switch (pattern.name) {
+      case 'BOOLEAN_FALSE':
+      case 'BOOLEAN_TRUE':
+      case 'NAT_ZERO':
+        if (pattern.args.length !== 0) {
+          return [
+            {
+              type: 'Issue',
+              loc: pattern.loc,
+              msg: `Built-in ${pattern.name} (${pattern.symbol}) expects no argument, has ${pattern.args.length}`,
+            },
+          ];
+        }
+        break;
+      case 'INT_MINUS':
+        if (pattern.args.length !== 2) {
+          return [
+            {
+              type: 'Issue',
+              loc: pattern.loc,
+              msg: `Built-in ${pattern.name} (${pattern.symbol}) expects two arguments, has ${pattern.args.length}`,
+            },
+          ];
+        }
+        if (
+          !theseVarsGroundThisPattern(boundVars, pattern.args[0]) ||
+          !theseVarsGroundThisPattern(boundVars, pattern.args[1])
+        ) {
+          return [
+            {
+              type: 'Issue',
+              loc: pattern.loc,
+              msg: `Built-in ${pattern.name} (${pattern.symbol}) needs to have one of its arguments grounded by previous premises, and that is not the case here.`,
+            },
+          ];
+        }
+        break;
+      case 'EQUAL':
+      case 'INT_PLUS':
+      case 'NAT_SUCC':
+      case 'STRING_CONCAT': {
+        let nonGround: ParsedPattern | null = null;
+        for (const arg of pattern.args) {
+          if (!theseVarsGroundThisPattern(boundVars, arg)) {
+            if (nonGround === null) {
+              nonGround = arg;
+            } else {
+              return [
+                {
+                  type: 'Issue',
+                  loc: pattern.loc,
+                  msg: `Built-in ${pattern.name} (${
+                    pattern.symbol
+                  }) needs to have all but one of its arguments grounded by previous premises, but the arguments '${termToString(
+                    nonGround,
+                  )}' and '${termToString(arg)}' are both not ground.`,
+                },
+              ];
             }
           }
         }
       }
     }
+  }
+  return [];
+}
+
+/**
+ * This check assumes that the first free variable checks have passed, and serves
+ * only to check that the flattening transformation will produce a well-moded program when
+ * functional predicates get flattened out into separate premises, and where functional
+ * predicates in new premises have a appropriate number of arguments.
+ */
+export function checkFunctionalPredicatesInDecl(
+  preds: Map<string, number>,
+  decl: ParsedDeclaration,
+): Issue[] {
+  const boundVars = new Set<string>();
+  const issues: Issue[] = [];
+  for (const premise of decl.premises) {
+    for (const pattern of visitTermsInPremises(premise)) {
+      issues.push(...checkFunctionalPredicatesInTerm(preds, boundVars, pattern));
+    }
     for (const fv of freeVarsPremise(premise)) {
       boundVars.add(fv);
+    }
+  }
+  if (decl.type === 'Rule') {
+    for (const pattern of visitSubterms(
+      ...decl.conclusion.args,
+      ...(decl.conclusion.values ?? []),
+    )) {
+      console.log(pattern);
+      issues.push(...checkFunctionalPredicatesInTerm(preds, boundVars, pattern));
     }
   }
   return issues;
@@ -287,8 +330,9 @@ export function check(decls: ParsedDeclaration[]): Issue[] {
   const errors: Issue[] = arityInfo.issues || [];
   for (const decl of decls) {
     const declErrors = checkFreeVarsInDecl(decl);
-    if (declErrors.length === 0) {
-      declErrors.push(...checkFunctionalPredicatesInDecl(decl));
+    if (declErrors.length === 0 && arityInfo.issues === null) {
+      const preds = new Map(Object.entries(arityInfo.arities));
+      declErrors.push(...checkFunctionalPredicatesInDecl(preds, decl));
     }
     errors.push(...declErrors);
   }

@@ -18,7 +18,7 @@ import { SourcePosition } from '../parsing/source-location.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { parseTokens } from '../language/dusa-parser.js';
-import { ParsedDeclaration, visitPropsInProgram } from '../language/syntax.js';
+import { ParsedDeclaration, visitPropsInProgram, visitTermsinProgram } from '../language/syntax.js';
 import { check } from '../language/check.js';
 
 const bogusPosition = {
@@ -171,9 +171,17 @@ const highlightPredicatesPlugin = ViewPlugin.define((view: EditorView) => {
       if (tokens.issues.length > 0) return;
       const parsed = parseTokens(tokens.document);
       const ranges: [number, number][] = [];
+      const preds = new Set<string>();
       for (const prop of visitPropsInProgram(parsed)) {
         const start = position(view.state, prop.loc.start);
         ranges.push([start, start + prop.name.length]);
+        preds.add(prop.name);
+      }
+      for (const term of visitTermsinProgram(parsed)) {
+        if (term.type === 'const' && preds.has(term.name)) {
+          const start = position(view.state, term.loc.start);
+          ranges.push([start, start + term.name.length]);
+        }
       }
       view.dispatch({ effects: [highlightPredicatesUpdateEffect.of(ranges)] });
     }

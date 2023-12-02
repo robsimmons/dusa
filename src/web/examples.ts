@@ -38,44 +38,29 @@ upperCase bard is "Bard".
 homeName Char is "the Highlands" :- home Char is highlands.
 homeName Char is "Seaside Village" :- home Char is seaside_town.
 homeName Char is "the Foothills" :- home Char is foothills.
-homeName Char is (concat TrainingCity " City") :-
-   home Char is city,
-   training Char is Training,
-   upperCase Training is TrainingCity.
+homeName Char is (concat (upperCase (training Char)) " City") :-
+   home Char is city.
 
 a_story is (concat 
   "Our hero " 
-  HeroName 
+  (character hero) 
   ", a talented " 
-  HeroTraining 
+  (lowerCase (training hero)) 
   " hailing from " 
-  HeroHome 
+  (homeName hero) 
   ", sets off for adventure with their trusty " 
-  SidekickTraining 
+  (lowerCase (training hero)) 
   " sidekick " 
-  SidekickName 
+  (character sidekick) 
   " from " 
-  SidekickHome 
+  (homeName sidekick) 
   ". Together they defeat the " 
-  VillainTraining 
+  (lowerCase (training villain)) 
   " villain " 
-  VillainName 
+  (character villain) 
   " of "
-  VillainHome
-  "!") :-
-   character hero is HeroName, 
-   character sidekick is SidekickName, 
-   character villain is VillainName, 
-   homeName hero is HeroHome, 
-   homeName sidekick is SidekickHome, 
-   homeName villain is VillainHome, 
-   training hero is HT, 
-     lowerCase HT is HeroTraining,
-   training sidekick is ST, 
-     lowerCase ST is SidekickTraining,
-   training villain is VT, 
-     lowerCase VT is VillainTraining.
-`.trim();
+  (homeName villain)
+  "!").`.trim();
 
 export const CKY_PARSING_EXAMPLE = `
 # CKY Parsing
