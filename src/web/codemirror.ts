@@ -122,7 +122,7 @@ function dusaLinter(view: EditorView): readonly Diagnostic[] {
   if (parsedIssues.length > 0) {
     return issueToDiagnostic(parsedIssues);
   }
-  const errors = check(parsedDecls);
+  const { errors } = check(parsedDecls);
   return issueToDiagnostic(errors);
 }
 

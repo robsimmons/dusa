@@ -375,7 +375,9 @@ Facts known:
 ${[...db.factValues.entries()]
   .map(({ name, keys, value }) =>
     value.type === 'is'
-      ? `${name}${keys.map((arg) => ` ${dataToString(arg)}`)} is ${dataToString(value.value)}\n`
+      ? `${name}${keys.map((arg) => ` ${dataToString(arg)}`).join('')} is ${dataToString(
+          value.value,
+        )}\n`
       : `${name}${keys.map(
           (arg) =>
             ` ${dataToString(arg)} is none of ${value.value

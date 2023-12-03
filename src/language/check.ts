@@ -324,7 +324,10 @@ export function checkFunctionalPredicatesInDecl(
   return issues;
 }
 
-export function check(decls: ParsedDeclaration[]): Issue[] {
+export function check(decls: ParsedDeclaration[]): {
+  errors: Issue[];
+  arities: Map<string, number>;
+} {
   const arityInfo = checkPropositionArity(decls);
   const errors: Issue[] = arityInfo.issues || [];
   for (const decl of decls) {
@@ -336,5 +339,5 @@ export function check(decls: ParsedDeclaration[]): Issue[] {
     errors.push(...declErrors);
   }
 
-  return errors;
+  return { errors, arities: new Map(Object.entries(arityInfo)) };
 }

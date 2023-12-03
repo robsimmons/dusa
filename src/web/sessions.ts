@@ -430,7 +430,7 @@ class SessionTabs {
         if (ast.errors !== null) {
           issues = ast.errors;
         } else {
-          issues = check(ast.document);
+          issues = check(ast.document).errors;
           decls = ast.document;
         }
 

@@ -11,7 +11,7 @@ function testExecution(source: string, debug = false) {
     throw parsed.errors;
   }
 
-  const errors = check(parsed.document);
+  const { errors } = check(parsed.document);
   if (errors.length !== 0) {
     throw errors;
   }
