@@ -378,13 +378,9 @@ ${[...db.factValues.entries()]
       ? `${name}${keys.map((arg) => ` ${dataToString(arg)}`).join('')} is ${dataToString(
           value.value,
         )}\n`
-      : `${name}${keys.map(
-          (arg) =>
-            ` ${dataToString(arg)} is none of ${value.value
-              .map((value) => dataToString(value))
-              .sort()
-              .join(', ')}\n`,
-        )}`,
+      : `${name}${keys.map((arg) => ` ${dataToString(arg)}`).join('')} is none of ${value.value
+          .map((v) => dataToString(v))
+          .join(', ')}\n`,
   )
   .sort()
   .join('')}
