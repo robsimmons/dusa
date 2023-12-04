@@ -406,3 +406,14 @@ test('Open ended and closed ended possibility', () => {
     'a 0 is tt, a 1 is ff, a 2 is ff, a 3 is ff, a 4 is ff, a 5 is ff, a 6 is ff, a 7 is ff, a 8 is ff, a 9 is ff, choice is 0, n 0, n 1, n 2, n 3, n 4, n 5, n 6, n 7, n 8, n 9',
   ]);
 });
+
+test('INT_TIMES', () => {
+  const { solutions } = testExecution(`
+    #builtin INT_PLUS plus
+    #builtin INT_TIMES times
+    a (plus (times 5 10) 2).
+    b (times 1 2 3 4 5 6).
+    c (times 0 1 2 3 4 5).
+    `);
+  expect(solutionsToStrings(solutions)).toEqual(['a 52, b 720, c 0']);
+});

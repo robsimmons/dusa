@@ -16,6 +16,7 @@ export function* runBuiltinBackward(
     case 'BOOLEAN_FALSE':
     case 'BOOLEAN_TRUE':
     case 'NAT_ZERO':
+    case 'INT_TIMES':
       throw new TypeError(`${pred} should not be run backwards`);
     case 'NAT_SUCC': {
       if (v.type !== 'int') return;
@@ -160,6 +161,15 @@ export function runBuiltinForward(pred: BUILT_IN_PRED, args: Data[]): Data | nul
         sum += view.value;
       }
       return hide({ type: 'int', value: sum });
+    }
+    case 'INT_TIMES': {
+      let product = 1n;
+      for (const arg of args) {
+        const view = expose(arg);
+        if (view.type !== 'int') return null;
+        product *= view.value;
+      }
+      return hide({ type: 'int', value: product });
     }
     case 'NAT_SUCC': {
       const n = expose(args[0]);

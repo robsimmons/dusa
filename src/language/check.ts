@@ -263,6 +263,25 @@ function checkFunctionalPredicatesInTerm(
           ];
         }
         break;
+      case 'INT_TIMES': {
+        for (const arg of pattern.args) {
+          if (!theseVarsGroundThisPattern(boundVars, arg)) {
+            return [
+              {
+                type: 'Issue',
+                loc: pattern.loc,
+                msg: `Built-in ${pattern.name} (${
+                  pattern.symbol
+                }) needs to have all of its arguments grounded by previous premises, but the argument '${termToString(
+                  arg,
+                )}' is not ground`,
+              },
+            ];
+          }
+        }
+        break;
+      }
+
       case 'EQUAL':
       case 'INT_PLUS':
       case 'NAT_SUCC':
@@ -287,6 +306,7 @@ function checkFunctionalPredicatesInTerm(
             }
           }
         }
+        break;
       }
     }
   }
