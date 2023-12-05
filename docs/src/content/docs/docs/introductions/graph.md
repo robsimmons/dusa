@@ -125,11 +125,17 @@ then there are no solutions.
 ### Demand constraints
 
 Constraints can work in the other direction as well. Because our graph has three
-different connected components, it won't . If we _only_ want to accept
-solutions where the nodes `a`, `f`, and `h` have the same color, we can enforce that
+different connected components, and the nodes `a`, `f`, and `h` are in different
+connected components, the color `a` doesn't affect the color of `f` and so on.
+It might be desirable to say that these three nodes must all have the same color
+in order to reduce the number of redundant solutions. We could enforce that
 with a `#demand` constraint:
 
     #demand color a is Color, color f is Color, color h is Color.
+
+This constraint says that concrete node values `a`, `f`, and `h` all have to
+have the same color, but because `Color` is a variable, the constraint doesn't
+say anything about _what_ that color has to be.
 
 [Explore this example](https://dusa.rocks/#program=%23%20Graph%20coloring%0A%0Aedge%20a%20b.%20%23%20a%20%20%20f--k--j%0Aedge%20a%20c.%20%23%20%7C%20%5C%20%20%20%20%7C%20%0Aedge%20b%20c.%20%23%20b--c%20%20%20g%20%20h%0Aedge%20b%20d.%20%23%20%7C%20%20%7C%20%20%20%20%20%20%7C%0Aedge%20c%20e.%20%23%20d--e%20%20%20i--l%0Aedge%20d%20e.%0Aedge%20f%20k.%0Aedge%20g%20k.%0Aedge%20h%20l.%0Aedge%20i%20l.%0Aedge%20k%20j.%0A%0Aedge%20Y%20X%20%3A-%20edge%20X%20Y.%0Anode%20X%20%3A-%20edge%20X%20_.%0Anode%20X%20%3A-%20edge%20_%20X.%0A%0Acolor%20X%20is%20%7B%20red%2C%20yellow%2C%20blue%20%7D%20%3A-%20node%20X.%0A%23forbid%20edge%20X%20Y%2C%20color%20X%20is%20Color%2C%20color%20Y%20is%20Color.%0A%23demand%20color%20a%20is%20Color%2C%20color%20f%20is%20Color%2C%20color%20h%20is%20Color.%0A%0A%23%20Adding%20these%20edges%20makes%20the%20problem%20unsolvable%0A%23%20edge%20a%20d.%0A%23%20edge%20c%20d.)
 
