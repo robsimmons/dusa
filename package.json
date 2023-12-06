@@ -17,13 +17,10 @@
     "url": "https://todo.sr.ht/~robsimmons/Dusa"
   },
   "keywords": [
-    "asp",
     "data",
     "database",
     "datalog",
-    "immutable",
-    "logic programming",
-    "persistent"
+    "logic programming"
   ],
   "license": "GPL-3.0-only",
   "scripts": {
