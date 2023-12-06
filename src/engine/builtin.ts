@@ -136,6 +136,14 @@ export function runBuiltinForward(pred: BUILT_IN_PRED, args: Data[]): Data | nul
         if (!equal(args[i - 1], args[i])) return BOOL_FALSE;
       }
       return BOOL_TRUE;
+    case 'GEQ':
+    case 'GT': {
+      const [a, b] = args.map(expose);
+      if (a.type !== 'int' || b.type !== 'int') return null;
+      if (a.value > b.value) return BOOL_TRUE;
+      if (a.value < b.value) return BOOL_FALSE;
+      return pred === 'GEQ' ? BOOL_TRUE : BOOL_FALSE;
+    }
     case 'STRING_CONCAT': {
       const strings: string[] = [];
       for (const arg of args) {

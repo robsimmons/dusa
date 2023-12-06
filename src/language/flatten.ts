@@ -272,20 +272,35 @@ function flattenPremise(
         ...after,
       ];
     }
+    case 'Gt':
+    case 'Geq':
+    case 'Lt':
+    case 'Leq':
     case 'Equality':
     case 'Inequality': {
-      const matchPosition = theseVarsGroundThisPattern(boundVars, premise.a) ? 1 : 0;
+      const matchPosition = !theseVarsGroundThisPattern(boundVars, premise.a)
+        ? 0
+        : !theseVarsGroundThisPattern(boundVars, premise.b)
+          ? 1
+          : null;
       const aResult = flattenPattern(preds, counter, boundVars, premise.a);
       const bResult = flattenPattern(preds, counter, boundVars, premise.b);
+      const name =
+        premise.type === 'Leq' || premise.type === 'Gt'
+          ? 'GT'
+          : premise.type === 'Lt' || premise.type === 'Geq'
+            ? 'GEQ'
+            : 'EQUAL';
+      const value = premise.type === 'Geq' || premise.type === 'Gt' || premise.type === 'Equality';
       return [
         ...aResult.before,
         ...bResult.before,
         {
           type: 'Builtin',
-          name: 'EQUAL',
+          name,
           symbol: null,
           args: [aResult.pattern, bResult.pattern],
-          value: { type: 'bool', value: premise.type === 'Equality' },
+          value: { type: 'bool', value },
           matchPosition: matchPosition,
           loc: premise.loc,
         },

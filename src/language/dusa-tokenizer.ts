@@ -20,7 +20,23 @@ type StateRoot =
       builtin: BUILT_IN_PRED;
     };
 
-const punct = ['...', ',', '.', '{', '}', '(', ')', ':-', '!=', '==', '?'] as const;
+const punct = [
+  '...',
+  ',',
+  '.',
+  '{',
+  '}',
+  '(',
+  ')',
+  ':-',
+  '!=',
+  '==',
+  '?',
+  '>=',
+  '>',
+  '<=',
+  '<',
+] as const;
 type PUNCT = (typeof punct)[number];
 
 export type Token =

@@ -263,6 +263,8 @@ function checkFunctionalPredicatesInTerm(
           ];
         }
         break;
+      case 'GT':
+      case 'GEQ':
       case 'INT_TIMES': {
         for (const arg of pattern.args) {
           if (!theseVarsGroundThisPattern(boundVars, arg)) {

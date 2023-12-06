@@ -8,6 +8,8 @@ export const BUILT_IN_MAP = {
   INT_TIMES: null as null | string,
   STRING_CONCAT: null as null | string,
   EQUAL: null as null | string,
+  GT: null as null | string,
+  GEQ: null as null | string,
 } as const;
 
 export type BUILT_IN_PRED = keyof typeof BUILT_IN_MAP;

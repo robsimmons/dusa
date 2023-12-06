@@ -137,15 +137,22 @@ export function parseHeadValue(t: Istream<Token>): {
   }
 }
 
+const BINARY_PREDICATES = {
+  '==': 'Equality',
+  '!=': 'Inequality',
+  '<=': 'Leq',
+  '<': 'Lt',
+  '>=': 'Geq',
+  '>': 'Gt',
+} as const;
+
 export function forcePremise(t: Istream<Token>): ParsedPremise {
   const a = forceFullTerm(t);
-  if (chomp(t, '==')) {
-    const b = forceFullTerm(t);
-    return { type: 'Equality', a, b, loc: { start: a.loc.start, end: b.loc.end } };
-  }
-  if (chomp(t, '!=')) {
-    const b = forceFullTerm(t);
-    return { type: 'Inequality', a, b, loc: { start: a.loc.start, end: b.loc.end } };
+  for (const [tok, type] of Object.entries(BINARY_PREDICATES)) {
+    if (chomp(t, tok)) {
+      const b = forceFullTerm(t);
+      return { type, a, b, loc: { start: a.loc.start, end: b.loc.end } };
+    }
   }
   if (a.type !== 'const') {
     throw new DusaSyntaxError(`Expected an attribute, found a '${a.type}'`, a.loc);

@@ -2,13 +2,6 @@ import { Issue } from '../parsing/parser.js';
 import { SourceLocation } from '../parsing/source-location.js';
 import { ParsedPattern, Pattern, freeVars, termToString } from './terms.js';
 
-export interface Proposition {
-  type: 'Proposition';
-  name: string;
-  args: Pattern[];
-  value: null | Pattern;
-}
-
 export interface ParsedProposition {
   type: 'Proposition';
   name: string;
@@ -17,19 +10,13 @@ export interface ParsedProposition {
   value: null | ParsedPattern;
 }
 
-export interface TermComparison {
-  type: 'Equality' | 'Inequality';
-  a: Pattern; // Must have no new free variables
-  b: Pattern; // May have new free variables
-}
 export interface ParsedTermComparison {
-  type: 'Equality' | 'Inequality';
+  type: 'Equality' | 'Inequality' | 'Gt' | 'Geq' | 'Lt' | 'Leq';
   a: ParsedPattern;
   b: ParsedPattern;
   loc: SourceLocation;
 }
 
-export type Premise = Proposition | TermComparison;
 export type ParsedPremise = ParsedProposition | ParsedTermComparison;
 
 export interface Conclusion {
@@ -48,16 +35,6 @@ export interface ParsedConclusion {
   loc: SourceLocation;
 }
 
-export type Declaration =
-  | { type: 'Forbid'; premises: Premise[]; loc?: SourceLocation }
-  | { type: 'Demand'; premises: Premise[]; loc?: SourceLocation }
-  | {
-      type: 'Rule';
-      premises: Premise[];
-      conclusion: Conclusion;
-      loc?: SourceLocation;
-    };
-
 export type ParsedDeclaration =
   | { type: 'Forbid'; premises: ParsedPremise[]; loc: SourceLocation }
   | { type: 'Demand'; premises: ParsedPremise[]; loc: SourceLocation }
@@ -68,7 +45,7 @@ export type ParsedDeclaration =
       loc: SourceLocation;
     };
 
-export function propToString(p: ParsedProposition | Proposition) {
+export function propToString(p: ParsedProposition) {
   const args = p.args.map((arg) => ` ${termToString(arg)}`).join('');
   const value = p.value === null || p.value.type === 'triv' ? '' : ` is ${termToString(p.value)}`;
   return `${p.name}${args}${value}`;
@@ -89,21 +66,33 @@ export function headToString(head: ParsedConclusion | Conclusion) {
   }
 }
 
-function premiseToString(premise: ParsedPremise | Premise) {
+function premiseToString(premise: ParsedPremise) {
   switch (premise.type) {
     case 'Equality':
       return `${termToString(premise.a)} == ${termToString(premise.b)}`;
     case 'Inequality':
       return `${termToString(premise.a)} != ${termToString(premise.b)}`;
+    case 'Gt':
+      return `${termToString(premise.a)} > ${termToString(premise.b)}`;
+    case 'Geq':
+      return `${termToString(premise.a)} >= ${termToString(premise.b)}`;
+    case 'Lt':
+      return `${termToString(premise.a)} < ${termToString(premise.b)}`;
+    case 'Leq':
+      return `${termToString(premise.a)} <= ${termToString(premise.b)}`;
     case 'Proposition':
       return propToString(premise);
   }
 }
 
-export function freeVarsPremise(premise: ParsedPremise | Premise) {
+export function freeVarsPremise(premise: ParsedPremise) {
   switch (premise.type) {
     case 'Equality':
     case 'Inequality':
+    case 'Gt':
+    case 'Geq':
+    case 'Lt':
+    case 'Leq':
       return freeVars(premise.a, premise.b);
     case 'Proposition':
       if (premise.value === null) {
@@ -114,7 +103,7 @@ export function freeVarsPremise(premise: ParsedPremise | Premise) {
   }
 }
 
-export function declToString(decl: ParsedDeclaration | Declaration): string {
+export function declToString(decl: ParsedDeclaration): string {
   switch (decl.type) {
     case 'Forbid':
       return `#forbid ${decl.premises.map(premiseToString).join(', ')}.`;
