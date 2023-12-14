@@ -29,6 +29,7 @@ const punct = [
   '(',
   ')',
   ':-',
+  '->',
   '!=',
   '==',
   '?',
@@ -59,7 +60,8 @@ export type Token =
 
 export type ParserState = StateRoot;
 
-const META_TOKEN = /^[0-9+\-A-Za-z_][A-Za-z0-9+\-_]*/;
+const META_ID_TOKEN = /^[A-Za-z_][A-Za-z0-9_]*/;
+const META_NUM_TOKEN = /^[+\-]?[0-9][A-Za-z0-9_]*/;
 const CONST_TOKEN = /^[a-z][a-zA-Z0-9_]*$/;
 const WILDCARD_TOKEN = /^_[a-zA-Z0-9_]*$/;
 const VAR_TOKEN = /^[A-Z][a-zA-Z0-9_]*$/;
@@ -95,7 +97,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
     switch (state.type) {
       case 'Beginning':
         if ((tok = stream.eat('#'))) {
-          tok = stream.eat(META_TOKEN);
+          tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
           if (!tok) {
             stream.eat(/^.*$/);
             return {
@@ -127,7 +129,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
         return { state: { ...state, type: 'Normal' } };
 
       case 'Builtin1':
-        tok = stream.eat(META_TOKEN);
+        tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
         if (!Object.keys(BUILT_IN_MAP).some((name) => name === tok)) {
           return {
             state: { type: 'Normal', defaults: state.defaults },
@@ -150,7 +152,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
         };
 
       case 'Builtin2':
-        tok = stream.eat(META_TOKEN);
+        tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
         if (tok === null || !tok.match(CONST_TOKEN)) {
           return {
             state: { type: 'Normal', defaults: state.defaults },
@@ -178,7 +180,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
 
       case 'Normal':
         if ((tok = stream.eat('#'))) {
-          tok = stream.eat(META_TOKEN);
+          tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
           return {
             state,
             issues: [
@@ -240,7 +242,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
           return { state };
         }
 
-        if ((tok = stream.eat(META_TOKEN))) {
+        if ((tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN))) {
           if (tok === 'is') {
             return {
               state,
