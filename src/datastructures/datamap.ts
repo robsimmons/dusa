@@ -425,7 +425,7 @@ export class TrieMap<K, V> {
   arity(name: string): number | null {
     const trie = lookup(this.t, name);
     if (trie === null) return null;
-    return trie.depth;
+    return trie.depth ?? 0;
   }
 
   set(name: string, args: K[], value: V) {

@@ -102,3 +102,20 @@ test('Has and get', () => {
   expect(dusa.solution!.get('color', 2)).toEqual('red');
   expect(dusa.solution!.get('color', 5)).toBeUndefined();
 });
+
+test('Getting different kinds of arguments', () => {
+  const dusa = new Dusa(`
+    a is 12.
+    b 1 is ().
+    c () is true.
+    d "a" is f q.
+    e m is 9.
+    e (f q) is p.`);
+  expect(dusa.solution!.get('a')).toEqual(12n);
+  expect(dusa.solution!.get('b', 1)).toEqual(null);
+  expect(dusa.solution!.get('b', 0)).toBeUndefined();
+  expect(dusa.solution!.get('b', { name: 'q' })).toBeUndefined();
+  expect(dusa.solution!.get('c', null)).toEqual({ name: 'true' });
+  expect(dusa.solution!.get('c', 1)).toBeUndefined();
+  expect(dusa.solution!.get('c', { name: 'q' })).toBeUndefined();
+});
