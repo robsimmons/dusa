@@ -195,7 +195,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
         }
 
         if (stream.eat(TRIV_TOKEN)) {
-          return { state, tag: 'literal' };
+          return { state, tag: 'literal', tree: { type: 'triv', loc: stream.matchedLocation() } };
         }
 
         if (stream.eat('"')) {

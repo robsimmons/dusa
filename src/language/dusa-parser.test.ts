@@ -32,4 +32,6 @@ test('Parser and pretty pretter idempotence', () => {
   expectRoundTripToParse('a is 1.', 'a is 1.');
   expectRoundTripToParse('a is -1.', 'a is -1.');
   expectRoundTripToParse('a is "fish".', 'a is "fish".');
+  expectRoundTripToParse('a is ().', 'a.');
+  expectRoundTripToParse('a () is 3.', 'a () is 3.');
 });
