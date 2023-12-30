@@ -13,6 +13,7 @@ import {
   listFacts,
   lookup,
   makeInitialDb,
+  stepDb,
 } from './engine/forwardengine.js';
 import { check } from './language/check.js';
 import { compile } from './language/compile.js';
@@ -22,6 +23,8 @@ import { Issue } from './parsing/parser.js';
 
 export type { Issue, Stats };
 export type { SourcePosition, SourceLocation } from './parsing/source-location.js';
+
+export { DANGER_RESET_DATA } from './datastructures/data.js';
 
 export type Term =
   | null // Trivial type ()
@@ -175,6 +178,13 @@ export class Dusa {
   private stats: Stats;
   private cachedSolution: DusaSolution | null = null;
 
+  private advanceDb() {
+    let db: Database | null = this.db;
+    while (db.queue.length > 0 && (db = stepDb(this.program, db)) !== null) {
+      this.db = db;
+    }
+  }
+
   constructor(source: string, debug = false) {
     const parsed = parse(source);
     if (parsed.errors !== null) {
@@ -258,6 +268,7 @@ export class Dusa {
   }
 
   get solutions(): IterableIterator<DusaSolution> {
+    this.advanceDb();
     return solutionGenerator(this.program, this.db, this.stats, this.debug);
   }
 
