@@ -10,11 +10,20 @@ export type DataView =
 
 type ViewsIndex = number;
 let nextRef: number = -1;
-const views: DataView[] = [
+let views: DataView[] = [
   { type: 'triv' },
   { type: 'bool', value: true },
   { type: 'bool', value: false },
 ];
+let strings: { [s: string]: number } = {};
+let structures: { [name: string]: DataTrie } = {};
+
+export function DANGER_RESET_DATA() {
+  nextRef = -1;
+  views = [{ type: 'triv' }, { type: 'bool', value: true }, { type: 'bool', value: false }];
+  strings = {};
+  structures = {};
+}
 
 export const TRIV_DATA = 0;
 export const BOOL_TRUE = 1;
@@ -28,14 +37,11 @@ export function expose(d: Data): DataView {
   return views[d];
 }
 
-const strings: { [s: string]: number } = {};
-
 type DataTrie = {
   value?: ViewsIndex;
   indexChildren: { [value: ViewsIndex]: DataTrie };
   bigintChildren: { [value: string]: DataTrie };
 };
-const structures: { [name: string]: DataTrie } = {};
 
 function getStructureIndex(name: string, args: Data[]): ViewsIndex | null {
   let structure: DataTrie | undefined = structures[name];
