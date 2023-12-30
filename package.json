@@ -32,11 +32,15 @@
     "prettier": "prettier --write *.ts *.json *.html *.md **/*.ts* **/*.json **/*.css **/*.html **/*.md",
     "prettier:check": "prettier --check .",
     "preview": "vite preview",
+    "protobuf": "buf generate --template proto/buf.gen.yaml proto && prettier --write src/gen/*.ts",
     "test": "vitest run",
     "tsc": "tsc",
     "watch": "vitest"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.28.1",
+    "@bufbuild/protobuf": "^1.6.0",
+    "@bufbuild/protoc-gen-es": "^1.6.0",
     "@codemirror/commands": "^6.3.0",
     "@codemirror/language": "^6.9.2",
     "@codemirror/lint": "^6.4.2",

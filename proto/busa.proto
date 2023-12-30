@@ -1,0 +1,147 @@
+// npx buf generate proto
+syntax = "proto3";
+
+message Pattern {
+    enum PatternEnum {
+        Unit = 0;
+        Wildcard = 1;
+    }
+
+    message Structure {
+        string name = 1;
+        repeated Pattern args = 2;
+    }
+
+    oneof is {
+        PatternEnum enum = 1;
+        bool bool = 2;
+        int32 var = 3;
+        int64 int = 4;
+        string string = 5;
+        Structure structure = 6;
+    }
+}
+
+message Rule {
+    /*
+    conclusion X0 ... XN :- premise <Args> is <Values>.
+
+     - Premise uses arbitrary patterns with vars X0...XN
+     - Every variable is bound in the premise
+     - Conclusion has arguments in order
+     - Conclusion is a fact (with all args, no values)
+    */
+    message Index {
+        string conclusion = 1;
+        int32 num_conclusion_args = 2;
+        string premise = 3;
+        repeated Pattern args = 4;
+        repeated Pattern values = 5;
+    }
+
+    /*
+    conclusion <Args> is <Values> :- prefix X0 ... XN
+
+     - Premise has arguments X0 ... XN in order
+     - Conclusion has arbitrary patterns with vars X0...XN
+     - Conclusion is a fact
+    */
+    message DatalogConclusion {
+        string conclusion = 1;
+        repeated Pattern args = 2;
+        repeated Pattern values = 3;
+        string prefix = 4;
+    }
+
+    /*
+    conclusion <Args> is { <Values> } :- prefix X0 ... XN (exhaustive)
+    conclusion <Args> is { <Values>? } :- prefix X0 ... XN (non-exhaustive)
+
+     - Premise has arguments X0 ... XN in order
+     - Conclusion has arbitrary patterns with vars X0...XN
+     - Conclusion is a fact with one value
+    */
+    message ChoiceConclusion {
+        string conclusion = 1;
+        repeated Pattern args = 2;
+        repeated Pattern choices = 3;
+        bool exhaustive = 4;
+        string prefix = 5;
+    }
+
+    /*
+    conclusion Y3 X1 Z4 :- prefix X0 X1 Y2 Y3, fact X0 X1 Z2 is Z3 Z4.
+
+     - Prefix and fact premise share first N arguments X0...XN
+     - prefix can have additional arguments ...YM, M >= N
+     - fact can have additional arguments in args and values ...ZP, P >= N
+     - conclusion is another prefix and has no repeat variables
+    */
+    message Join {
+        message JoinPattern {
+            enum JoinLocation {
+                Shared = 0;
+                Prefix = 1;
+                FactArg = 2;
+                FactValue = 3;
+            }
+
+            JoinLocation loc = 1;
+            int32 var = 2;
+        }
+        string conclusion = 1;
+        repeated JoinPattern args = 2;
+        string prefix = 3;
+        string fact = 4;
+        int32 num_shared = 5;
+    }
+
+    /*
+    conclusion X2 X4 X3 :- prefix X0 X1 X2 X3, <built-in-premise>
+
+     - There are various extra constraints on each built-in premises,
+       but they can be forced to bind additional variables in some cases,
+       which can then be used in the conclusion (again, in some cases).
+     - conclusion is another prefix and has no repeat variables
+    */
+    message Function {
+        enum Builtin {
+            BOOLEAN_TRUE = 0;
+            BOOLEAN_FALSE = 1;
+            NAT_ZERO = 2;
+            NAT_SUCC = 3;
+            INT_PLUS = 4;
+            INT_MINUS = 5;
+            INT_TIMES = 6;
+            STRING_CONCAT = 7;
+            EQUAL = 8;
+            GT = 9;
+            GEQ = 10;
+        }
+
+        string conclusion = 1;
+        repeated int32 args = 2;
+        string prefix = 3;
+        oneof type {
+            Builtin builtin = 4;
+            string other = 5;
+        }
+        repeated Pattern function_args = 6;
+        int32 num_vars = 7;
+    }
+
+    oneof is {
+        Index index = 1;
+        Join join = 2;
+        Function function = 3;
+        ChoiceConclusion choice_conclusion = 4;
+        DatalogConclusion datalog_conclusion = 5;
+    }
+}
+
+message Program {
+    repeated Rule rules = 1;
+    repeated string seeds = 2;
+    repeated string forbids = 3;
+    repeated string demands = 4;
+}
