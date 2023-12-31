@@ -10,6 +10,7 @@ import { Database, listFacts, makeInitialDb } from '../engine/forwardengine.js';
 import { ParsedDeclaration } from '../language/syntax.js';
 import { IndexedProgram } from '../language/indexize.js';
 import { compile } from '../language/compile.js';
+import { outputProgram } from '../language/bytecode.js';
 
 export type WorkerQuery = {
   type: 'list';
@@ -154,6 +155,11 @@ onmessage = (event: MessageEvent<AppToWorker>): true => {
       stats = newStats();
       path = [];
       program = compile(event.data.program, DEBUG_TRANSFORM);
+      if (DEBUG_TRANSFORM) {
+        const busa = outputProgram(program);
+        console.log(`\nForm 4: JSON Bytecode`);
+        console.log(busa.toJsonString());
+      }
       try {
         tree = { type: 'leaf', db: makeInitialDb(program) };
         return resume('running');

@@ -1,5 +1,4 @@
 import { binarize, binarizedProgramToString } from './binarize.js';
-import { outputProgram } from './bytecode.js';
 import { flatProgramToString, flattenAndName } from './flatten.js';
 import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
 import { ParsedDeclaration } from './syntax.js';
@@ -30,10 +29,6 @@ ${binarizedProgramToString(binarized)}`);
     console.log(`\nForm 3: Index-aware program
 ${indexedProgramToString(indexed)}`);
   }
-
-  const busa = outputProgram(indexed);
-  console.log(`\nForm 4: JSON Bytecode`);
-  console.log(busa.toJsonString());
 
   return indexed;
 }
