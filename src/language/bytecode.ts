@@ -120,10 +120,14 @@ export function outputProgram(prog: IndexedProgram) {
       });
     }
   });
+
   const indexRules = prog.indexInsertionRules.map((value) => {
     const varToIndex = new Map<string, number>();
-    for (const [index, varName] of value.introduced.entries()) {
+    for (const [index, varName] of value.shared.entries()) {
       varToIndex.set(varName, index);
+    }
+    for (const [index, varName] of value.introduced.entries()) {
+      varToIndex.set(varName, index + value.shared.length);
     }
 
     return new Rule({
@@ -139,6 +143,7 @@ export function outputProgram(prog: IndexedProgram) {
       },
     });
   });
+
   const conclusionRules = prog.conclusionRules.map((value) => {
     const varToIndex = new Map<string, number>();
     for (const [index, varName] of value.inVars.entries()) {
