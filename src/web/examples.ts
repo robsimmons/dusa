@@ -49,7 +49,7 @@ a_story is (concat
   " hailing from " 
   (homeName hero) 
   ", sets off for adventure with their trusty " 
-  (lowerCase (training hero)) 
+  (lowerCase (training sidekick)) 
   " sidekick " 
   (character sidekick) 
   " from " 
