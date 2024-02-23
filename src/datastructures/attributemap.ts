@@ -16,7 +16,7 @@ export class AttributeMap<T> {
     return new AttributeMap(this.map.set(hide({ type: 'const', name, args }), value));
   }
 
-  get(name: string, args: Data[]) {
+  get(name: string, args: Data[]): T | null {
     return this.map.get(hide({ type: 'const', name, args }));
   }
 

@@ -15,12 +15,21 @@ type Prefix = { type: 'prefix'; name: string; shared: Data[]; passed: Data[] };
 type NewFact = { type: 'fact'; name: string; args: Data[]; value: Data };
 type Index = { type: 'index'; name: string; shared: Data[]; introduced: Data[] };
 
+type Listy<T> = null | { data: T; next: Listy<T> };
+function listyToString<T>(listy: Listy<T>): T[] {
+  const result: T[] = [];
+  for (let node = listy; node !== null; node = node.next) {
+    result.push(node.data);
+  }
+  return result;
+}
+
 type QueueMember = Prefix | Index | NewFact;
 
 export interface Database {
   factValues: TrieMap<Data, { type: 'is'; value: Data } | { type: 'is not'; value: Data[] }>;
-  prefixes: AttributeMap<Data[][]>;
-  indexes: AttributeMap<Data[][]>;
+  prefixes: AttributeMap<Listy<Data[]>>;
+  indexes: AttributeMap<Listy<Data[]>>;
   queue: PQ<QueueMember>;
   deferredChoices: AttributeMap<{ values: Data[]; exhaustive: boolean }>;
   remainingDemands: AttributeMap<true>;
@@ -28,8 +37,8 @@ export interface Database {
 
 export function makeInitialDb(program: IndexedProgram): Database {
   const prefixes = program.seeds.reduce(
-    (prefixes, seed) => prefixes.set(seed, [], [[]]),
-    AttributeMap.new<Data[][]>(),
+    (prefixes, seed) => prefixes.set(seed, [], { data: [], next: null }),
+    AttributeMap.new<Listy<Data[]>>(),
   );
   return {
     factValues: TrieMap.new(),
@@ -157,9 +166,8 @@ function stepFact(rules: IndexInsertionRule[], args: Data[], value: Data, db: Da
     if (substitution !== null) {
       const shared = rule.shared.map((v) => substitution![v]);
       const introduced = rule.introduced.map((v) => substitution![v]);
-      const known = db.indexes.get(rule.indexName, shared) ?? [];
-      // TODO deeply suspicious of this concat
-      db.indexes = db.indexes.set(rule.indexName, shared, known.concat([introduced]));
+      const known = db.indexes.get(rule.indexName, shared);
+      db.indexes = db.indexes.set(rule.indexName, shared, { data: introduced, next: known });
       db.queue = db.queue.push(0, { type: 'index', name: rule.indexName, shared, introduced });
     }
   }
@@ -189,12 +197,9 @@ function nextPrefix(
 function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): void {
   for (const prefix of candidatePrefixList) {
     if (db.prefixes.get(prefix.name, prefix.shared.concat(prefix.passed)) === null) {
-      // TODO deeply suspicious of this concat
-      const known = db.prefixes.get(prefix.name, prefix.shared)?.concat([prefix.passed]) ?? [
-        prefix.passed,
-      ];
+      const known = { data: prefix.passed, next: db.prefixes.get(prefix.name, prefix.shared) };
       db.prefixes = db.prefixes
-        .set(prefix.name, prefix.shared.concat(prefix.passed), [])
+        .set(prefix.name, prefix.shared.concat(prefix.passed), { data: [], next: null })
         .set(prefix.name, prefix.shared, known);
       db.queue = db.queue.push(0, prefix);
     }
@@ -205,8 +210,12 @@ function stepPrefix(rule: IndexedBinaryRule, shared: Data[], passed: Data[], db:
   const newPrefixes: Prefix[] = [];
 
   if (rule.type === 'IndexLookup') {
-    for (const introduced of db.indexes.get(rule.indexName, shared) ?? []) {
-      newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
+    for (
+      let introduced = db.indexes.get(rule.indexName, shared);
+      introduced !== null;
+      introduced = introduced.next
+    ) {
+      newPrefixes.push(nextPrefix(rule, shared, passed, introduced.data));
     }
   } else {
     const substitution: Substitution = {};
@@ -258,8 +267,8 @@ function stepIndex(
 ): void {
   const newPrefixes: Prefix[] = [];
 
-  for (const passed of db.prefixes.get(rule.inName, shared) ?? []) {
-    newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
+  for (let passed = db.prefixes.get(rule.inName, shared); passed !== null; passed = passed.next) {
+    newPrefixes.push(nextPrefix(rule, shared, passed.data, introduced));
   }
 
   extendDbWithPrefixes(newPrefixes, db);
@@ -388,7 +397,9 @@ Prefixes known:
 ${db.prefixes
   .entries()
   .flatMap(([prefix, keys, valuess]) =>
-    valuess.map((values) => `$${prefix}prefix ${argsetToString(keys)} ${argsetToString(values)}\n`),
+    listyToString(valuess).map(
+      (values) => `$${prefix}prefix ${argsetToString(keys)} ${argsetToString(values)}\n`,
+    ),
   )
   .sort()
   .join('')}`;

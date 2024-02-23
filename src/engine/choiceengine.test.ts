@@ -330,7 +330,8 @@ test('Absent/extant bug', () => {
     edge X Y is Z :- edge Y X is Z.
   
     reachable N N :- vertex N.
-    reachable Start Y :- reachable Start X, edge X Y is extant.`);
+    reachable Start Y :- reachable Start X, edge X Y is extant.
+    `);
 
   expect(solutionsToStrings(solutions)).toEqual([
     'edge 0 1 is absent, edge 0 2 is absent, edge 1 0 is absent, edge 1 2 is extant, edge 2 0 is absent, edge 2 1 is extant, reachable 0 0, reachable 1 1, reachable 1 2, reachable 2 1, reachable 2 2, vertex 0, vertex 1, vertex 2',
