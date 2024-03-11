@@ -258,7 +258,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
               case 'x':
                 tok = String.fromCharCode(parseInt(tok.slice(1), 16));
                 break;
-              default:
+              default: {
                 // case 'u'
                 const charCode = parseInt(tok.slice(2, tok.length - 1), 16);
                 if (charCode > 0x10ffff) {
@@ -276,6 +276,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
                   tok = String.fromCharCode(charCode);
                   break;
                 }
+              }
             }
             return {
               state: {

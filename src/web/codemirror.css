@@ -59,6 +59,10 @@
   color: var(--oksolar-text-green);
 }
 
+.tok-string2 {
+  color: var(--oksolar-text-orange);
+}
+
 .tok-invalid {
   color: var(--oksolar-text-red);
 }
