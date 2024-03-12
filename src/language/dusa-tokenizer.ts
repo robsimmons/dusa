@@ -107,12 +107,14 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
       return { state };
     }
 
-    if (stream.eat(/^\s+/)) {
-      return { state };
-    }
+    if (state.type !== 'InString') {
+      if (stream.eat(/^\s+/)) {
+        return { state };
+      }
 
-    if (stream.eat(/^#(| .*)$/)) {
-      return { state, tag: 'comment' };
+      if (stream.eat(/^#(| .*)$/)) {
+        return { state, tag: 'comment' };
+      }
     }
 
     switch (state.type) {
@@ -254,6 +256,9 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
                 break;
               case '"':
                 tok = '"';
+                break;
+              case '\\':
+                tok = '\\';
                 break;
               case 'x':
                 tok = String.fromCharCode(parseInt(tok.slice(1), 16));
