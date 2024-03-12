@@ -159,7 +159,7 @@ export function dataToString(d: Data, needsParens = true): string {
       return `#${view.value ? 'tt' : 'ff'}`;
     case 'ref':
       return `#${view.value}`;
-    case 'string':
+    case 'string': {
       const escaped = [];
       let i = 0;
       while (i < view.value.length) {
@@ -167,7 +167,7 @@ export function dataToString(d: Data, needsParens = true): string {
           escaped.push(`\\u{${view.value.codePointAt(i)!.toString(16)}}`);
           i += 2;
         } else {
-          let ch = view.value.charAt(i);
+          const ch = view.value.charAt(i);
           if (ch.charCodeAt(0) > 0xff) {
             escaped.push(`\\u{${view.value.charCodeAt(i).toString(16)}}`);
           } else if (ch.match(/[ !#-[\]-~]/)) {
@@ -187,6 +187,7 @@ export function dataToString(d: Data, needsParens = true): string {
         }
       }
       return `"${escaped.join('')}"`;
+    }
     case 'const':
       return view.args.length === 0
         ? view.name
