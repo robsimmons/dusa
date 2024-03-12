@@ -120,7 +120,7 @@ function resolveQuery(index: number): WorkerQuery {
         }
         return compareData(a.value, b.value);
       })
-      .map(({ name, args, value }) => factToString({ name, args, value }))
+      .map(({ name, args, value }) => factToString({ name, args, value })),
   };
 }
 
