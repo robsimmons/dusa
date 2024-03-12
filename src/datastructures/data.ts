@@ -109,6 +109,45 @@ export function hide(d: DataView): Data {
   }
 }
 
+export function compareData(a: Data, b: Data): number {
+  const x = expose(a);
+  const y = expose(b);
+  switch (x.type) {
+    case 'triv':
+      if (y.type === 'triv') return 0;
+      return -1;
+    case 'int':
+      if (y.type === 'triv') return 1;
+      if (y.type === 'int') {
+        const c = x.value - y.value;
+        return c > 0n ? 1 : c < 0n ? -1 : 0;
+      }
+      return -1;
+    case 'bool':
+      if (y.type === 'triv' || y.type === 'int') return 1;
+      if (y.type === 'bool') return (x.value ? 1 : 0) - (y.value ? 1 : 0);
+      return -1;
+    case 'ref':
+      if (y.type === 'triv' || y.type === 'int' || y.type === 'bool') return 1;
+      if (y.type === 'ref') return x.value - y.value;
+      return -1;
+    case 'string':
+      if (y.type === 'triv' || y.type === 'int' || y.type === 'bool' || y.type === 'ref') return 1;
+      if (y.type === 'string') return x.value > y.value ? 1 : x.value < y.value ? -1 : 0;
+      return -1;
+    case 'const':
+      if (y.type !== 'const') return 1;
+      if (x.name > y.name) return 1;
+      if (x.name < y.name) return -1;
+      if (x.args.length !== y.args.length) return x.args.length - y.args.length;
+      for (let i = 0; i < x.args.length; i++) {
+        const c = compareData(x.args[i], y.args[i]);
+        if (c !== 0) return c;
+      }
+      return 0;
+  }
+}
+
 export function dataToString(d: Data, needsParens = true): string {
   const view = expose(d);
   switch (view.type) {
@@ -121,7 +160,33 @@ export function dataToString(d: Data, needsParens = true): string {
     case 'ref':
       return `#${view.value}`;
     case 'string':
-      return `"${view.value}"`;
+      const escaped = [];
+      let i = 0;
+      while (i < view.value.length) {
+        if (view.value.codePointAt(i)! > 0xffff) {
+          escaped.push(`\\u{${view.value.codePointAt(i)!.toString(16)}}`);
+          i += 2;
+        } else {
+          let ch = view.value.charAt(i);
+          if (ch.charCodeAt(0) > 0xff) {
+            escaped.push(`\\u{${view.value.charCodeAt(i).toString(16)}}`);
+          } else if (ch.match(/[ !#-[\]-~]/)) {
+            escaped.push(ch);
+          } else if (ch === '\\') {
+            escaped.push('\\\\');
+          } else if (ch === '"') {
+            escaped.push('\\"');
+          } else if (ch === '\n') {
+            escaped.push('\\n');
+          } else if (ch.charCodeAt(0) >= 16) {
+            escaped.push(`\\x${view.value.charCodeAt(i).toString(16)}`);
+          } else {
+            escaped.push(`\\x0${view.value.charCodeAt(i).toString(16)}`);
+          }
+          i += 1;
+        }
+      }
+      return `"${escaped.join('')}"`;
     case 'const':
       return view.args.length === 0
         ? view.name

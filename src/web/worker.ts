@@ -1,4 +1,4 @@
-import { Data } from '../datastructures/data.js';
+import { Data, compareData } from '../datastructures/data.js';
 import {
   ChoiceTree,
   ChoiceTreeNode,
@@ -109,8 +109,18 @@ function resolveQuery(index: number): WorkerQuery {
     type: 'list',
     solution: setSolution,
     value: [...listFacts(solutions[index])]
+      .sort((a, b) => {
+        if (a.name > b.name) return 1;
+        if (a.name < b.name) return -1;
+        if (a.args.length < b.args.length) return 1;
+        if (a.args.length > b.args.length) return -1;
+        for (let i = 0; i < a.args.length; i++) {
+          const c = compareData(a.args[i], b.args[i]);
+          if (c !== 0) return c;
+        }
+        return compareData(a.value, b.value);
+      })
       .map(({ name, args, value }) => factToString({ name, args, value }))
-      .sort(),
   };
 }
 

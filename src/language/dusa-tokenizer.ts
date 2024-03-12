@@ -266,6 +266,18 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
               default: {
                 // case 'u'
                 const charCode = parseInt(tok.slice(2, tok.length - 1), 16);
+                if (0xd800 <= charCode && charCode < 0xe000) {
+                  return {
+                    state,
+                    issues: [
+                      {
+                        type: 'Issue',
+                        msg: `Cannot encode lone surrogate ${tok}`,
+                        loc: stream.matchedLocation(),
+                      },
+                    ],
+                  };
+                }
                 if (charCode > 0x10ffff) {
                   return {
                     state,
@@ -278,7 +290,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
                     ],
                   };
                 } else {
-                  tok = String.fromCharCode(charCode);
+                  tok = String.fromCodePoint(charCode);
                   break;
                 }
               }
