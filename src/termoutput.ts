@@ -1,4 +1,4 @@
-import { Data, TRIV_DATA, expose, hide } from "./datastructures/data.js";
+import { Data, TRIV_DATA, expose, hide } from './datastructures/data.js';
 
 export type Term =
   | null // Trivial type ()
@@ -25,7 +25,6 @@ export interface InputFact {
   args: InputTerm[];
   value?: InputTerm;
 }
-
 
 export type JsonData = null | number | bigint | string | JsonData[] | { [field: string]: JsonData };
 

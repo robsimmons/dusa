@@ -21,7 +21,15 @@ import { parse } from './language/dusa-parser.js';
 import { IndexedProgram } from './language/indexize.js';
 import { Issue } from './parsing/parser.js';
 
-import { Fact, InputFact, InputTerm, JsonData, Term, dataToTerm, termToData } from './termoutput.js';
+import {
+  Fact,
+  InputFact,
+  InputTerm,
+  JsonData,
+  Term,
+  dataToTerm,
+  termToData,
+} from './termoutput.js';
 export type { Term, Fact, InputTerm, InputFact, JsonData } from './termoutput.js';
 export { dataToTerm, termToData } from './termoutput.js';
 
