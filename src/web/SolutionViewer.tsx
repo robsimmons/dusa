@@ -172,7 +172,7 @@ export default function SolutionViewer(props: Props) {
           (name === 'line' && args.length === 4 && args.every((arg) => typeof arg === 'bigint')),
       )
     ) {
-      setShowImage(true);
+      setShowImage(false);
     }
   }
 
