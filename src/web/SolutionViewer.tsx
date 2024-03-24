@@ -51,7 +51,7 @@ const CSS_COLOR_NAMES: { [id: string]: string } = {
 };
 
 function termToCSSColor(term: Term): string | null {
-  if (term === null) return 'var(--oksolar-text)';
+  if (term === null) return 'black';
   if (typeof term === 'object' && term.name !== null) {
     if (term.args) {
       if (!term.args.every((arg) => typeof arg === 'bigint')) return null;
