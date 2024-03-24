@@ -21,71 +21,14 @@ import { parse } from './language/dusa-parser.js';
 import { IndexedProgram } from './language/indexize.js';
 import { Issue } from './parsing/parser.js';
 
+import { Fact, InputFact, InputTerm, JsonData, Term, dataToTerm, termToData } from './termoutput.js';
+export type { Term, Fact, InputTerm, InputFact, JsonData } from './termoutput.js';
+export { dataToTerm, termToData } from './termoutput.js';
+
 export type { Issue, Stats };
 export type { SourcePosition, SourceLocation } from './parsing/source-location.js';
 
 export { DANGER_RESET_DATA } from './datastructures/data.js';
-
-export type Term =
-  | null // Trivial type ()
-  | bigint // Natural numbers and integers
-  | string // Strings
-  | boolean
-  | { name: null; value: number } // JSON refs
-  | { name: string } // Constants
-  | { name: string; args: [Term, ...Term[]] };
-export interface Fact {
-  name: string;
-  args: Term[];
-  value: Term;
-}
-export type InputTerm =
-  | null
-  | number
-  | boolean
-  | bigint
-  | string
-  | { name: null; value: number }
-  | { name: string; args?: InputTerm[] };
-export interface InputFact {
-  name: string;
-  args: InputTerm[];
-  value?: InputTerm;
-}
-
-export class DusaError extends Error {
-  issues: Issue[];
-  constructor(issues: Issue[]) {
-    super();
-    this.issues = issues;
-  }
-}
-
-export type JsonData = null | number | bigint | string | JsonData[] | { [field: string]: JsonData };
-
-function dataToTerm(d: Data): Term {
-  const view = expose(d);
-  if (view.type === 'triv') return null;
-  if (view.type === 'int') return view.value;
-  if (view.type === 'bool') return view.value;
-  if (view.type === 'string') return view.value;
-  if (view.type === 'ref') return { name: null, value: view.value };
-  if (view.args.length === 0) return { name: view.name };
-  const args = view.args.map(dataToTerm) as [Term, ...Term[]];
-  return { name: view.name, args };
-}
-
-function termToData(tm: InputTerm): Data {
-  if (tm === null) return TRIV_DATA;
-  if (typeof tm === 'boolean') return hide({ type: 'bool', value: tm });
-  if (typeof tm === 'string') return hide({ type: 'string', value: tm });
-  if (typeof tm === 'bigint') return hide({ type: 'int', value: tm });
-  if (typeof tm === 'object') {
-    if (tm.name === null) return hide({ type: 'ref', value: tm.value });
-    return hide({ type: 'const', name: tm.name, args: tm.args?.map(termToData) ?? [] });
-  }
-  return hide({ type: 'int', value: BigInt(tm) });
-}
 
 function loadJson(json: JsonData, facts: [Data, Data, Data][]): Data {
   if (
@@ -113,6 +56,14 @@ function loadJson(json: JsonData, facts: [Data, Data, Data][]): Data {
     ]);
   }
   return ref;
+}
+
+export class DusaError extends Error {
+  issues: Issue[];
+  constructor(issues: Issue[]) {
+    super();
+    this.issues = issues;
+  }
 }
 
 export class DusaSolution {

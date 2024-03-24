@@ -11,11 +11,12 @@ import { ParsedDeclaration } from '../language/syntax.js';
 import { IndexedProgram } from '../language/indexize.js';
 import { compile } from '../language/compile.js';
 import { outputProgram } from '../language/bytecode.js';
+import { Fact as OutputFact, dataToTerm } from '../termoutput.js';
 
 export type WorkerQuery = {
   type: 'list';
   solution: number | null;
-  value: string[];
+  value: OutputFact[];
 };
 
 export interface WorkerStats {
@@ -120,7 +121,11 @@ function resolveQuery(index: number): WorkerQuery {
         }
         return compareData(a.value, b.value);
       })
-      .map(({ name, args, value }) => factToString({ name, args, value })),
+      .map(({ name, args, value }) => ({
+        name,
+        args: args.map(dataToTerm),
+        value: dataToTerm(value),
+      })),
   };
 }
 

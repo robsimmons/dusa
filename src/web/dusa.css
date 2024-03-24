@@ -460,6 +460,11 @@ div#codemirror-root .cm-scroller {
   text-wrap: nowrap;
 }
 
+#explorer-view-header .switch-mode {
+  margin-left: auto;
+  margin-right: 4px;
+}
+
 #explorer-view-data {
   padding-block: var(--dk-medium-padding);
   overflow-y: scroll;

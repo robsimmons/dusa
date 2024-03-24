@@ -148,6 +148,36 @@ export function compareData(a: Data, b: Data): number {
   }
 }
 
+export function escapeString(input: string): string {
+  const escaped = [];
+  let i = 0;
+  while (i < input.length) {
+    if (input.codePointAt(i)! > 0xffff) {
+      escaped.push(`\\u{${input.codePointAt(i)!.toString(16)}}`);
+      i += 2;
+    } else {
+      const ch = input.charAt(i);
+      if (ch.charCodeAt(0) > 0xff) {
+        escaped.push(`\\u{${input.charCodeAt(i).toString(16)}}`);
+      } else if (ch.match(/[ !#-[\]-~]/)) {
+        escaped.push(ch);
+      } else if (ch === '\\') {
+        escaped.push('\\\\');
+      } else if (ch === '"') {
+        escaped.push('\\"');
+      } else if (ch === '\n') {
+        escaped.push('\\n');
+      } else if (ch.charCodeAt(0) >= 16) {
+        escaped.push(`\\x${input.charCodeAt(i).toString(16)}`);
+      } else {
+        escaped.push(`\\x0${input.charCodeAt(i).toString(16)}`);
+      }
+      i += 1;
+    }
+  }
+  return escaped.join('');
+}
+
 export function dataToString(d: Data, needsParens = true): string {
   const view = expose(d);
   switch (view.type) {
@@ -160,33 +190,7 @@ export function dataToString(d: Data, needsParens = true): string {
     case 'ref':
       return `#${view.value}`;
     case 'string': {
-      const escaped = [];
-      let i = 0;
-      while (i < view.value.length) {
-        if (view.value.codePointAt(i)! > 0xffff) {
-          escaped.push(`\\u{${view.value.codePointAt(i)!.toString(16)}}`);
-          i += 2;
-        } else {
-          const ch = view.value.charAt(i);
-          if (ch.charCodeAt(0) > 0xff) {
-            escaped.push(`\\u{${view.value.charCodeAt(i).toString(16)}}`);
-          } else if (ch.match(/[ !#-[\]-~]/)) {
-            escaped.push(ch);
-          } else if (ch === '\\') {
-            escaped.push('\\\\');
-          } else if (ch === '"') {
-            escaped.push('\\"');
-          } else if (ch === '\n') {
-            escaped.push('\\n');
-          } else if (ch.charCodeAt(0) >= 16) {
-            escaped.push(`\\x${view.value.charCodeAt(i).toString(16)}`);
-          } else {
-            escaped.push(`\\x0${view.value.charCodeAt(i).toString(16)}`);
-          }
-          i += 1;
-        }
-      }
-      return `"${escaped.join('')}"`;
+      return `"${escapeString(view.value)}"`;
     }
     case 'const':
       return view.args.length === 0
