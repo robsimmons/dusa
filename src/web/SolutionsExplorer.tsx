@@ -8,7 +8,6 @@ import {
 import { Session } from './sessions.js';
 import { ICON_SIZE } from './constants.js';
 import SolutionViewer from './SolutionViewer.js';
-import React from 'react';
 
 interface Props {
   session: Session;
@@ -21,7 +20,6 @@ interface Props {
 export default function SolutionsExplorer({ load, run, pause, setSolution, session }: Props) {
   const shouldReload =
     session.status !== 'unconnected' && session.status !== 'load-error' && session.textModified;
-  const [solutionKey, setSolutionKey] = React.useState(crypto.randomUUID());
 
   return (
     <>
@@ -32,7 +30,6 @@ export default function SolutionsExplorer({ load, run, pause, setSolution, sessi
           className={shouldReload ? 'urgent' : ''}
           onClick={(event) => {
             event.preventDefault();
-            setSolutionKey(crypto.randomUUID());
             document.getElementById('session')!.className = 'mobile-view-explorer';
             load();
           }}

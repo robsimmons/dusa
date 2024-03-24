@@ -2,7 +2,6 @@ import { Data, compareData } from '../datastructures/data.js';
 import {
   ChoiceTree,
   ChoiceTreeNode,
-  factToString,
   pathToString,
   stepTreeRandomDFS,
 } from '../engine/choiceengine.js';

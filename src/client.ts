@@ -1,4 +1,4 @@
-import { Data, TRIV_DATA, expose, getRef, hide } from './datastructures/data.js';
+import { Data, TRIV_DATA, getRef, hide } from './datastructures/data.js';
 import {
   ChoiceTree,
   ChoiceTreeNode,
