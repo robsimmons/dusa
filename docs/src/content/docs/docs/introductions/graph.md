@@ -46,7 +46,7 @@ As an if-then statement, we could write "for all `X` and `Y`, if `edge X Y` then
 
     edge Y X :- edge X Y.
 
-Note that this if-thin statement is written backwards from how it's written in English:
+Note that this if-then statement is written backwards from how it's written in English:
 the "then" part, the **conclusion** is written first, followed by the `:-` symbol.
 After the `:-` symbol is **premises**. (There can be more than one premise. If there
 aren't any premises we're just defining a fact, so we don't write the `:-` symbol at
