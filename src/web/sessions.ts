@@ -9,6 +9,7 @@ import {
 import { ParsedDeclaration } from '../language/syntax.js';
 import { AppToWorker, WorkerQuery, WorkerStats, WorkerToApp } from './worker.js';
 import { check } from '../language/check.js';
+import { Issue } from '../client.js';
 
 function decodeDusaHashURI(): null | { program: string } {
   if (!window.location.hash.startsWith('#')) return null;
@@ -426,7 +427,7 @@ class SessionTabs {
       .then(({ worker, activeSession, text }) => {
         const ast = parse(text);
         let decls: ParsedDeclaration[] | null = null;
-        let issues: { msg: string; loc?: SourceLocation }[] = [];
+        let issues: Issue[] = [];
         if (ast.errors !== null) {
           issues = ast.errors;
         } else {
@@ -434,7 +435,7 @@ class SessionTabs {
           decls = ast.document;
         }
 
-        if (issues.length > 0 || decls === null) {
+        if (issues.filter(({ severity }) => severity === 'error').length > 0 || decls === null) {
           this.sessionData[activeSession] = {
             status: 'load-error',
             text,

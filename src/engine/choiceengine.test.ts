@@ -193,7 +193,7 @@ test('Exhaustive choices', () => {
 
 test('Non-exhaustive choice', () => {
   const { solutions, deadEnds } = testExecution(`
-    a is { false? }.
+    a is? false.
     b is { true, false } :- a is false.
     `);
 
@@ -220,11 +220,11 @@ test('Overlapping non-exhaustive and exhaustive choices', () => {
     p.
     q.
     r is { a, b, d, e } :- p.
-    r is { a, b, c? } :- p.
+    r is? { a, b, c } :- p.
     r is { a, c, d, e } :- q.
-    r is { c? }.
-    r is { a? }.
-    r is { f? }.
+    r is? c.
+    r is? a.
+    r is? f.
     `);
   expect(solutionsToStrings(solutions)).toEqual(['p, q, r is a', 'p, q, r is d', 'p, q, r is e']);
 });
@@ -233,9 +233,9 @@ test('Overlapping non-exhaustive choices', () => {
   const { solutions } = testExecution(`
     p.
     q.
-    r is { a, b, c? } :- p.
-    r is { a, c, d? } :- q.
-    r is { f? }.
+    r is? { a, b, c } :- p.
+    r is? { a, c, d } :- q.
+    r is? f.
     `);
   expect(solutionsToStrings(solutions)).toEqual([
     'p, q, r is a',
@@ -389,9 +389,9 @@ test('Open ended and closed ended possibility', () => {
     n 9.
     n (minus N 1) :- n N, N != 0.
     
-    choice is {C?} :- n C.
-    a C is {ff?} :- n C.
-    a C is {tt} :- choice is C.
+    choice is? C :- n C.
+    a C is? ff :- n C.
+    a C is tt :- choice is C.
     `);
 
   expect(solutionsToStrings(solutions)).toEqual([

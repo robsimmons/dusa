@@ -150,12 +150,13 @@ and then all connected nodes are assigned the same representative.
 The fact that every element might be (but isn't necessarily) the representative of its
 connected component can be captured by an **open** rule.
 
-    representative X is { X? } :- node X.
+    representative X is? X :- node X.
 
-This rule indicates that every node may be its own representative, but doesn't force
-that decision. If only that rule is given, every node will be assigned as its own
+This rule indicates that every node **may** be its own representative, but doesn't force
+that decision if another rule provides a contradictory assignment.
+
+If only that rule is given, every node will be assigned as its own
 representative.
-
 If we add the reachability logic from our first example, it will force every node
 in a connected component to have the same representative:
 

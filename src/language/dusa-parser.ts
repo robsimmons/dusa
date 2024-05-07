@@ -24,13 +24,25 @@ export function parse(
   str: string,
 ): { errors: Issue[] } | { errors: null; document: ParsedDeclaration[] } {
   const tokens = parseWithStreamParser(dusaTokenizer, str);
-  if (tokens.issues.length > 0) return { errors: tokens.issues };
+
+  for (const issue of tokens.issues) {
+    if (issue.severity === 'warning') {
+      console.error(`Parse warning: ${issue.msg} at line ${issue.loc?.start.line}`);
+    }
+  }
+  if (tokens.issues.filter(({ severity }) => severity === 'error').length > 0) {
+    return { errors: tokens.issues };
+  }
+
   const parseResult = parseTokens(tokens.document);
   const parseIssues = parseResult.filter((decl): decl is Issue => decl.type === 'Issue');
   const parseDecls = parseResult.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue');
+
+  // If parsing phase gives warning-level issues, this will need to be modified as above
   if (parseIssues.length > 0) {
     return { errors: parseIssues };
   }
+
   return { errors: null, document: parseDecls };
 }
 
@@ -41,7 +53,7 @@ function parseDeclOrIssue(t: Istream<Token>): ParsedDeclaration | Issue | null {
     if (e instanceof DusaSyntaxError) {
       let next: Token | null;
       while ((next = t.next()) !== null && next.type !== '.');
-      return { type: 'Issue', msg: e.message, loc: e.loc };
+      return { type: 'Issue', msg: e.message, severity: 'error', loc: e.loc };
     } else {
       throw e;
     }
@@ -101,39 +113,47 @@ export function parseHeadValue(t: Istream<Token>): {
   values: null | ParsedPattern[];
   exhaustive: boolean;
   end: SourcePosition | null;
+  deprecatedQuestionMark?: Token | undefined;
 } {
-  const istok = chomp(t, 'is');
-  if (!istok) {
+  const isToken = chomp(t, 'is') || chomp(t, 'is?');
+  if (!isToken) {
     return { values: null, exhaustive: true, end: null };
   }
 
   let tok: Token | null;
   if ((tok = chomp(t, '{')) !== null) {
     const values = [];
-    let exhaustive = true;
+    let exhaustive = isToken.type === 'is';
     let end = tok.loc.end;
     if (chomp(t, '?')) {
       exhaustive = false;
     } else {
       values.push(forceFullTerm(t));
     }
+    let deprecatedQuestionMark: Token | undefined = undefined;
     while ((tok = chomp(t, '}')) === null) {
       if (chomp(t, ',')) {
         values.push(forceFullTerm(t));
       } else {
-        force(t, '?');
+        deprecatedQuestionMark = force(t, '?');
+        if (isToken.type === 'is?') {
+          throw new DusaSyntaxError(
+            `Rule conclusion cannot use both 'is?' and deprecated standalone question mark`,
+            deprecatedQuestionMark.loc,
+          );
+        }
         end = force(t, '}').loc.end;
         exhaustive = false;
         break;
       }
     }
-    return { values, exhaustive, end: tok?.loc.end ?? end };
+    return { values, exhaustive, end: tok?.loc.end ?? end, deprecatedQuestionMark };
   } else {
     const value = parseFullTerm(t);
     if (value === null) {
-      throw new DusaSyntaxError(`Did not find value after 'is'`, istok.loc);
+      throw new DusaSyntaxError(`Did not find value after '${isToken.type}'`, isToken.loc);
     }
-    return { values: [value], exhaustive: true, end: value.loc.end };
+    return { values: [value], exhaustive: isToken.type === 'is', end: value.loc.end };
   }
 }
 
@@ -212,12 +232,13 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
       args.push(next);
       next = parseTerm(t);
     }
-    const { values, exhaustive, end } = parseHeadValue(t);
+    const { values, exhaustive, end, deprecatedQuestionMark } = parseHeadValue(t);
     result = {
       type: 'Rule',
       premises: [],
       conclusion: { name, args, values, exhaustive, loc: { start, end: end ?? attributeEnd } },
       loc: tok.loc, // dummy value, will be replaced
+      deprecatedQuestionMark: deprecatedQuestionMark?.loc,
     };
 
     if ((tok = chomp(t, '.')) !== null) {

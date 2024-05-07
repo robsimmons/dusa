@@ -98,12 +98,12 @@ function position(state: EditorState, pos: SourcePosition) {
 
 function issueToDiagnostic(issues: Issue[]): readonly Diagnostic[] {
   return issues
-    .map((issue) => {
+    .map((issue): Diagnostic | null => {
       if (!issue.loc) return null;
       return {
         from: position(view.state, issue.loc.start),
         to: position(view.state, issue.loc.end),
-        severity: 'error',
+        severity: issue.severity,
         message: issue.msg,
       };
     })

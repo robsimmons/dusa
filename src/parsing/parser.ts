@@ -23,6 +23,7 @@ export type Tag = string;
 export interface Issue {
   type: 'Issue';
   msg: string;
+  severity: 'warning' | 'error';
   loc?: SourceLocation;
 }
 

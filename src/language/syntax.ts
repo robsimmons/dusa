@@ -43,6 +43,7 @@ export type ParsedDeclaration =
       premises: ParsedPremise[];
       conclusion: ParsedConclusion;
       loc: SourceLocation;
+      deprecatedQuestionMark: SourceLocation | undefined;
     };
 
 export function propToString(p: ParsedProposition) {
@@ -55,14 +56,17 @@ export function headToString(head: ParsedConclusion | Conclusion) {
   const args = head.args.map((arg) => ` ${termToString(arg)}`).join('');
   if (head.values === null) {
     return `${head.name}${args}`;
-  } else if (head.values.length !== 1 || !head.exhaustive) {
-    return `${head.name}${args} is { ${head.values
+  } else if (head.values.length !== 1) {
+    return `${head.name}${args} ${head.exhaustive ? 'is' : 'is?'} { ${head.values
       .map((term) => termToString(term, false))
-      .join(', ')}${head.exhaustive ? '' : '?'} }`;
-  } else if (head.values[0].type === 'triv') {
+      .join(', ')} }`;
+  } else if (head.values[0].type === 'triv' && head.exhaustive) {
     return `${head.name}${args}`;
   } else {
-    return `${head.name}${args} is ${termToString(head.values[0], false)}`;
+    return `${head.name}${args} ${head.exhaustive ? 'is' : 'is?'} ${termToString(
+      head.values[0],
+      false,
+    )}`;
   }
 }
 

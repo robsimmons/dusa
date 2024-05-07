@@ -50,6 +50,7 @@ type PUNCT = (typeof punct)[number];
 export type Token =
   | { loc: SourceLocation; type: PUNCT }
   | { loc: SourceLocation; type: 'is' }
+  | { loc: SourceLocation; type: 'is?' }
   | { loc: SourceLocation; type: 'in' }
   | { loc: SourceLocation; type: 'const'; value: string }
   | {
@@ -79,6 +80,7 @@ function issue(stream: StringStream, msg: string): Issue {
   return {
     type: 'Issue',
     msg,
+    severity: 'error',
     loc: stream.matchedLocation(),
   };
 }
@@ -98,6 +100,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
             {
               type: 'Issue',
               msg: 'End of string not found at end of line',
+              severity: 'error',
               loc: { start: state.start, end: state.end },
             },
           ],
@@ -162,6 +165,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
                 msg: `Expected token following #builtin to be one of ${Object.keys(
                   BUILT_IN_MAP,
                 ).join(', ')}`,
+                severity: 'error',
                 loc: { start: state.hashloc.start, end: stream.matchedLocation().end },
               },
             ],
@@ -183,6 +187,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
               {
                 type: 'Issue',
                 msg: `Expected constant following #builtin ${state.builtin}`,
+                severity: 'error',
                 loc: { start: state.hashloc.start, end: stream.matchedLocation().end },
               },
             ],
@@ -273,6 +278,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
                       {
                         type: 'Issue',
                         msg: `Cannot encode lone surrogate ${tok}`,
+                        severity: 'error',
                         loc: stream.matchedLocation(),
                       },
                     ],
@@ -285,6 +291,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
                       {
                         type: 'Issue',
                         msg: `Bad Unicode code point ${tok}`,
+                        severity: 'error',
                         loc: stream.matchedLocation(),
                       },
                     ],
@@ -312,6 +319,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
                 {
                   type: 'Issue',
                   msg: `Invalid escape sequence \\${tok}`,
+                  severity: 'error',
                   loc: stream.matchedLocation(),
                 },
               ],
@@ -324,6 +332,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
               {
                 type: 'Issue',
                 msg: 'Backslash not supported at end of line',
+                severity: 'error',
                 loc: stream.matchedLocation(),
               },
             ],
@@ -341,6 +350,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
               {
                 type: 'Issue',
                 msg: `A hash command like '#${tok}' can only appear at the beginning of a declaration`,
+                severity: 'error',
                 loc: stream.matchedLocation(),
               },
             ],
@@ -370,6 +380,17 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
             return {
               state: p === '.' ? { ...state, type: 'Beginning' } : state,
               tag: 'punctuation',
+              issues:
+                p === '?'
+                  ? [
+                      {
+                        type: 'Issue',
+                        msg: "Standalone question marks for open rules are deprecated and will be removed in a future version: use 'is?' instead",
+                        severity: 'warning',
+                        loc: stream.matchedLocation(),
+                      },
+                    ]
+                  : undefined,
               tree: { type: p, loc: stream.matchedLocation() },
             };
           }
@@ -381,6 +402,13 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
 
         if ((tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN))) {
           if (tok === 'is') {
+            if (stream.eat('?')) {
+              return {
+                state,
+                tag: 'keyword',
+                tree: { type: 'is?', loc: stream.matchedLocation() },
+              };
+            }
             return {
               state,
               tag: 'keyword',
@@ -456,6 +484,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
           {
             type: 'Issue',
             msg: 'End of string not found at end of input',
+            severity: 'error',
             loc: { start: state.start, end: state.end },
           },
         ],
