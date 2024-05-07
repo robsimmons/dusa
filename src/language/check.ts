@@ -44,6 +44,7 @@ export function checkPropositionArity(
             expectedArity === 1 ? '' : 's'
           }, but here it has ${arity}`,
           loc: occurrence,
+          severity: 'error',
         });
       }
     }
@@ -82,6 +83,7 @@ function checkFreeVarsInPremises(premises: ParsedPremise[]):
           type: 'Issue',
           msg: `Variable ${v} cannot be reused in a later premise because its first occurance was in an inequality`,
           loc,
+          severity: 'error',
         });
       }
     }
@@ -93,6 +95,7 @@ function checkFreeVarsInPremises(premises: ParsedPremise[]):
         type: 'Issue',
         msg: `Named wildcard ${dup} used multiple times in a rule.`,
         loc,
+        severity: 'error',
       });
     }
   }
@@ -129,6 +132,7 @@ function checkFreeVarsInPremises(premises: ParsedPremise[]):
             type: 'Issue',
             msg: `Only one side of an ${premise.type.toLowerCase()} can include a first occurance of a variable or a wildcard. The left side uses ${newA}, the right side uses ${newB}.`,
             loc: premise.loc,
+            severity: 'error',
           });
         }
         break;
@@ -183,6 +187,7 @@ export function checkFreeVarsInDecl(decl: ParsedDeclaration): Issue[] {
           type: 'Issue',
           msg: `Cannot include wildcard ${w} in the head of a rule.`,
           loc: decl.conclusion.loc,
+          severity: 'error',
         });
       }
 
@@ -192,12 +197,14 @@ export function checkFreeVarsInDecl(decl: ParsedDeclaration): Issue[] {
             type: 'Issue',
             msg: `Variable '${v}' used in head of rule but was first defined in an inequality.`,
             loc,
+            severity: 'error',
           });
         } else if (!fv.has(v)) {
           errors.push({
             type: 'Issue',
             msg: `Variable '${v}' used in head of rule but not defined in a premise.`,
             loc,
+            severity: 'error',
           });
         }
       }
@@ -222,6 +229,7 @@ function checkFunctionalPredicatesInTerm(
           msg: `The functional predicate '${pattern.name}' should be given ${expectedNum} argument${
             expectedNum === 1 ? '' : 's'
           }, but is given ${pattern.args.length} here`,
+          severity: 'error',
         },
       ];
     }
@@ -236,6 +244,7 @@ function checkFunctionalPredicatesInTerm(
               type: 'Issue',
               loc: pattern.loc,
               msg: `Built-in ${pattern.name} (${pattern.symbol}) expects no argument, has ${pattern.args.length}`,
+              severity: 'error',
             },
           ];
         }
@@ -247,6 +256,7 @@ function checkFunctionalPredicatesInTerm(
               type: 'Issue',
               loc: pattern.loc,
               msg: `Built-in ${pattern.name} (${pattern.symbol}) expects two arguments, has ${pattern.args.length}`,
+              severity: 'error',
             },
           ];
         }
@@ -259,6 +269,7 @@ function checkFunctionalPredicatesInTerm(
               type: 'Issue',
               loc: pattern.loc,
               msg: `Built-in ${pattern.name} (${pattern.symbol}) needs to have one of its arguments grounded by previous premises, and that is not the case here.`,
+              severity: 'error',
             },
           ];
         }
@@ -277,6 +288,7 @@ function checkFunctionalPredicatesInTerm(
                 }) needs to have all of its arguments grounded by previous premises, but the argument '${termToString(
                   arg,
                 )}' is not ground`,
+                severity: 'error',
               },
             ];
           }
@@ -303,6 +315,7 @@ function checkFunctionalPredicatesInTerm(
                   }) needs to have all but one of its arguments grounded by previous premises, but the arguments '${termToString(
                     nonGround,
                   )}' and '${termToString(arg)}' are both not ground.`,
+                  severity: 'error',
                 },
               ];
             }

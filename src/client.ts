@@ -60,7 +60,11 @@ function loadJson(json: JsonData, facts: [Data, Data, Data][]): Data {
     }
   } else {
     throw new DusaError([
-      { type: 'Issue', msg: `Could not load ${typeof json} as JSON data triples` },
+      {
+        type: 'Issue',
+        msg: `Could not load ${typeof json} as JSON data triples`,
+        severity: 'error',
+      },
     ]);
   }
   return ref;
@@ -169,6 +173,7 @@ export class Dusa {
         {
           type: 'Issue',
           msg: `Asserted predicates must start with a lowercase letter and include only alphanumeric characters, '${pred}' does not.`,
+          severity: 'error',
         },
       ]);
     }
@@ -181,6 +186,7 @@ export class Dusa {
           msg: `Predicate ${pred} should have ${expected} argument${
             expected === 1 ? '' : 's'
           }, but the asserted fact has ${arity}`,
+          severity: 'error',
         },
       ]);
     }
@@ -241,6 +247,7 @@ export class Dusa {
         {
           type: 'Issue',
           msg: "Cannot use 'solution' getter on programs with multiple solutions. Use sample() instead.",
+          severity: 'error',
         },
       ]);
     }
