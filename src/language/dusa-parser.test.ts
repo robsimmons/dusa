@@ -46,8 +46,8 @@ test('Parser and pretty pretter idempotence', () => {
   expectRoundTripToParse('a is? ().');
   expectRoundTripToParse('a () is 3.', 'a () is 3.');
 
-  expectRoundTripToParse('#forbid a.')
-  expectRoundTripToParse('#demand a.')
+  expectRoundTripToParse('#forbid a.');
+  expectRoundTripToParse('#demand a.');
 
   // Deprecated syntax
   expectRoundTripToParse('a is { b? }.', 'a is? b.');
