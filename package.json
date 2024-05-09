@@ -1,6 +1,6 @@
 {
   "name": "dusa",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "type": "module",
   "main": "lib/client.js",
   "types": "lib/client.d.ts",
@@ -11,7 +11,7 @@
   "homepage": "https://dusa.rocks",
   "repository": {
     "type": "git",
-    "url": "https://git.sr.ht/~robsimmons/dusa"
+    "url": "https://git.sr.ht/~robsimmons/dusa.git"
   },
   "bugs": {
     "url": "https://todo.sr.ht/~robsimmons/Dusa"
