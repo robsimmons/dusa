@@ -33,12 +33,13 @@ tasks:
       npm install
       npm run build
   - github: |
-      if [ "$GIT_REF" == "refs/heads/main" ]
+      if [ "$GIT_REF" == "refs/heads/main" ] || [ "$GIT_REF" == "refs/heads/publish" ]
       then
         cd dusa
         echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
         git remote add github git@github.com:robsimmons/dusa.git
         git push github main
+        git push github publish
       fi
   - publish: |
       if [ "$GIT_REF" == "refs/heads/publish" ]
