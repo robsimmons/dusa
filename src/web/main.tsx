@@ -15,7 +15,7 @@ import { parser } from './codemirror.js';
 import createAndMountInspector from './inspector.js';
 
 
-await setup({
+setup({
   createAndMountInspector,
   extractTitleFromDoc: (doc) => {
     if (doc.startsWith('# ')) {
