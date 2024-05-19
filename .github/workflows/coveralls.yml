@@ -9,8 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: npm ci
-        working-directory: docs
-      - run: npm ci
       - run: npm run coverage
       - uses: coverallsapp/github-action@v2
         with:
