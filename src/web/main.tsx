@@ -1,17 +1,12 @@
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { EditorView, keymap, lineNumbers } from '@codemirror/view';
-
 import { setup } from 'sketchzone';
-import { syntaxHighlighting } from '@codemirror/language';
-import { classHighlighter } from '@lezer/highlight';
+
+import { codemirrorExtensions } from './codemirror.js';
 import {
   CHARACTER_CREATION_EXAMPLE,
   CKY_PARSING_EXAMPLE,
   GRAPH_GENERATION_EXAMPLE,
   ROCK_PAPER_SCISSORS,
 } from './examples.js';
-
-import { parser } from './codemirror.js';
 import createAndMountInspector from './inspector.js';
 
 setup({
@@ -23,14 +18,7 @@ setup({
     }
     return '<untitled>';
   },
-  codemirrorExtensions: [
-    parser,
-    syntaxHighlighting(classHighlighter),
-    lineNumbers(),
-    history(),
-    EditorView.lineWrapping,
-    keymap.of([...defaultKeymap, ...historyKeymap]),
-  ],
+  codemirrorExtensions: codemirrorExtensions,
   defaultEntries: [
     CHARACTER_CREATION_EXAMPLE,
     CKY_PARSING_EXAMPLE,
