@@ -24,23 +24,6 @@ function TermViewer(props: { term: Term; depth: number }) {
   const [show, setShow] = React.useState(props.depth > 0);
   if (typeof props.term !== 'object' || show) {
     if (props.term === null) return '()';
-    if (typeof props.term === 'string') return `"${escapeString(props.term)}"`;
-    if (typeof props.term === 'bigint') return `${props.term}`;
-    if (typeof props.term === 'boolean') return `#${props.term}`;
-    if (props.term.name === null) return `#${props.term.value}`;
-    if (!props.term.args) return props.term.name;
-    return (
-      <>
-        ({props.term.name}
-        {props.term.args.map((arg, i) => (
-          <span key={i}>
-            {' '}
-            <TermViewer term={arg} depth={props.depth - 1} />
-          </span>
-        ))}
-        )
-      </>
-    );
   } else {
     return <button onClick={() => setShow(true)}>more...</button>;
   }

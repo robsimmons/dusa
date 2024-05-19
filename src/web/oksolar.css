@@ -1,0 +1,53 @@
+body {
+  --oksolar-light-text-green: oklch(57% 0.15 150);
+  --oksolar-light-text-blue: oklch(57% 0.15 240);
+  --oksolar-light-text-violet: oklch(57% 0.15 280);
+  --oksolar-light-text-pink: oklch(57% 0.15 330);
+  --oksolar-light-text-red: oklch(57% 0.15 20);
+  --oksolar-light-text-orange: oklch(57% 0.15 60);
+
+  --oksolar-dark-text-green: oklch(67% 0.15 150);
+  --oksolar-dark-text-blue: oklch(67% 0.15 240);
+  --oksolar-dark-text-violet: oklch(67% 0.15 280);
+  --oksolar-dark-text-pink: oklch(67% 0.15 330);
+  --oksolar-dark-text-red: oklch(67% 0.15 20);
+  --oksolar-dark-text-orange: oklch(67% 0.15 60);
+}
+
+body {
+  --oksolar-text-green: var(--oksolar-light-text-green);
+  --oksolar-text-blue: var(--oksolar-light-text-blue);
+  --oksolar-text-violet: var(--oksolar-light-text-violet);
+  --oksolar-text-pink: var(--oksolar-light-text-pink);
+  --oksolar-text-red: var(--oksolar-light-text-red);
+  --oksolar-text-orange: var(--oksolar-light-text-orange);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    --oksolar-text-green: var(--oksolar-dark-text-green);
+    --oksolar-text-blue: var(--oksolar-dark-text-blue);
+    --oksolar-text-violet: var(--oksolar-dark-text-violet);
+    --oksolar-text-pink: var(--oksolar-dark-text-pink);
+    --oksolar-text-red: var(--oksolar-dark-text-red);
+    --oksolar-text-orange: var(--oksolar-dark-text-orange);
+  }
+}
+
+body.theme-light {
+  --oksolar-text-green: var(--oksolar-light-text-green);
+  --oksolar-text-blue: var(--oksolar-light-text-blue);
+  --oksolar-text-violet: var(--oksolar-light-text-violet);
+  --oksolar-text-pink: var(--oksolar-light-text-pink);
+  --oksolar-text-red: var(--oksolar-light-text-red);
+  --oksolar-text-orange: var(--oksolar-light-text-orange);
+}
+
+body.theme-dark {
+  --oksolar-text-green: var(--oksolar-dark-text-green);
+  --oksolar-text-blue: var(--oksolar-dark-text-blue);
+  --oksolar-text-violet: var(--oksolar-dark-text-violet);
+  --oksolar-text-pink: var(--oksolar-dark-text-pink);
+  --oksolar-text-red: var(--oksolar-dark-text-red);
+  --oksolar-text-orange: var(--oksolar-dark-text-orange);
+}
