@@ -26,6 +26,12 @@ const bogusPosition = {
   start: { line: 1, column: 1 },
   end: { line: 1, column: 2 },
 };
+/** Create a Codemirror-compliant parser from our stream parser.
+ * The token method is given a Codemirror-style StringStream,
+ * and we have to use that to implement the StringStream interface
+ * that our parser expects. Because we're not using the syntax
+ * tree, we can feed bogus SourceLocation information to matchedLocation.
+ */
 const parser = StreamLanguage.define<{ state: ParserState }>({
   name: 'Dusa',
   startState: () => ({ state: dusaTokenizer.startState }),
@@ -175,7 +181,6 @@ const highlightPredicatesPlugin = ViewPlugin.define((view: EditorView) => {
 
   return {
     update(update: ViewUpdate) {
-      console.log(update);
       if (update.docChanged) {
         // Debounce logic, part 2
         nextUpdateCanHappenOnlyAfter = Date.now() + delay;
