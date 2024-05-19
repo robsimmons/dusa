@@ -8,9 +8,9 @@ name "Terra".
 name "Luna".
 
 # Pick names for three characters: a hero, sidekick, and villan
-character hero is { Name? } :- name Name.
-character sidekick is { Name? } :- name Name.
-character villain is { Name? } :- name Name.
+character hero is? Name :- name Name.
+character sidekick is? Name :- name Name.
+character villain is? Name :- name Name.
 
 # No two characters can have the same name
 #forbid character Char1 is N, character Char2 is N, Char1 != Char2.
@@ -131,7 +131,7 @@ move Move :- outcome Move _ _.
 
 #builtin INT_PLUS plus.
 round 1.
-plays P N is { Move? } :- round N, player P, move Move.
+plays P N is? Move :- round N, player P, move Move.
 
 # If the players make the same move, we go to the next round
 round (plus Round 1) :-

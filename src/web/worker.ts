@@ -35,8 +35,8 @@ export type AppToWorker =
 
 const DEBUG_TRANSFORM = true;
 const DEBUG_EXECUTION = false;
-const CYCLE_LIMIT = 500;
-const STATS_UPDATE = 250;
+const CYCLE_LIMIT = 100;
+const STATS_UPDATE = 100;
 
 let state: 'uninitialized' | 'in-progress' | 'error' | 'done' = 'uninitialized';
 let program: IndexedProgram;

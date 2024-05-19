@@ -48,12 +48,16 @@ function Solution({ facts }: { facts: Fact[] }) {
     <ul>
       {facts.map((fact, i) => (
         <li key={i}>
-          {fact.name}{' '}
+          {fact.name}
           {fact.args.map((term, i) => (
-            <Term key={i} term={term} />
-          ))}{' '}
+            <span key={i}>
+              {' '}
+              <Term key={i} term={term} />
+            </span>
+          ))}
           {fact.value !== null && (
             <>
+              {' '}
               is <Term term={fact.value} />
             </>
           )}
@@ -211,7 +215,6 @@ export default function Inspector({ doc, visible }: Props) {
           onClick={() => {
             post({ type: 'stop' });
             setState('paused');
-            console.log('Aayy');
           }}
         >
           <PauseIcon width={ICON_SIZE} height={ICON_SIZE} /> Pause
