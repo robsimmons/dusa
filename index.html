@@ -14,27 +14,32 @@
       href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@500&family=Fira+Sans+Condensed&display=swap"
       rel="stylesheet"
     />
-    <link href="/src/web/reset.css" rel="stylesheet" />
+    <link href="/node_modules/sketchzone/css/reset.css" rel="stylesheet" />
+    <link href="/node_modules/sketchzone/css/sketchzone.css" rel="stylesheet" />
+    <link href="/src/web/oksolar.css" rel="stylesheet" />
     <link href="/src/web/dusa.css" rel="stylesheet" />
-    <link href="/src/web/codemirror.css" rel="stylesheet" />
     <link rel="icon" href="/dusa-icon.svg" />
     <link rel="mask-icon" href="/dusa-icon.svg" color="#007FBC" />
   </head>
-  <body id="root" class="theme-light">
-    <main>
-      <div class="dk-config" id="config-root"></div>
-      <div class="dk-sessions">
-        <div class="dk-header">
-          <div id="dk-tabs" class="dk-tabs"></div>
-          <div class="dk-logo">Dusa</div>
+  <body id="body-root">
+    <main id="main-root">
+      <div id="sketchzone-config"></div>
+      <div id="sketchzone-container">
+        <div id="sketchzone-header">
+          <div id="sketchzone-tabs"></div>
+          <div id="sketchzone-logo"></div>
         </div>
-        <div id="session" class="mobile-view-editor">
-          <div id="codemirror-root"></div>
-          <div id="session-divider"></div>
-          <div id="react-root"></div>
+        <div id="sketchzone-active-sketch" class="active-sketch-is-showing-editor">
+          <div id="sketchzone-codemirror-root"></div>
+          <div id="sketchzone-divider"></div>
+          <div id="sketchzone-inspector-root">
+            <div id="sketchzone-inspector-controller" class="zone1"></div>
+            <div id="sketchzone-inspector-contents"></div>
+          </div>
         </div>
       </div>
     </main>
+    <div id="modal-root"></div>
     <script type="module" src="/src/web/main.tsx"></script>
   </body>
 </html>

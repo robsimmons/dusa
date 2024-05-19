@@ -1,16 +1,15 @@
-import { Data, compareData } from '../datastructures/data.js';
+import { ParsedDeclaration } from '../language/syntax.js';
+import { Fact as OutputFact, dataToTerm } from '../termoutput.js';
+import { compile } from '../language/compile.js';
+import { listFacts, makeInitialDb } from '../engine/forwardengine.js';
 import {
   ChoiceTree,
   ChoiceTreeNode,
   pathToString,
   stepTreeRandomDFS,
 } from '../engine/choiceengine.js';
-import { Database, listFacts, makeInitialDb } from '../engine/forwardengine.js';
-import { ParsedDeclaration } from '../language/syntax.js';
+import { Data, compareData } from '../datastructures/data.js';
 import { IndexedProgram } from '../language/indexize.js';
-import { compile } from '../language/compile.js';
-import { outputProgram } from '../language/bytecode.js';
-import { Fact as OutputFact, dataToTerm } from '../termoutput.js';
 
 export type WorkerQuery = {
   type: 'list';
@@ -21,192 +20,153 @@ export type WorkerQuery = {
 export interface WorkerStats {
   cycles: number;
   deadEnds: number;
-  solutions: number;
-  error: string | null;
 }
 
 export type WorkerToApp =
-  | { stats: WorkerStats; type: 'hello' }
-  | { stats: WorkerStats; type: 'paused'; query: null | WorkerQuery }
-  | { stats: WorkerStats; type: 'running'; query: null | WorkerQuery }
-  | { stats: WorkerStats; type: 'done'; query: null | WorkerQuery }
-  | { stats: WorkerStats; type: 'reset' };
+  | { type: 'error'; msg: string }
+  | { type: 'stats'; stats: WorkerStats }
+  | { type: 'solution'; facts: OutputFact[] }
+  | { type: 'done' };
 
 export type AppToWorker =
-  | { type: 'status' }
-  | { type: 'setsolution'; solution: number | null }
-  | { type: 'stop' }
   | { type: 'load'; program: ParsedDeclaration[] }
-  | { type: 'start' }
-  | { type: 'reset' };
+  | { type: 'stop' }
+  | { type: 'start' };
 
 const DEBUG_TRANSFORM = true;
 const DEBUG_EXECUTION = false;
-const CYCLE_LIMIT = 10000;
-const TIME_LIMIT = 500;
-let program: IndexedProgram | null = null;
-let solutions: Database[] = [];
-let setSolution: number | null = null;
+const CYCLE_LIMIT = 500;
+const STATS_UPDATE = 250;
 
-function newStats(): WorkerStats {
-  return {
-    cycles: 0,
-    deadEnds: 0,
-    solutions: 0,
-    error: null,
-  };
-}
-let stats: WorkerStats = newStats();
+let state: 'uninitialized' | 'in-progress' | 'error' | 'done' = 'uninitialized';
+let program: IndexedProgram;
+let tree: ChoiceTree;
+let path: [ChoiceTreeNode, Data | 'defer'][] = [];
+const stats: WorkerStats = {
+  cycles: 0,
+  deadEnds: 0,
+};
 
 function post(message: WorkerToApp): true {
   postMessage(message);
   return true;
 }
 
-let tree: null | ChoiceTree = null;
-let path: [ChoiceTreeNode, Data | 'defer'][] = [];
+let lastStatsTime = Date.now();
+let loopHandle: null | ReturnType<typeof setTimeout> = null;
+function loop(): true {
+  if (state === 'uninitialized') {
+    post({ type: 'error', msg: 'Called loop() on an uninitialized program' });
+    state = 'error';
+    return true;
+  }
+  if (state === 'error' || state === 'done') return true;
 
-function cycle(): null | number {
-  const limit = stats.cycles + CYCLE_LIMIT + Math.random() * CYCLE_LIMIT;
-  const start = performance.now();
-  try {
-    while (stats.cycles < limit && start + TIME_LIMIT > performance.now()) {
-      if (tree === null) return null;
+  if (Date.now() - lastStatsTime > STATS_UPDATE) {
+    post({ type: 'stats', stats });
+    lastStatsTime = Date.now();
+  }
+
+  for (let i = 0; i < CYCLE_LIMIT + Math.random() * CYCLE_LIMIT; i++) {
+    try {
       if (DEBUG_EXECUTION) {
         console.log(pathToString(tree, path));
       }
-      const result = stepTreeRandomDFS(program!, tree, path, stats);
-      tree = result.tree;
-      path = result.tree === null ? path : result.path;
+      const result = stepTreeRandomDFS(program, tree, path, stats);
 
       if (result.solution) {
-        solutions.push(result.solution);
-        stats.solutions += 1;
-        return 0;
+        post({ type: 'stats', stats });
+        post({
+          type: 'solution',
+          facts: [...listFacts(result.solution)]
+            .sort((a, b) => {
+              if (a.name > b.name) return 1;
+              if (a.name < b.name) return -1;
+              if (a.args.length < b.args.length) return 1;
+              if (a.args.length > b.args.length) return -1;
+              for (let i = 0; i < a.args.length; i++) {
+                const c = compareData(a.args[i], b.args[i]);
+                if (c !== 0) return c;
+              }
+              return compareData(a.value, b.value);
+            })
+            .map(({ name, args, value }) => ({
+              name,
+              args: args.map(dataToTerm),
+              value: dataToTerm(value),
+            })),
+        });
       }
-    }
-  } catch (e) {
-    stats.error = `${e}`;
-    console.log(e);
-    return null;
-  }
 
-  return 0;
-}
-
-let liveLoopHandle: null | ReturnType<typeof setTimeout> = null;
-function liveLoop() {
-  let nextTimeout: null | number = null;
-  if ((nextTimeout = cycle()) !== null) {
-    liveLoopHandle = setTimeout(liveLoop, nextTimeout);
-  } else {
-    liveLoopHandle = null;
-  }
-}
-
-function resolveQuery(index: number): WorkerQuery {
-  return {
-    type: 'list',
-    solution: setSolution,
-    value: [...listFacts(solutions[index])]
-      .sort((a, b) => {
-        if (a.name > b.name) return 1;
-        if (a.name < b.name) return -1;
-        if (a.args.length < b.args.length) return 1;
-        if (a.args.length > b.args.length) return -1;
-        for (let i = 0; i < a.args.length; i++) {
-          const c = compareData(a.args[i], b.args[i]);
-          if (c !== 0) return c;
-        }
-        return compareData(a.value, b.value);
-      })
-      .map(({ name, args, value }) => ({
-        name,
-        args: args.map(dataToTerm),
-        value: dataToTerm(value),
-      })),
-  };
-}
-
-// Picking up where you left off
-function resume(state: 'paused' | 'done' | 'running') {
-  const query =
-    solutions.length === 0
-      ? null
-      : setSolution === null
-        ? resolveQuery(solutions.length - 1)
-        : resolveQuery(setSolution);
-
-  switch (state) {
-    case 'paused': {
-      return post({ type: 'paused', stats, query });
-    }
-
-    case 'done': {
-      return post({ type: 'done', stats, query });
-    }
-
-    case 'running': {
-      liveLoopHandle = setTimeout(liveLoop);
-      return post({ type: 'running', stats, query });
+      if (result.tree === null) {
+        post({ type: 'stats', stats });
+        post({ type: 'done' });
+        state = 'done';
+        return true;
+      } else {
+        tree = result.tree;
+        path = result.tree === null ? path : result.path;
+      }
+    } catch (e) {
+      post({ type: 'error', msg: `${e}` });
+      state = 'error';
+      return true;
     }
   }
+  loopHandle = setTimeout(loop);
+  return true;
 }
 
 onmessage = (event: MessageEvent<AppToWorker>): true => {
-  // What state are we actually in?
-  const state: 'paused' | 'done' | 'running' =
-    liveLoopHandle !== null ? 'running' : tree === null || stats.error !== null ? 'done' : 'paused';
+  if (state === 'error' || state === 'done') return true;
 
-  // Pause
-  if (liveLoopHandle !== null) {
-    clearTimeout(liveLoopHandle);
-    liveLoopHandle = null;
-  }
-
-  switch (event.data.type) {
-    case 'load': {
-      stats = newStats();
-      path = [];
-      program = compile(event.data.program, DEBUG_TRANSFORM);
-      if (DEBUG_TRANSFORM) {
-        const busa = outputProgram(program);
-        console.log(`\nForm 4: JSON Bytecode`);
-        console.log(busa.toJsonString());
-      }
+  if (state === 'uninitialized') {
+    if (event.data.type !== 'load') {
+      post({
+        type: 'error',
+        msg: `A 'load' message must be first, received '${event.data.type}' instead.`,
+      });
+      state = 'error';
+      return true;
+    } else {
       try {
+        program = compile(event.data.program, DEBUG_TRANSFORM);
         tree = { type: 'leaf', db: makeInitialDb(program) };
-        return resume('running');
+        loopHandle = setTimeout(loop);
+        state = 'in-progress';
+        return true;
       } catch (e) {
-        stats.error = `${e}`;
-        console.log(e);
-        return resume('done');
+        console.error(e);
+        post({ type: 'error', msg: `${e}` });
+        state = 'error';
+        return true;
       }
     }
-    case 'start':
-      if (state === 'paused') {
-        return resume('running');
+  }
+
+  // state === 'in-progress'
+  switch (event.data.type) {
+    case 'load': {
+      post({
+        type: 'error',
+        msg: `A 'load' message must be first, received '${event.data.type}' instead.`,
+      });
+      state = 'error';
+      return true;
+    }
+    case 'start': {
+      if (loopHandle === null) {
+        loopHandle = setTimeout(loop);
       }
-      return resume(state);
-    case 'stop':
-      if (state === 'running') {
-        return resume('paused');
+      return true;
+    }
+    case 'stop': {
+      if (loopHandle !== null) {
+        clearTimeout(loopHandle);
+        loopHandle = null;
+        post({ type: 'stats', stats });
       }
-      return resume(state);
-    case 'reset':
-      stats = newStats();
-      solutions = [];
-      setSolution = null;
-      tree = null;
-      path = [];
-      program = null;
-      return post({ type: 'reset', stats });
-    case 'status':
-      return resume(state);
-    case 'setsolution':
-      setSolution = event.data.solution;
-      return resume(state);
+      return true;
+    }
   }
 };
-
-post({ stats, type: 'hello' });

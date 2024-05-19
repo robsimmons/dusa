@@ -1,4 +1,6 @@
-import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { StreamLanguage, syntaxHighlighting } from '@codemirror/language';
+import { Diagnostic, linter } from '@codemirror/lint';
 import { EditorState, RangeSet, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
@@ -10,13 +12,12 @@ import {
   lineNumbers,
   tooltips,
 } from '@codemirror/view';
+import { classHighlighter } from '@lezer/highlight';
+
 import { ParserState, dusaTokenizer } from '../language/dusa-tokenizer.js';
 import { StringStream } from '../parsing/string-stream.js';
-import { classHighlighter, tags } from '@lezer/highlight';
-import { Diagnostic, linter } from '@codemirror/lint';
-import { SourcePosition } from '../parsing/source-location.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { SourcePosition } from '../client.js';
 import { parseTokens } from '../language/dusa-parser.js';
 import { ParsedDeclaration, visitPropsInProgram, visitTermsinProgram } from '../language/syntax.js';
 import { check } from '../language/check.js';
@@ -84,19 +85,11 @@ const parser = StreamLanguage.define<{ state: ParserState }>({
   tokenTable: {},
 });
 
-export const highlighter = HighlightStyle.define([{ tag: tags.className, backgroundColor: 'red' }]);
-
-export interface CodeEditorProps {
-  contents: string;
-  getContents: React.MutableRefObject<null | (() => string)>;
-  updateListener: (update: ViewUpdate) => void;
-}
-
 function position(state: EditorState, pos: SourcePosition) {
   return state.doc.line(pos.line).from + pos.column - 1;
 }
 
-function issueToDiagnostic(issues: Issue[]): readonly Diagnostic[] {
+function issueToDiagnostic(view: EditorView, issues: Issue[]): readonly Diagnostic[] {
   return issues
     .map((issue): Diagnostic | null => {
       if (!issue.loc) return null;
@@ -114,16 +107,16 @@ function dusaLinter(view: EditorView): readonly Diagnostic[] {
   const contents = view.state.doc.toString();
   const tokens = parseWithStreamParser(dusaTokenizer, contents);
   if (tokens.issues.length > 0) {
-    return issueToDiagnostic(tokens.issues);
+    return issueToDiagnostic(view, tokens.issues);
   }
   const parsed = parseTokens(tokens.document);
   const parsedIssues = parsed.filter((decl): decl is Issue => decl.type === 'Issue');
   const parsedDecls = parsed.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue');
   if (parsedIssues.length > 0) {
-    return issueToDiagnostic(parsedIssues);
+    return issueToDiagnostic(view, parsedIssues);
   }
   const { errors } = check(parsedDecls);
-  return issueToDiagnostic(errors);
+  return issueToDiagnostic(view, errors);
 }
 
 /** highlightPredicates is based on simplifying the Linter infrastructure */
@@ -205,38 +198,15 @@ const highlightPredicatesPlugin = ViewPlugin.define((view: EditorView) => {
   };
 });
 
-export const editorChangeListener: { current: null | ((update: ViewUpdate) => void) } = {
-  current: null,
-};
-
-const state = EditorState.create({
-  doc: '',
-  extensions: [
-    parser,
-    syntaxHighlighting(classHighlighter),
-    lineNumbers(),
-    history(),
-    EditorView.lineWrapping,
-    EditorView.updateListener.of((update) => {
-      if (editorChangeListener.current !== null) {
-        editorChangeListener.current(update);
-      }
-    }),
-    linter(dusaLinter),
-    tooltips({ parent: document.body }),
-    highlightPredicatesPlugin,
-    highlightPredicatesState,
-    keymap.of([...defaultKeymap, ...historyKeymap]),
-  ],
-});
-const view = new EditorView({ state, parent: document.getElementById('codemirror-root')! });
-
-export function setEditorContents(contents: string) {
-  view.dispatch({
-    changes: { from: 0, to: view.state.doc.length, insert: contents },
-  });
-}
-
-export function getEditorContents() {
-  return view.state.doc.toString();
-}
+export const codemirrorExtensions = [
+  parser,
+  syntaxHighlighting(classHighlighter),
+  lineNumbers(),
+  history(),
+  EditorView.lineWrapping,
+  linter(dusaLinter),
+  tooltips({ parent: document.body }),
+  highlightPredicatesPlugin,
+  highlightPredicatesState,
+  keymap.of([...defaultKeymap, ...historyKeymap]),
+];
