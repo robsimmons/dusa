@@ -88,6 +88,7 @@ const parser = StreamLanguage.define<{ state: ParserState }>({
 function position(state: EditorState, pos: SourcePosition) {
   return state.doc.line(pos.line).from + pos.column - 1;
 }
+
 function issueToDiagnostic(view: EditorView, issues: Issue[]): readonly Diagnostic[] {
   return issues
     .map((issue): Diagnostic | null => {

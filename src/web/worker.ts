@@ -22,16 +22,16 @@ export interface WorkerStats {
   deadEnds: number;
 }
 
-export type AppToWorker =
-  | { type: 'load'; program: ParsedDeclaration[] }
-  | { type: 'stop' }
-  | { type: 'start' };
-
 export type WorkerToApp =
   | { type: 'error'; msg: string }
   | { type: 'stats'; stats: WorkerStats }
   | { type: 'solution'; facts: OutputFact[] }
   | { type: 'done' };
+
+export type AppToWorker =
+  | { type: 'load'; program: ParsedDeclaration[] }
+  | { type: 'stop' }
+  | { type: 'start' };
 
 const DEBUG_TRANSFORM = true;
 const DEBUG_EXECUTION = false;
