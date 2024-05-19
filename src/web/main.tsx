@@ -1,4 +1,5 @@
-import { setup } from 'sketchzone';
+import ReactDOM from 'react-dom/client';
+import { setup, type DOCUMENT, type Inspector as INSPECTOR } from 'sketchzone';
 
 import { codemirrorExtensions } from './codemirror.js';
 import {
@@ -7,7 +8,25 @@ import {
   GRAPH_GENERATION_EXAMPLE,
   ROCK_PAPER_SCISSORS,
 } from './examples.js';
-import createAndMountInspector from './inspector.js';
+import Inspector from './Inspector.js';
+
+function createAndMountInspector(elem: HTMLDivElement, doc: DOCUMENT): INSPECTOR {
+  const root = ReactDOM.createRoot(elem);
+  root.render(<Inspector doc={doc} visible={true} />);
+
+  return {
+    destroy: async () => {
+      root.unmount();
+      elem.innerText = '';
+    },
+    unmount: async () => {
+      root.render(<Inspector doc={doc} visible={false} />);
+    },
+    remount: async () => {
+      root.render(<Inspector doc={doc} visible={true} />);
+    },
+  };
+}
 
 setup({
   createAndMountInspector,

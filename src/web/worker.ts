@@ -42,7 +42,7 @@ let state: 'uninitialized' | 'in-progress' | 'error' | 'done' = 'uninitialized';
 let program: IndexedProgram;
 let tree: ChoiceTree;
 let path: [ChoiceTreeNode, Data | 'defer'][] = [];
-let stats: WorkerStats = {
+const stats: WorkerStats = {
   cycles: 0,
   deadEnds: 0,
 };

@@ -1,5 +1,4 @@
-import { DOCUMENT, type Inspector as INSPECTOR } from 'sketchzone';
-import ReactDOM from 'react-dom/client';
+import { DOCUMENT } from 'sketchzone';
 import React from 'react';
 import { parse } from '../language/dusa-parser.js';
 import { check } from '../language/check.js';
@@ -64,7 +63,7 @@ function Solution({ facts }: { facts: Fact[] }) {
   );
 }
 
-function Inspector({ doc, visible }: Props) {
+export default function Inspector({ doc, visible }: Props) {
   const [issues, setIssues] = React.useState<Issue[]>([]);
   const worker = React.useRef<Worker>();
   const post = React.useCallback(
@@ -120,7 +119,7 @@ function Inspector({ doc, visible }: Props) {
     return () => {
       worker.current!.terminate();
     };
-  }, [worker, doc]);
+  }, [post, doc]);
 
   React.useEffect(() => {
     if (!worker.current) {
@@ -129,7 +128,7 @@ function Inspector({ doc, visible }: Props) {
       post({ type: 'stop' });
       setState('paused');
     }
-  }, [visible]);
+  }, [post, visible]);
 
   return issues.length > 0 ? (
     <div id="inspector-error">
@@ -233,22 +232,4 @@ function Inspector({ doc, visible }: Props) {
       </div>
     </div>
   );
-}
-
-export default function createAndMountInspector(elem: HTMLDivElement, doc: DOCUMENT): INSPECTOR {
-  const root = ReactDOM.createRoot(elem);
-  root.render(<Inspector doc={doc} visible={true} />);
-
-  return {
-    destroy: async () => {
-      root.unmount();
-      elem.innerText = '';
-    },
-    unmount: async () => {
-      root.render(<Inspector doc={doc} visible={false} />);
-    },
-    remount: async () => {
-      root.render(<Inspector doc={doc} visible={true} />);
-    },
-  };
 }
