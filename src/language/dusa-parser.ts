@@ -113,7 +113,7 @@ export function parseHeadValue(t: Istream<Token>): {
   values: null | ParsedPattern[];
   exhaustive: boolean;
   end: SourcePosition | null;
-  deprecatedQuestionMark?: Token | undefined;
+  deprecatedQuestionMark?: Token;
 } {
   const isToken = chomp(t, 'is') || chomp(t, 'is?');
   if (!isToken) {
@@ -147,7 +147,11 @@ export function parseHeadValue(t: Istream<Token>): {
         break;
       }
     }
-    return { values, exhaustive, end: tok?.loc.end ?? end, deprecatedQuestionMark };
+    if (deprecatedQuestionMark === undefined) {
+      return { values, exhaustive, end: tok?.loc.end ?? end };
+    } else {
+      return { values, exhaustive, end: tok?.loc.end ?? end, deprecatedQuestionMark };
+    }
   } else {
     const value = parseFullTerm(t);
     if (value === null) {
@@ -218,6 +222,7 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
     } else {
       throw new DusaSyntaxError(
         `Unexpected directive '${tok.value}'. Valid directives are #builtin, #demand, and #forbid.`,
+        tok.loc,
       );
     }
   } else if (tok.type === ':-') {

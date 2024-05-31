@@ -53,3 +53,76 @@ test('Parser and pretty pretter idempotence', () => {
   expectRoundTripToParse('a is { b? }.', 'a is? b.');
   expectRoundTripToParse('a is { a, b? }.', 'a is? { a, b }.');
 });
+
+test('Test full parses', () => {
+  expect(parse('')).toStrictEqual({ document: [], errors: null });
+  expect(parse('#')).toStrictEqual({ document: [], errors: null });
+  expect(parse('# ')).toStrictEqual({ document: [], errors: null });
+
+  expect(parse('##')).toStrictEqual({
+    errors: [
+      {
+        type: 'Issue',
+        loc: { start: { column: 1, line: 1 }, end: { column: 3, line: 1 } },
+        msg: 'Expect # to be followed by a constant (directive) or space (comment)',
+        severity: 'error',
+      },
+    ],
+  });
+
+  expect(parse('#void')).toStrictEqual({
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: "Unexpected directive 'void'. Valid directives are #builtin, #demand, and #forbid.",
+        loc: { start: { column: 1, line: 1 }, end: { line: 1, column: 6 } },
+      },
+    ],
+  });
+
+  expect(parse('a is { tt? }.')).toStrictEqual({
+    document: [
+      {
+        type: 'Rule',
+        conclusion: {
+          name: 'a',
+          args: [],
+          exhaustive: false,
+          loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 13 } },
+          values: [
+            {
+              name: 'tt',
+              type: 'const',
+              args: [],
+              loc: { start: { line: 1, column: 8 }, end: { line: 1, column: 10 } },
+            },
+          ],
+        },
+        premises: [],
+        deprecatedQuestionMark: { start: { line: 1, column: 10 }, end: { line: 1, column: 11 } },
+        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 14 } },
+      },
+    ],
+    errors: null,
+  });
+
+  expect(parse('a.')).toStrictEqual({
+    document: [
+      {
+        type: 'Rule',
+        conclusion: {
+          name: 'a',
+          args: [],
+          exhaustive: true,
+          loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
+          values: null,
+        },
+        premises: [],
+        deprecatedQuestionMark: undefined,
+        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 3 } },
+      },
+    ],
+    errors: null,
+  });
+});

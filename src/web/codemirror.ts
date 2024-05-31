@@ -107,15 +107,18 @@ function dusaLinter(view: EditorView): readonly Diagnostic[] {
   const contents = view.state.doc.toString();
   const tokens = parseWithStreamParser(dusaTokenizer, contents);
   if (tokens.issues.length > 0) {
+    console.log({ tokenIssue: tokens.issues });
     return issueToDiagnostic(view, tokens.issues);
   }
   const parsed = parseTokens(tokens.document);
   const parsedIssues = parsed.filter((decl): decl is Issue => decl.type === 'Issue');
   const parsedDecls = parsed.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue');
   if (parsedIssues.length > 0) {
+    console.log({ parsedIssues });
     return issueToDiagnostic(view, parsedIssues);
   }
   const { errors } = check(parsedDecls);
+  console.log({ errors });
   return issueToDiagnostic(view, errors);
 }
 
