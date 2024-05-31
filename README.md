@@ -12,7 +12,7 @@ set programming.
 - [Source code at sourcehut](https://git.sr.ht/~robsimmons/dusa)
 - [Issue tracker at sourcehut](https://todo.sr.ht/~robsimmons/Dusa)
 
-Dusa was initially developed by Rob Simmons and Chris Martens wile Rob attended
+Dusa was initially developed by Rob Simmons and Chris Martens while Rob attended
 [Recurse Center](https://www.recurse.com/) in Fall 2023. Recurse center is a
 great place to think about ambitious projects like this in a supportive
 environment full of interesting people!
