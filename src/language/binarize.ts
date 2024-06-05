@@ -154,7 +154,10 @@ export function binarize(decls: [string, FlatDeclaration][]): BinarizedProgram {
         const { seed, newRules, conclusion, carriedVars } = binarizePremises(
           name,
           decl.premises,
-          freeVars(...decl.conclusion.args, ...(decl.conclusion.values ?? [])),
+          freeVars(
+            ...decl.conclusion.args,
+            ...(decl.conclusion.type === 'datalog' ? [] : decl.conclusion.values),
+          ),
         );
         seeds.push(seed);
         rules.push(...newRules, {

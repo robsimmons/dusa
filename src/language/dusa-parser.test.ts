@@ -30,8 +30,8 @@ test('Parser and pretty pretter idempotence', () => {
   expectRoundTripToParse('a :- 1 <= 1.');
 
   expectRoundTripToParse('a is z.');
-  expectRoundTripToParse('a is s z.');
-  expectRoundTripToParse('a is s (s (s z)).');
+  expectRoundTripToParse('a is s z.', 'a is (s z).');
+  expectRoundTripToParse('a is (s (s (s z))).');
   expectRoundTripToParse('a is { b }.', 'a is b.');
   expectRoundTripToParse('a is? b.');
   expectRoundTripToParse('a is? { b }.', 'a is? b.');
@@ -42,16 +42,19 @@ test('Parser and pretty pretter idempotence', () => {
   expectRoundTripToParse('a is 1.', 'a is 1.');
   expectRoundTripToParse('a is -1.', 'a is -1.');
   expectRoundTripToParse('a is "fish".', 'a is "fish".');
-  expectRoundTripToParse('a is ().', 'a.');
+  expectRoundTripToParse('a.');
+  expectRoundTripToParse('a is ().');
   expectRoundTripToParse('a is? ().');
   expectRoundTripToParse('a () is 3.', 'a () is 3.');
 
   expectRoundTripToParse('#forbid a.');
   expectRoundTripToParse('#demand a.');
+  expectRoundTripToParse('#builtin INT_PLUS plus');
+  expectRoundTripToParse('#builtin INT_PLUS plus.', '#builtin INT_PLUS plus');
 
   // Deprecated syntax
-  expectRoundTripToParse('a is { b? }.', 'a is? b.');
-  expectRoundTripToParse('a is { a, b? }.', 'a is? { a, b }.');
+  expectRoundTripToParse('a is { b? }.', '1 error(s)');
+  expectRoundTripToParse('a is { a, b? }.', '1 error(s)');
 });
 
 test('Test full parses', () => {
@@ -64,7 +67,7 @@ test('Test full parses', () => {
       {
         type: 'Issue',
         loc: { start: { column: 1, line: 1 }, end: { column: 3, line: 1 } },
-        msg: 'Expect # to be followed by a constant (directive) or space (comment)',
+        msg: "The symbol '#' should be followed by a constant (directive) or space (comment).",
         severity: 'error',
       },
     ],
@@ -81,30 +84,73 @@ test('Test full parses', () => {
     ],
   });
 
-  expect(parse('a is { tt? }.')).toStrictEqual({
+  expect(parse('#builtin')).toStrictEqual({
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, CHECK_GEQ, CHECK_GT, CHECK_LEQ, CHECK_LT, EQUAL, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, NOT_EQUAL, STRING_CONCAT.',
+        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 9 } },
+      },
+    ],
+  });
+
+  expect(parse('#builtin BOB')).toStrictEqual({
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, CHECK_GEQ, CHECK_GT, CHECK_LEQ, CHECK_LT, EQUAL, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, NOT_EQUAL, STRING_CONCAT.',
+        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 13 } },
+      },
+    ],
+  });
+
+  expect(parse('#builtin INT_PLUS')).toStrictEqual({
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: '#builtin INT_PLUS must be followed by a constant to use for the built-in operation.',
+        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 18 } },
+      },
+    ],
+  });
+
+  expect(parse('a is? tt.')).toStrictEqual({
     document: [
       {
         type: 'Rule',
         conclusion: {
           name: 'a',
           args: [],
-          exhaustive: false,
-          loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 13 } },
+          type: 'open',
+          loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 9 } },
           values: [
             {
               name: 'tt',
               type: 'const',
               args: [],
-              loc: { start: { line: 1, column: 8 }, end: { line: 1, column: 10 } },
+              loc: { start: { line: 1, column: 7 }, end: { line: 1, column: 9 } },
             },
           ],
         },
         premises: [],
-        deprecatedQuestionMark: { start: { line: 1, column: 10 }, end: { line: 1, column: 11 } },
-        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 14 } },
+        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
       },
     ],
     errors: null,
+  });
+
+  expect(parse('a is {tt?}.')).toStrictEqual({
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: "Expected to find ',', but instead found '?'.",
+        loc: { start: { line: 1, column: 9 }, end: { line: 1, column: 10 } },
+      },
+    ],
   });
 
   expect(parse('a.')).toStrictEqual({
@@ -114,12 +160,10 @@ test('Test full parses', () => {
         conclusion: {
           name: 'a',
           args: [],
-          exhaustive: true,
+          type: 'datalog',
           loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
-          values: null,
         },
         premises: [],
-        deprecatedQuestionMark: undefined,
         loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 3 } },
       },
     ],
