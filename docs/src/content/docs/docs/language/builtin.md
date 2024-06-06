@@ -15,10 +15,6 @@ relation. If you write
 then the identifiers `plus` and `s` will be treated, throughout the program, as a
 built-in definition instead of as a regular identifier.
 
-
-
-
-
 - The `NAT_ZERO` builtin takes no arguments and represents the natural number zero.
 - The `NAT_SUCC` builtin takes one natural number argument, and adds one to it. If
   `NAT_SUCC` is `s`, then the premise `s X == 0` will always fail, since `X` would
@@ -30,4 +26,4 @@ built-in definition instead of as a regular identifier.
 
 ## How built-in relations work
 
-All built-in relations 
+All built-in relations

@@ -1,5 +1,5 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { StreamLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
+import { StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { Diagnostic, linter } from '@codemirror/lint';
 import { EditorState, RangeSet, StateEffect, StateField } from '@codemirror/state';
 import {
@@ -19,7 +19,7 @@ import { StringStream } from '../parsing/string-stream.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
 import { SourcePosition } from '../client.js';
 import { parseTokens } from '../language/dusa-parser.js';
-import { ParsedDeclaration, visitPropsInProgram, visitTermsinProgram } from '../language/syntax.js';
+import { ParsedDeclaration } from '../language/syntax.js';
 import { check } from '../language/check.js';
 import { builtinModes } from '../language/dusa-builtins.js';
 

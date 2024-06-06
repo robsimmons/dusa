@@ -15,7 +15,6 @@ import {
 } from '@radix-ui/react-icons';
 import { escapeString } from '../datastructures/data.js';
 import { builtinModes } from '../language/dusa-builtins.js';
-import { ParsedDeclaration } from '../language/syntax.js';
 import { compile } from '../language/compile.js';
 
 interface Props {

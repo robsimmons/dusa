@@ -43,7 +43,7 @@ export function builtinModes(builtin: BUILT_IN_PRED): (mode: BuiltinMode) => boo
       return ({ args }) => args.length === 2 && args[0] === 'input' && args[1] === 'input';
 
     case 'EQUAL':
-      return ({ args, value }) => 
+      return ({ args, value }) =>
         args.length >= 2 && value === 'input' && (args[0] === 'input' || args[1] === 'input');
 
     case 'NOT_EQUAL':

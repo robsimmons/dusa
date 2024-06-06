@@ -31,7 +31,6 @@ export type AppToWorker =
   | { type: 'stop' }
   | { type: 'start' };
 
-const DEBUG_TRANSFORM = true;
 const DEBUG_EXECUTION = false;
 const CYCLE_LIMIT = 100;
 const STATS_UPDATE = 100;

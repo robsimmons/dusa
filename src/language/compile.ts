@@ -1,5 +1,5 @@
 import { binarize, binarizedProgramToString } from './binarize.js';
-import { BUILT_IN_PRED, builtinModes } from './dusa-builtins.js';
+import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { flattenDecls, flatProgramToString } from './flatten.js';
 import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
 import { ParsedDeclaration, ParsedTopLevel } from './syntax.js';
