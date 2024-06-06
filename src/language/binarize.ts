@@ -1,26 +1,6 @@
 import { FlatDeclaration, FlatPremise, flatPremiseToString } from './flatten.js';
-import { Pattern, freeVars, termToString } from './terms.js';
-
-/**
- * Binarization transformation
- *
- * The binarization transformation is straightforward in implementation and
- * concept. A rule of this form:
- *
- *     a: C :- P0, P2, ... Pn.
- *
- * is turned into a series of rule n+1 rules, each with either one or two premises:
- *
- *     $a1 <vars> :- $a0, P0.
- *     ...
- *     $a(i+1) <vars> :- $ai <vars>, Pi.
- *     ...
- *     C :- $a(n+1).
- */
-
-export function freeVarsBinarizedPremise(premise: FlatPremise): Set<string> {
-  return freeVars(...premise.args, premise.value);
-}
+import { Conclusion, headToString } from './syntax.js';
+import { freeVars } from './terms.js';
 
 export type BinarizedRule =
   | {
@@ -30,17 +10,12 @@ export type BinarizedRule =
       inVars: string[];
       outName: string;
       outVars: string[];
-      premiseNumber: number;
-      totalPremises: number;
     }
   | {
       type: 'Conclusion';
       inName: string;
       inVars: string[];
-      name: string;
-      args: Pattern[];
-      values: Pattern[];
-      exhaustive: boolean;
+      conclusion: Conclusion;
     };
 
 export interface BinarizedProgram {
@@ -57,11 +32,7 @@ function binarizedRuleToString(rule: BinarizedRule): string {
         rule.inName
       }${rule.inVars.map((v) => ` ${v}`).join('')}, ${flatPremiseToString(rule.premise)}.`;
     case 'Conclusion':
-      return `${rule.name}${rule.args
-        .map((arg) => ` ${termToString(arg)}`)
-        .join('')} is { ${rule.values.map((arg) => termToString(arg)).join(', ')}${
-        rule.exhaustive ? '' : '?'
-      } } :- $${rule.inName}${rule.inVars.map((v) => ` ${v}`).join('')}.`;
+      return `${headToString(rule.conclusion)} :- $${rule.inName}${rule.inVars.map((v) => ` ${v}`).join('')}.`;
   }
 }
 
@@ -94,10 +65,9 @@ function binarizePremises(
 
   const knownFreeVars = new Set<string>();
   let knownCarriedVars: string[] = [];
-  const totalPremises = premises.length;
   const newRules = premises.map((premise, premiseNumber): BinarizedRule => {
-    const inName = `${name}${premiseNumber}`;
-    const outName = `${name}${premiseNumber + 1}`;
+    const inName = `${name}-${premiseNumber}`;
+    const outName = `${name}-${premiseNumber + 1}`;
 
     const inVars = [...knownCarriedVars];
     for (const v of freeVars(...premise.args, premise.value)) {
@@ -114,25 +84,53 @@ function binarizePremises(
       inVars,
       outName,
       outVars: [...knownCarriedVars],
-      premiseNumber,
-      totalPremises,
     };
   });
 
   return {
-    seed: `${name}0`,
-    conclusion: `${name}${premises.length}`,
+    seed: `${name}-0`,
+    conclusion: `${name}-${premises.length}`,
     newRules,
     carriedVars: knownCarriedVars.filter((v) => liveVars.has(v)),
   };
 }
-export function binarize(decls: [string, FlatDeclaration][]): BinarizedProgram {
+
+/**
+ * Perform the binarization transformation, which is straightforward in implementation and
+ * concept. A uniquely-named rule of this form:
+ *
+ *     a: C :- P0, P2, ... Pn.
+ *
+ * is turned into a series of rule n+1 rules, each with either one or two premises:
+ *
+ *     $a-1 <vars> :- $a0, P0.
+ *     ...
+ *     $a-(i+1) <vars> :- $ai <vars>, Pi.
+ *     ...
+ *     C :- $a-(n+1) <vars>.
+ *
+ * All the remaining binary rules have a very uniform structure:
+ *
+ *     $a-(i+1) <vars>  :- $ai    <vars>, Pi.
+ *     -------- -------    ---    ------  --
+ *     outName  outVars    inName inVars  premise
+ *
+ * And unary rules similarly have the structure
+ *
+ *     H          :- $an    <vars>
+ *     ----------    ------ ------
+ *     conclusion    inName inVars
+ *
+ * One of the critical properties of a binarized program is that each introduced predicate
+ * only appears as a *premise* of a single rule.
+ */
+export function binarize(decls: { name: string; decl: FlatDeclaration }[]): BinarizedProgram {
   const seeds: string[] = [];
   const rules: BinarizedRule[] = [];
   const forbids: string[] = [];
   const demands: string[] = [];
 
-  for (const [name, decl] of decls) {
+  for (const { name, decl } of decls) {
     switch (decl.type) {
       case 'Forbid': {
         const { seed, newRules, conclusion } = binarizePremises(name, decl.premises, new Set());
@@ -164,10 +162,7 @@ export function binarize(decls: [string, FlatDeclaration][]): BinarizedProgram {
           type: 'Conclusion',
           inName: conclusion,
           inVars: carriedVars,
-          name: decl.conclusion.name,
-          args: decl.conclusion.args,
-          values: decl.conclusion.values ?? [{ type: 'triv' }],
-          exhaustive: decl.conclusion.exhaustive,
+          conclusion: decl.conclusion,
         });
       }
     }

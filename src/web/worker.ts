@@ -1,6 +1,4 @@
-import { ParsedDeclaration } from '../language/syntax.js';
 import { Fact as OutputFact, dataToTerm } from '../termoutput.js';
-import { compile } from '../language/compile.js';
 import { listFacts, makeInitialDb } from '../engine/forwardengine.js';
 import {
   ChoiceTree,
@@ -29,7 +27,7 @@ export type WorkerToApp =
   | { type: 'done' };
 
 export type AppToWorker =
-  | { type: 'load'; program: ParsedDeclaration[] }
+  | { type: 'load'; program: IndexedProgram }
   | { type: 'stop' }
   | { type: 'start' };
 
@@ -130,7 +128,7 @@ onmessage = (event: MessageEvent<AppToWorker>): true => {
       return true;
     } else {
       try {
-        program = compile(event.data.program, DEBUG_TRANSFORM);
+        program = event.data.program;
         tree = { type: 'leaf', db: makeInitialDb(program) };
         loopHandle = setTimeout(loop);
         state = 'in-progress';

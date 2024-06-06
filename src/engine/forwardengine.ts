@@ -1,6 +1,6 @@
 import { AttributeMap } from '../datastructures/attributemap.js';
 import PQ from '../datastructures/binqueue.js';
-import { Data, dataToString } from '../datastructures/data.js';
+import { Data, TRIVIAL, dataToString } from '../datastructures/data.js';
 import { TrieMap } from '../datastructures/datamap.js';
 import {
   IndexInsertionRule,
@@ -56,7 +56,8 @@ export function makeInitialDb(program: IndexedProgram): Database {
   };
 }
 
-/* A decision will always take the form "this attribute takes one of these values", or
+/**
+ * A decision will always take the form "this attribute takes one of these values", or
  * "this attribute takes one of these values, or maybe some other values."
  *
  * Given a database, we can prune any possibilities that are inconsistent with respect to that
@@ -108,20 +109,26 @@ function stepConclusion(rule: IndexedConclusion, inArgs: Data[], db: Database): 
   for (const [index, v] of rule.inVars.entries()) {
     substitution[v] = inArgs[index];
   }
-  const args = rule.args.map((arg) => apply(substitution, arg));
-  let { values, exhaustive } = prune(
-    rule.name,
-    args,
-    rule.values.map((value) => apply(substitution, value)),
-    rule.exhaustive,
-    db,
-  );
+  const args = rule.conclusion.args.map((arg) => apply(substitution, arg));
+  const conc =
+    rule.conclusion.type === 'datalog'
+      ? { values: [TRIVIAL], exhaustive: true }
+      : rule.conclusion.type === 'closed'
+        ? {
+            values: rule.conclusion.values.map((value) => apply(substitution, value)),
+            exhaustive: true,
+          }
+        : {
+            values: rule.conclusion.values.map((value) => apply(substitution, value)),
+            exhaustive: false,
+          };
+  let { values, exhaustive } = prune(rule.conclusion.name, args, conc.values, conc.exhaustive, db);
 
   // Merge the conclusion with any existing deferred values
-  const [deferredChoice, deferredChoices] = db.deferredChoices.remove(rule.name, args) ?? [
-    null,
-    db.deferredChoices,
-  ];
+  const [deferredChoice, deferredChoices] = db.deferredChoices.remove(
+    rule.conclusion.name,
+    args,
+  ) ?? [null, db.deferredChoices];
   if (deferredChoice !== null) {
     if (exhaustive && deferredChoice.exhaustive) {
       // Intersect values
@@ -149,16 +156,20 @@ function stepConclusion(rule: IndexedConclusion, inArgs: Data[], db: Database): 
   if (exhaustive && values.length === 1) {
     // Time to assert a fact
     db.deferredChoices = deferredChoices;
-    return insertFact(rule.name, args, values[0], db);
+    return insertFact(rule.conclusion.name, args, values[0], db);
   }
   // Time to defer some choices
-  db.deferredChoices = deferredChoices.set(rule.name, args, { values, exhaustive });
+  db.deferredChoices = deferredChoices.set(rule.conclusion.name, args, { values, exhaustive });
   return true;
 }
 
 function stepFact(rules: IndexInsertionRule[], args: Data[], value: Data, db: Database): void {
   for (const rule of rules) {
-    let substitution: Substitution | null = match({}, rule.value, value);
+    let substitution: Substitution | null = match(
+      {},
+      rule.value === null ? { type: 'trivial' } : rule.value,
+      value,
+    );
     for (const [index, pattern] of rule.args.entries()) {
       if (substitution === null) break;
       substitution = match(substitution, pattern, args[index]);

@@ -1,5 +1,5 @@
 import { BUILT_IN_PRED } from '../language/dusa-builtins.js';
-import { BOOL_FALSE, BOOL_TRUE, Data, expose, hide } from '../datastructures/data.js';
+import { BOOL_FALSE, BOOL_TRUE, TRIVIAL, Data, expose, hide } from '../datastructures/data.js';
 import { Substitution, equal, match } from './dataterm.js';
 import { Pattern } from '../language/terms.js';
 
@@ -90,37 +90,47 @@ export function* runBuiltinBackward(
       return;
     }
     case 'EQUAL': {
-      if (v.type !== 'bool') return;
+      if (v.type !== 'trivial') return;
       let actualValue: Data | null = null;
       for (const arg of prefix.concat(postfix)) {
         if (actualValue === null) {
           actualValue = arg;
         } else {
           if (!equal(actualValue, arg)) {
-            if (!v.value) {
-              yield substitution;
-            }
             return;
           }
         }
       }
-      if (actualValue === null) {
-        yield substitution;
-        return;
-      }
-      const subst = match(substitution, matchPosition, actualValue);
-      if (!v.value && subst === null) {
-        // If we are checking whether equality outputs #ff, then we require no match
-        yield substitution;
-        return;
-      } else if (v.value && subst !== null) {
-        // If we are checking whether equality outputs #tt, then we require a match
+      const subst = match(substitution, matchPosition, actualValue!);
+      if (subst !== null) {
         yield subst;
-        return;
+      }
+      return;
+    }
+    case 'NOT_EQUAL': {
+      if (v.type !== 'trivial') return;
+      let actualValue: Data | null = null;
+      for (const arg of prefix.concat(postfix)) {
+        if (actualValue === null) {
+          actualValue = arg;
+        } else {
+          if (equal(actualValue, arg)) {
+            yield substitution;
+            return;
+          }
+        }
+      }
+      const subst = match(substitution, matchPosition, actualValue!);
+      if (subst === null) {
+        yield substitution;
       }
       return;
     }
   }
+}
+
+function bool(b: boolean): Data {
+  return b ? BOOL_TRUE : BOOL_FALSE;
 }
 
 export function runBuiltinForward(pred: BUILT_IN_PRED, args: Data[]): Data | null {
@@ -133,16 +143,30 @@ export function runBuiltinForward(pred: BUILT_IN_PRED, args: Data[]): Data | nul
       return hide({ type: 'int', value: 0n });
     case 'EQUAL':
       for (let i = 1; i < args.length; i++) {
-        if (!equal(args[i - 1], args[i])) return BOOL_FALSE;
+        if (!equal(args[i - 1], args[i])) return null;
       }
-      return BOOL_TRUE;
-    case 'GEQ':
-    case 'GT': {
+      return TRIVIAL;
+    case 'NOT_EQUAL':
+      for (let i = 1; i < args.length; i++) {
+        if (!equal(args[i - 1], args[i])) return TRIVIAL;
+      }
+      return null;
+    case 'CHECK_GEQ':
+    case 'CHECK_GT':
+    case 'CHECK_LEQ':
+    case 'CHECK_LT': {
       const [a, b] = args.map(expose);
       if (a.type !== 'int' || b.type !== 'int') return null;
-      if (a.value > b.value) return BOOL_TRUE;
-      if (a.value < b.value) return BOOL_FALSE;
-      return pred === 'GEQ' ? BOOL_TRUE : BOOL_FALSE;
+      let compare: 'gt' | 'eq' | 'lt' = 'eq';
+      if (a.value > b.value) compare = 'gt';
+      if (a.value < b.value) compare = 'lt';
+      return pred === 'CHECK_GEQ'
+        ? bool(compare === 'gt' || compare === 'eq')
+        : pred === 'CHECK_GT'
+          ? bool(compare === 'gt')
+          : pred === 'CHECK_LEQ'
+            ? bool(compare === 'lt' || compare === 'eq')
+            : bool(compare === 'lt');
     }
     case 'STRING_CONCAT': {
       const strings: string[] = [];

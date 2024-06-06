@@ -1,7 +1,8 @@
 import { binarize, binarizedProgramToString } from './binarize.js';
-import { flatProgramToString, flattenAndName } from './flatten.js';
+import { BUILT_IN_PRED, builtinModes } from './dusa-builtins.js';
+import { flattenDecls, flatProgramToString } from './flatten.js';
 import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
-import { ParsedDeclaration } from './syntax.js';
+import { ParsedDeclaration, ParsedTopLevel } from './syntax.js';
 
 export function indexToRuleName(index: number): string {
   if (index >= 26) {
@@ -11,14 +12,44 @@ export function indexToRuleName(index: number): string {
 }
 
 /** Compiles a *checked* program */
-export function compile(decls: ParsedDeclaration[], debug = false): IndexedProgram {
-  const flattened = flattenAndName(decls);
+export function compile(
+  builtins: Map<string, BUILT_IN_PRED>,
+  arities: Map<string, { args: number; value: boolean }>,
+  program: ParsedTopLevel[],
+  debug = false,
+): IndexedProgram {
+  const decls = program.filter((x): x is ParsedDeclaration => x.type !== 'Builtin');
+
+  const flattened = flattenDecls(
+    new Map([
+      ...[...builtins.entries()].map<[string, BUILT_IN_PRED]>(([name, builtin]) => [name, builtin]),
+      ...[...arities.keys()].map<[string, undefined]>((name) => [name, undefined]),
+    ]),
+    decls,
+  );
+
+  const nameMap = new Map();
+  function nextName(str: string) {
+    const count = nameMap.get(str);
+    if (count === undefined) {
+      nameMap.set(str, 2);
+      return `${str}-1`;
+    } else {
+      nameMap.set(str, count + 1);
+      return `${str}-${count}`;
+    }
+  }
+  const named = flattened.map((decl) => ({
+    decl,
+    name: decl.type === 'Rule' ? nextName(decl.conclusion.name) : nextName(decl.type),
+  }));
+
   if (debug) {
     console.log(`Form 1: flattened program
-${flatProgramToString(flattened)}`);
+${flatProgramToString(named)}`);
   }
 
-  const binarized = binarize(flattened);
+  const binarized = binarize(named);
   if (debug) {
     console.log(`\nForm 2: Binarized program
 ${binarizedProgramToString(binarized)}`);

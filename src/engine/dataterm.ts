@@ -10,7 +10,7 @@ export function match(
 ): null | Substitution {
   const dv = expose(data);
   switch (pattern.type) {
-    case 'triv':
+    case 'trivial':
       if (pattern.type !== dv.type) return null;
       return substitution;
     case 'int':
@@ -46,7 +46,7 @@ export function match(
 
 export function apply(substitution: Substitution, pattern: Pattern): Data {
   switch (pattern.type) {
-    case 'triv':
+    case 'trivial':
     case 'bool':
     case 'string': {
       return hide(pattern);

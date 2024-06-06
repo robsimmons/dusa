@@ -5,16 +5,17 @@ import {
   ParsedDeclaration,
   ParsedPremise,
   ParsedTopLevel,
-  freeVarsPremise,
   headToString,
 } from './syntax.js';
-import { ParsedPattern, Pattern, termToString, theseVarsGroundThisPattern } from './terms.js';
+import { ParsedPattern, Pattern, termToString } from './terms.js';
 
 export type FlatPremise = {
   args: Pattern[];
-  value: Pattern | null;
   loc: SourceLocation;
-} & ({ type: 'builtin'; name: BUILT_IN_PRED } | { type: 'fact'; name: string });
+} & (
+  | { type: 'builtin'; name: BUILT_IN_PRED; value: Pattern }
+  | { type: 'fact'; name: string; value: Pattern | null }
+);
 
 export type FlatDeclaration =
   | { type: 'Forbid'; premises: FlatPremise[]; loc?: SourceLocation }
@@ -26,26 +27,6 @@ export type FlatDeclaration =
       loc?: SourceLocation;
     };
 
-/*
- * The flattening transformation is a relatively naive transformation determining the order in
- * which built-in terms and functional propositions in term position will be sequenced.
- *
- * A functional predicate is required to have only ground arguments, so it's boosted out
- * before the premise:
- *
- *     #demand f X Y, h (plus X Y).
- *       -->
- *     #demand f X Y, plus X Y is Z, h Z
- *
- * These effects stack:
- *
- *    #demand f X Y, g (plus (plus X X) (plus X Y)).
- *      -->
- *    #demand f X Y, plus X X is X2, plus X Y is Z, plus X2 Z is G, g G.
- *
- * Built-in predicates and functional propositions are treated the same way in the flattening
- * transformation, but
- */
 function flattenPattern(
   preds: Map<string, undefined | BUILT_IN_PRED>,
   counter: { current: number },
@@ -111,7 +92,7 @@ function flattenPremise(
       return [
         ...before,
         builtin
-          ? { type: 'builtin', name: builtin, args, value: valueResult.pattern, loc }
+          ? { type: 'builtin', name: builtin, args, value: valueResult.pattern!, loc }
           : { type: 'fact', name: premise.name, args, value: valueResult.pattern, loc },
       ];
     }
@@ -213,6 +194,28 @@ function flattenDecl(
   }
 }
 
+/**
+ * Perform the flattening transformation on a checked program.
+ *
+ * The flattening transformation resolves uses of built-in propositions and uses of
+ * function relations within terms. It's partially a very naive query planner.
+ *
+ * Because, at present, a functional predicate in term position is required to have only ground
+ * arguments, any functional relations get boosted out before the premise:
+ *
+ *     #demand f X Y, h (plus X Y).
+ *       -->
+ *     #demand f X Y, plus X Y is Z, h Z
+ *
+ * These effects stack:
+ *
+ *     #demand f X Y, g (plus (plus X X) (plus X Y)).
+ *       -->
+ *     #demand f X Y, plus X X is X2, plus X Y is Z, plus X2 Z is G, g G.
+ *
+ * Built-in predicates and functional propositions are treated the same way in the flattening
+ * transformation.
+ */
 export function flattenDecls(
   preds: Map<string, undefined | BUILT_IN_PRED>,
   decls: ParsedTopLevel[],
@@ -221,7 +224,6 @@ export function flattenDecls(
     .filter((decl): decl is ParsedDeclaration => decl.type !== 'Builtin')
     .map((decl) => flattenDecl(preds, decl));
 }
-
 
 export function flatPremiseToString(premise: FlatPremise) {
   const args = premise.args.map((arg) => termToString(arg));
@@ -244,8 +246,6 @@ export function flatDeclToString(decl: FlatDeclaration) {
   }
 }
 
-/*
-export function flatProgramToString(flatProgram: [string, FlatDeclaration][]) {
-  return flatProgram.map(flatDeclToString).join('\n');
+export function flatProgramToString(flatProgram: { name: string; decl: FlatDeclaration }[]) {
+  return flatProgram.map(({ name, decl }) => `${name}: ${flatDeclToString(decl)}`).join('\n');
 }
-*/

@@ -261,7 +261,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
         }
 
         if (stream.eat(TRIV_TOKEN)) {
-          return { state, tag: 'literal', tree: { type: 'triv', loc: stream.matchedLocation() } };
+          return { state, tag: 'unit', tree: { type: 'triv', loc: stream.matchedLocation() } };
         }
 
         if (stream.eat('"')) {
@@ -280,7 +280,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
         for (const p of punct) {
           if (stream.eat(p)) {
             return {
-              state: p === '.' ? { ...state, type: 'Normal' } : state,
+              state: state,
               tag: 'punctuation',
               issues: [],
               tree: { type: p, loc: stream.matchedLocation() },
@@ -310,28 +310,28 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
           if (tok.match(VAR_TOKEN)) {
             return {
               state,
-              tag: 'variableName.special',
+              tag: 'variableName',
               tree: { type: 'var', value: tok, loc: stream.matchedLocation() },
             };
           }
           if (tok.match(INT_TOKEN)) {
             return {
               state,
-              tag: 'literal',
+              tag: 'integer',
               tree: { type: 'int', value: parseInt(tok), loc: stream.matchedLocation() },
             };
           }
           if (tok.match(CONST_TOKEN)) {
             return {
               state,
-              tag: 'variableName',
+              tag: 'literal',
               tree: { type: 'const', value: tok, loc: stream.matchedLocation() },
             };
           }
           if (tok.match(WILDCARD_TOKEN)) {
             return {
               state,
-              tag: 'variableName.local',
+              tag: 'variableName',
               tree: { type: 'wildcard', value: tok, loc: stream.matchedLocation() },
             };
           }

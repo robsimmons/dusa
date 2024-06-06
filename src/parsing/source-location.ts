@@ -3,6 +3,7 @@
 export interface SourcePosition {
   line: number; // >= 1
   column: number; // >= 1
+  index: number; // >= 0
 }
 
 export interface SourceLocation {

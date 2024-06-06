@@ -66,7 +66,7 @@ test('Test full parses', () => {
     errors: [
       {
         type: 'Issue',
-        loc: { start: { column: 1, line: 1 }, end: { column: 3, line: 1 } },
+        loc: { start: { column: 1, line: 1, index: 0 }, end: { column: 3, line: 1, index: 2 } },
         msg: "The symbol '#' should be followed by a constant (directive) or space (comment).",
         severity: 'error',
       },
@@ -79,7 +79,7 @@ test('Test full parses', () => {
         type: 'Issue',
         severity: 'error',
         msg: "Unexpected directive 'void'. Valid directives are #builtin, #demand, and #forbid.",
-        loc: { start: { column: 1, line: 1 }, end: { line: 1, column: 6 } },
+        loc: { start: { column: 1, line: 1, index: 0 }, end: { line: 1, column: 6, index: 5 } },
       },
     ],
   });
@@ -90,7 +90,7 @@ test('Test full parses', () => {
         type: 'Issue',
         severity: 'error',
         msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, CHECK_GEQ, CHECK_GT, CHECK_LEQ, CHECK_LT, EQUAL, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, NOT_EQUAL, STRING_CONCAT.',
-        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 9 } },
+        loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 9, index: 8 } },
       },
     ],
   });
@@ -101,7 +101,7 @@ test('Test full parses', () => {
         type: 'Issue',
         severity: 'error',
         msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, CHECK_GEQ, CHECK_GT, CHECK_LEQ, CHECK_LT, EQUAL, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, NOT_EQUAL, STRING_CONCAT.',
-        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 13 } },
+        loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 13, index: 12 } },
       },
     ],
   });
@@ -112,7 +112,7 @@ test('Test full parses', () => {
         type: 'Issue',
         severity: 'error',
         msg: '#builtin INT_PLUS must be followed by a constant to use for the built-in operation.',
-        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 18 } },
+        loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 18, index: 17 } },
       },
     ],
   });
@@ -125,18 +125,21 @@ test('Test full parses', () => {
           name: 'a',
           args: [],
           type: 'open',
-          loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 9 } },
+          loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 9, index: 8 } },
           values: [
             {
               name: 'tt',
               type: 'const',
               args: [],
-              loc: { start: { line: 1, column: 7 }, end: { line: 1, column: 9 } },
+              loc: {
+                start: { line: 1, column: 7, index: 6 },
+                end: { line: 1, column: 9, index: 8 },
+              },
             },
           ],
         },
         premises: [],
-        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 10 } },
+        loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 10, index: 9 } },
       },
     ],
     errors: null,
@@ -148,7 +151,7 @@ test('Test full parses', () => {
         type: 'Issue',
         severity: 'error',
         msg: "Expected to find ',', but instead found '?'.",
-        loc: { start: { line: 1, column: 9 }, end: { line: 1, column: 10 } },
+        loc: { start: { line: 1, column: 9, index: 8 }, end: { line: 1, column: 10, index: 9 } },
       },
     ],
   });
@@ -161,10 +164,10 @@ test('Test full parses', () => {
           name: 'a',
           args: [],
           type: 'datalog',
-          loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } },
+          loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 2, index: 1 } },
         },
         premises: [],
-        loc: { start: { line: 1, column: 1 }, end: { line: 1, column: 3 } },
+        loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 3, index: 2 } },
       },
     ],
     errors: null,

@@ -1,6 +1,6 @@
 import { Token, dusaTokenizer } from './dusa-tokenizer.js';
 import { ParsedPattern } from './terms.js';
-import { ParsedConclusion, ParsedDeclaration, ParsedPremise, ParsedTopLevel } from './syntax.js';
+import { ParsedConclusion, ParsedPremise, ParsedTopLevel } from './syntax.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
 import { SourceLocation, SourcePosition } from '../parsing/source-location.js';
 import { BUILT_IN_MAP, isBuiltIn } from './dusa-builtins.js';

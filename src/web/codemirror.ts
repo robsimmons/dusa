@@ -1,5 +1,5 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { StreamLanguage, syntaxHighlighting } from '@codemirror/language';
+import { StreamLanguage, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { Diagnostic, linter } from '@codemirror/lint';
 import { EditorState, RangeSet, StateEffect, StateField } from '@codemirror/state';
 import {
@@ -21,10 +21,11 @@ import { SourcePosition } from '../client.js';
 import { parseTokens } from '../language/dusa-parser.js';
 import { ParsedDeclaration, visitPropsInProgram, visitTermsinProgram } from '../language/syntax.js';
 import { check } from '../language/check.js';
+import { builtinModes } from '../language/dusa-builtins.js';
 
 const bogusPosition = {
-  start: { line: 1, column: 1 },
-  end: { line: 1, column: 2 },
+  start: { line: 1, column: 1, index: 0 },
+  end: { line: 1, column: 2, index: 1 },
 };
 /** Create a Codemirror-compliant parser from our stream parser.
  * The token method is given a Codemirror-style StringStream,
@@ -104,27 +105,32 @@ function issueToDiagnostic(view: EditorView, issues: Issue[]): readonly Diagnost
 }
 
 function dusaLinter(view: EditorView): readonly Diagnostic[] {
-  const contents = view.state.doc.toString();
-  const tokens = parseWithStreamParser(dusaTokenizer, contents);
-  if (tokens.issues.length > 0) {
-    console.log({ tokenIssue: tokens.issues });
-    return issueToDiagnostic(view, tokens.issues);
+  const lexed = parseWithStreamParser(dusaTokenizer, view.state.doc.toString());
+  if (lexed.issues.length > 0) {
+    return issueToDiagnostic(view, lexed.issues);
   }
-  const parsed = parseTokens(tokens.document);
+
+  const parsed = parseTokens(lexed.document);
   const parsedIssues = parsed.filter((decl): decl is Issue => decl.type === 'Issue');
-  const parsedDecls = parsed.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue');
   if (parsedIssues.length > 0) {
-    console.log({ parsedIssues });
     return issueToDiagnostic(view, parsedIssues);
   }
-  const { errors } = check(parsedDecls);
-  console.log({ errors });
+
+  const { errors } = check(
+    builtinModes,
+    parsed.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue'),
+  );
+
   return issueToDiagnostic(view, errors);
 }
 
 /** highlightPredicates is based on simplifying the Linter infrastructure */
-const highlightPredicatesUpdateEffect = StateEffect.define<[number, number][]>();
-const highlightPredicatesState = StateField.define<DecorationSet>({
+const highlightDetailUpdateEffect = StateEffect.define<{
+  predicates: [number, number][];
+  builtins: [number, number][];
+  builtinDecls: [number, number][];
+}>();
+const highlightDetailState = StateField.define<DecorationSet>({
   create() {
     return RangeSet.empty;
   },
@@ -134,13 +140,25 @@ const highlightPredicatesState = StateField.define<DecorationSet>({
     }
 
     for (const effect of transaction.effects) {
-      if (effect.is(highlightPredicatesUpdateEffect)) {
+      if (effect.is(highlightDetailUpdateEffect)) {
         return RangeSet.of(
-          effect.value.map(([from, to]) => ({
-            from,
-            to,
-            value: Decoration.mark({ inclusive: true, class: 'tok-predicate' }),
-          })),
+          [
+            ...effect.value.predicates.map(([from, to]) => ({
+              from,
+              to,
+              value: Decoration.mark({ inclusive: true, class: 'tok-user-predicate' }),
+            })),
+            ...effect.value.builtins.map(([from, to]) => ({
+              from,
+              to,
+              value: Decoration.mark({ inclusive: true, class: 'tok-builtin-predicate' }),
+            })),
+            ...effect.value.builtinDecls.map(([from, to]) => ({
+              from,
+              to,
+              value: Decoration.mark({ inclusive: true, class: 'tok-builtin-name' }),
+            })),
+          ],
           true,
         );
       }
@@ -151,7 +169,7 @@ const highlightPredicatesState = StateField.define<DecorationSet>({
     return EditorView.decorations.from(field);
   },
 });
-const highlightPredicatesPlugin = ViewPlugin.define((view: EditorView) => {
+const highlightDetailPlugin = ViewPlugin.define((view: EditorView) => {
   const delay = 750;
   let timeout: null | ReturnType<typeof setTimeout> = setTimeout(() => run(), delay);
   let nextUpdateCanHappenOnlyAfter = Date.now() + delay;
@@ -166,20 +184,31 @@ const highlightPredicatesPlugin = ViewPlugin.define((view: EditorView) => {
       const tokens = parseWithStreamParser(dusaTokenizer, contents);
       if (tokens.issues.length > 0) return;
       const parsed = parseTokens(tokens.document);
-      const ranges: [number, number][] = [];
-      const preds = new Set<string>();
-      for (const prop of visitPropsInProgram(parsed)) {
-        const start = position(view.state, prop.loc.start);
-        ranges.push([start, start + prop.name.length]);
-        preds.add(prop.name);
-      }
-      for (const term of visitTermsinProgram(parsed)) {
-        if (term.type === 'const' && preds.has(term.name)) {
-          const start = position(view.state, term.loc.start);
-          ranges.push([start, start + term.name.length]);
-        }
-      }
-      view.dispatch({ effects: [highlightPredicatesUpdateEffect.of(ranges)] });
+      const { arities, builtins } = check(
+        builtinModes,
+        parsed.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue'),
+      );
+
+      view.dispatch({
+        effects: [
+          highlightDetailUpdateEffect.of({
+            predicates: tokens.document
+              .filter((tok) => tok.type === 'const' && arities.has(tok.value))
+              .map((tok) => [tok.loc.start.index, tok.loc.end.index]),
+            builtins: tokens.document
+              .filter((tok) => tok.type === 'const' && builtins.has(tok.value))
+              .map((tok) => [tok.loc.start.index, tok.loc.end.index]),
+            builtinDecls: tokens.document
+              .map((tok, i) => {
+                if (tok.type !== 'hashdirective' || tok.value !== 'builtin') return null;
+                const next = tokens.document[i + 1];
+                if (next?.type !== 'var') return null;
+                return [next.loc.start.index, next.loc.end.index];
+              })
+              .filter((x): x is [number, number] => x !== null),
+          }),
+        ],
+      });
     }
   }
 
@@ -209,7 +238,7 @@ export const codemirrorExtensions = [
   EditorView.lineWrapping,
   linter(dusaLinter),
   tooltips({ parent: document.body }),
-  highlightPredicatesPlugin,
-  highlightPredicatesState,
+  highlightDetailPlugin,
+  highlightDetailState,
   keymap.of([...defaultKeymap, ...historyKeymap]),
 ];

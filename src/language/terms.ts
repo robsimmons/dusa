@@ -43,7 +43,7 @@ export function termToString(t: Pattern | ParsedPattern, needsParens = true): st
 
 export function theseVarsGroundThisPattern<T>(
   vars: Set<string> | Map<string, T>,
-  t: ParsedPattern,
+  t: Pattern,
 ): boolean {
   switch (t.type) {
     case 'trivial':
@@ -54,8 +54,37 @@ export function theseVarsGroundThisPattern<T>(
     case 'wildcard':
       return false;
     case 'const':
-      return t.args.every((arg: ParsedPattern) => theseVarsGroundThisPattern(vars, arg));
+      return t.args.every((arg: Pattern) => theseVarsGroundThisPattern(vars, arg));
     case 'var':
       return vars.has(t.name);
   }
+}
+
+function freeVarsAccum(s: Set<string>, p: Pattern | ParsedPattern) {
+  switch (p.type) {
+    case 'var':
+      s.add(p.name);
+      return;
+    case 'trivial':
+    case 'int':
+    case 'bool':
+    case 'string':
+    case 'wildcard':
+      return;
+    case 'const':
+      for (const arg of p.args) {
+        freeVarsAccum(s, arg);
+      }
+      return;
+  }
+}
+
+export function freeVars(...patterns: (Pattern | ParsedPattern | null)[]): Set<string> {
+  const s = new Set<string>();
+  for (const pattern of patterns) {
+    if (pattern !== null) {
+      freeVarsAccum(s, pattern);
+    }
+  }
+  return s;
 }

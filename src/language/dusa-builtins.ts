@@ -44,11 +44,11 @@ export function builtinModes(builtin: BUILT_IN_PRED): (mode: BuiltinMode) => boo
 
     case 'EQUAL':
       return ({ args, value }) => 
-        args.length === 2 && value === 'input' && (args[0] === 'input' || args[1] === 'input');
+        args.length >= 2 && value === 'input' && (args[0] === 'input' || args[1] === 'input');
 
     case 'NOT_EQUAL':
       return ({ args, value }) =>
-        args.length === 2 &&
+        args.length >= 2 &&
         value === 'input' &&
         args.every((arg) => arg !== 'output') &&
         (args[0] === 'input' || args[1] === 'input');

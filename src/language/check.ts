@@ -8,7 +8,7 @@ import {
   visitPropsInProgram,
   visitTermsInDecl,
 } from './syntax.js';
-import { ParsedPattern, theseVarsGroundThisPattern } from './terms.js';
+import { ParsedPattern, termToString, theseVarsGroundThisPattern } from './terms.js';
 
 function mkErr(msg: string, loc: SourceLocation): Issue {
   return { type: 'Issue', severity: 'error', msg, loc };
@@ -132,7 +132,7 @@ function checkRelationsAndBuiltinsInPattern(
         if (!theseVarsGroundThisPattern(previouslyGroundVars, term)) {
           return [
             mkErr(
-              `Because ${term.name} is ${builtin ? `the built-in relation ${builtin}` : 'a predicate in your program'}, for it to be used like a function symbol, all the arguments must be grounded by previous premise. If you want to use ${term.name} with a different mode, write it out as a separate premise, like '${term.name} ${term.args
+              `Because ${term.name} is ${builtin ? `the built-in relation ${builtin}` : 'a predicate in your program'}, for it to be used like a function symbol, all the arguments must be grounded by a previous premise. If you want to use ${term.name} with a different mode, write it out as a separate premise, like '${term.name} ${term.args
                 .map((_) => '* ')
                 .join('')}is *'.`,
               term.loc,
@@ -268,7 +268,6 @@ function checkBuiltin(
       : theseVarsGroundThisPattern(previouslyGroundVars, value)
         ? 'input'
         : 'output';
-  console.log({ builtin, argsMode, value });
   if (builtinModes(builtin)({ args: argsMode, value: valueMode })) return [];
 
   const argsNotGround = argsMode
@@ -340,8 +339,17 @@ export function check(
       switch (premise.type) {
         case 'Proposition': {
           const builtin = builtins.get(premise.name);
-          if (builtin !== undefined)
-            checkBuiltinHelper(builtin, premise.args, premise.value, premise.loc);
+          if (builtin === undefined) break;
+          if (premise.value === null) {
+            errors.push(
+              mkErr(
+                `The built-in relation ${builtin} needs to be given a value. If you don't care what the value is, you can just say '${premise.name} ${premise.args.map((arg) => termToString(arg, true) + ' ').join('')}is _'.`,
+                premise.loc,
+              ),
+            );
+            break;
+          }
+          checkBuiltinHelper(builtin, premise.args, premise.value, premise.loc);
           break;
         }
 
