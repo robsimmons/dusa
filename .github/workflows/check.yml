@@ -1,0 +1,31 @@
+name: Run static checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run-static-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - run: npm ci
+
+      - name: Check formatting with prettier
+        run: npm run prettier:check
+
+      - name: Check for issues with eslint
+        run: npm run lint
+
+      - name: Check for type errors with typescript
+        run: npm run tsc
+
+      - name: Run unit tests
+        run: npm run test
