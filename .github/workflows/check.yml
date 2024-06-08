@@ -1,8 +1,7 @@
-name: Run static checks
+name: Dusa tests
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
