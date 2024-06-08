@@ -1,0 +1,25 @@
+name: Publish NPM Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - run: npm ci
+
+      - name: Build package
+        run: npm run lib
+
+      - name: Publish package
+        env:
+          NODE_AUTH_TOKEN: "${{ secrets.NPM_PUBLISH_TOKEN }}"
+        run: npm publish
