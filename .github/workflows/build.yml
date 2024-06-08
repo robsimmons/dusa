@@ -1,4 +1,4 @@
-name: Check that the package and website can build correctly
+name: Check that everything builds correctly
 
 on:
   push:
