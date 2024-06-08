@@ -2,14 +2,28 @@ name: Submit to coveralls
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  test:
+  submit-coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
       - run: npm ci
-      - run: npm run coverage
-      - uses: coverallsapp/github-action@v2
+
+      - name: Test
+        run: npm run coverage
+
+      - name: Submit
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
