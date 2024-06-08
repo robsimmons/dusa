@@ -18,6 +18,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
+      - run: npm ci
 
       - name: Build package
         run: npm run lib
