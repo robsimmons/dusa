@@ -1,14 +1,10 @@
-name: Submit to coveralls
+name: Publish NPM Package
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
   workflow_dispatch:
 
 jobs:
-  submit-coverage:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,10 +17,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
 
-      - name: Test
-        run: npm run coverage
+      - name: Build package
+        run: npm run lib
 
-      - name: Submit
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish package
+        env:
+          NODE_AUTH_TOKEN: '${{ secrets.NPM_PUBLISH_TOKEN }}'
+        run: npm publish
