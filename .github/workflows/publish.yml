@@ -1,9 +1,6 @@
 name: Publish NPM Package
 
 on:
-  push:
-    branches:
-      - publish
   workflow_dispatch:
 
 jobs:
@@ -17,6 +14,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
       - run: npm ci
 
       - name: Build package
