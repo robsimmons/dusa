@@ -1,6 +1,9 @@
 name: Publish NPM Package
 
 on:
+  push:
+    branches:
+      - publish
   workflow_dispatch:
 
 jobs:
