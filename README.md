@@ -9,8 +9,8 @@ set programming.
 
 - Dusa lives online at [dusa.rocks](https://dusa.rocks/).
 - Documentation lives at [dusa.rocks/docs](https://dusa.rocks/docs/)
-- [Source code at sourcehut](https://git.sr.ht/~robsimmons/dusa)
-- [Issue tracker at sourcehut](https://todo.sr.ht/~robsimmons/Dusa)
+- [Source code on GitHub](https://github.com/robsimmons/dusa)
+- [Issue tracker at GitHub](https://github.com/robsimmons/dusa/issues)
 
 Dusa was initially developed by Rob Simmons and Chris Martens while Rob attended
 [Recurse Center](https://www.recurse.com/) in Fall 2023. Recurse center is a

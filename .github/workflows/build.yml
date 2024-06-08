@@ -1,4 +1,4 @@
-name: Submit to coveralls
+name: Check that everything builds correctly
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  submit-coverage:
+  test-building:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,10 +20,14 @@ jobs:
           node-version: 22.x
       - run: npm ci
 
-      - name: Test
-        run: npm run coverage
+      - name: Build package
+        run: npm run lib
 
-      - name: Submit
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build website
+        run: npm run build
+
+      - name: Build docs
+        run: |
+          cd docs
+          npm ci
+          npm run build
