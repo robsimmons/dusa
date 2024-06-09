@@ -133,7 +133,7 @@ function checkRelationsAndBuiltinsInPattern(
           return [
             mkErr(
               `Because ${term.name} is ${builtin ? `the built-in relation ${builtin}` : 'a predicate in your program'}, for it to be used like a function symbol, all the arguments must be grounded by a previous premise. If you want to use ${term.name} with a different mode, write it out as a separate premise, like '${term.name} ${term.args
-                .map((_) => '* ')
+                .map(() => '* ')
                 .join('')}is *'.`,
               term.loc,
             ),
@@ -311,31 +311,33 @@ export function check(
     const wildcardsInDeclIssues = checkForUniqueWildcardsInDecl(decl);
     errors.push(...wildcardsInDeclIssues);
     if (wildcardsInDeclIssues.length > 0) continue;
-
     const groundVars = new Map();
 
-    function checkBuiltinHelper(
-      builtin: BUILT_IN_PRED,
-      args: ParsedPattern[],
-      value: null | ParsedPattern,
-      loc: SourceLocation,
-    ) {
-      errors.push(
-        ...checkBuiltin(
-          builtinModes,
-          builtins,
-          arities.arities,
-          groundVars,
-          builtin,
-          args,
-          value,
-          loc,
-        ),
-      );
-    }
-
-    /* Check premises */
+    /* For each premise: call checkBuiltin if applicable, call checkRelationsAndBuiltinsInPatterns,
+     * and then register any new variables as bound. */
     for (const premise of decl.premises) {
+      // There are many different configurations where we need to check the properties
+      // of builtins: consolidating the arguments to checkBuiltin makes this much simpler
+      // eslint-disable-next-line no-inner-declarations
+      function checkBuiltinHelper(
+        builtin: BUILT_IN_PRED,
+        args: ParsedPattern[],
+        value: null | ParsedPattern,
+      ) {
+        errors.push(
+          ...checkBuiltin(
+            builtinModes,
+            builtins,
+            arities.arities,
+            groundVars,
+            builtin,
+            args,
+            value,
+            premise.loc,
+          ),
+        );
+      }
+
       switch (premise.type) {
         case 'Proposition': {
           const builtin = builtins.get(premise.name);
@@ -349,27 +351,27 @@ export function check(
             );
             break;
           }
-          checkBuiltinHelper(builtin, premise.args, premise.value, premise.loc);
+          checkBuiltinHelper(builtin, premise.args, premise.value);
           break;
         }
 
         case 'Geq':
-          checkBuiltinHelper('CHECK_GEQ', [premise.a, premise.b], null, premise.loc);
+          checkBuiltinHelper('CHECK_GEQ', [premise.a, premise.b], null);
           break;
         case 'Gt':
-          checkBuiltinHelper('CHECK_GT', [premise.a, premise.b], null, premise.loc);
+          checkBuiltinHelper('CHECK_GT', [premise.a, premise.b], null);
           break;
         case 'Leq':
-          checkBuiltinHelper('CHECK_LEQ', [premise.a, premise.b], null, premise.loc);
+          checkBuiltinHelper('CHECK_LEQ', [premise.a, premise.b], null);
           break;
         case 'Lt':
-          checkBuiltinHelper('CHECK_LT', [premise.a, premise.b], null, premise.loc);
+          checkBuiltinHelper('CHECK_LT', [premise.a, premise.b], null);
           break;
         case 'Inequality':
-          checkBuiltinHelper('NOT_EQUAL', [premise.a, premise.b], null, premise.loc);
+          checkBuiltinHelper('NOT_EQUAL', [premise.a, premise.b], null);
           break;
         case 'Equality':
-          checkBuiltinHelper('EQUAL', [premise.a, premise.b], null, premise.loc);
+          checkBuiltinHelper('EQUAL', [premise.a, premise.b], null);
           break;
       }
 
