@@ -14,6 +14,8 @@ import {
   PlayIcon,
 } from '@radix-ui/react-icons';
 import { escapeString } from '../datastructures/data.js';
+import { builtinModes } from '../language/dusa-builtins.js';
+import { compile } from '../language/compile.js';
 
 interface Props {
   doc: DOCUMENT;
@@ -87,9 +89,10 @@ export default function Inspector({ doc, visible }: Props) {
       setIssues(ast.errors);
       return;
     }
-    const checkedIssues = check(ast.document).errors;
-    if (checkedIssues.length > 0) {
-      setIssues(checkedIssues);
+    const checkResult = check(builtinModes, ast.document);
+
+    if (checkResult.errors.length > 0) {
+      setIssues(checkResult.errors);
       return;
     }
 
@@ -118,7 +121,11 @@ export default function Inspector({ doc, visible }: Props) {
       }
     };
 
-    post({ type: 'load', program: ast.document });
+    const compiledProgram = compile(checkResult.builtins, checkResult.arities, ast.document, true);
+    post({
+      type: 'load',
+      program: compiledProgram,
+    });
     post({ type: 'start' });
     return () => {
       worker.current!.terminate();

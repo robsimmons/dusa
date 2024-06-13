@@ -1,8 +1,19 @@
 import { SourceLocation } from '../client.js';
-import { BinarizedProgram, freeVarsBinarizedPremise } from './binarize.js';
+import { BinarizedProgram } from './binarize.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
-import { flatPremiseToString } from './flatten.js';
-import { Pattern, termToString } from './terms.js';
+import { Conclusion, headToString } from './syntax.js';
+import { Pattern, freeVars, termToString, theseVarsGroundThisPattern } from './terms.js';
+
+export interface IndexedBinaryRuleBase {
+  type: string;
+  inName: string;
+  shared: string[];
+  passed: string[];
+  introduced: string[];
+  outShared: ['shared' | 'passed' | 'introduced', number][];
+  outPassed: ['shared' | 'passed' | 'introduced', number][];
+  outName: string;
+}
 
 /**
  * Indexing transformation
@@ -32,17 +43,6 @@ import { Pattern, termToString } from './terms.js';
  * requires a lot of bookkeeping, which is why this ends up being tedious.
  */
 
-export interface IndexedBinaryRuleBase {
-  type: string;
-  inName: string;
-  shared: string[];
-  passed: string[];
-  introduced: string[];
-  outShared: ['shared' | 'passed' | 'introduced', number][];
-  outPassed: ['shared' | 'passed' | 'introduced', number][];
-  outName: string;
-}
-
 export interface IndexedLookup extends IndexedBinaryRuleBase {
   type: 'IndexLookup';
   indexName: string;
@@ -51,10 +51,9 @@ export interface IndexedLookup extends IndexedBinaryRuleBase {
 export interface FunctionLookup extends IndexedBinaryRuleBase {
   type: 'Builtin';
   name: BUILT_IN_PRED;
-  symbol: null | string;
-  matchPosition: null | number;
   args: Pattern[];
   value: Pattern;
+  matchPosition: null | number;
   loc: SourceLocation;
 }
 
@@ -63,7 +62,7 @@ export type IndexedBinaryRule = IndexedLookup | FunctionLookup;
 export interface IndexInsertionRule {
   name: string;
   args: Pattern[];
-  value: Pattern;
+  value: Pattern | null;
   indexName: string;
   shared: string[];
   introduced: string[];
@@ -72,10 +71,7 @@ export interface IndexInsertionRule {
 export interface IndexedConclusion {
   inName: string;
   inVars: string[];
-  name: string;
-  args: Pattern[];
-  values: Pattern[];
-  exhaustive: boolean;
+  conclusion: Conclusion;
 }
 
 export interface IndexedProgram {
@@ -103,7 +99,7 @@ function indexedRuleToString(rule: IndexedBinaryRule) {
   const premiseStr =
     rule.type === 'IndexLookup'
       ? `$${rule.indexName}index [ ${rule.shared.join(', ')} ] [ ${rule.introduced.join(', ')} ]`
-      : flatPremiseToString(rule);
+      : `${rule.name}${rule.args.map((arg) => ` ${termToString(arg)}`).join('')} is ${termToString(rule.value)}`;
 
   return `$${rule.outName}prefix [ ${rule.outShared.map(lookup).join(', ')} ] [ ${rule.outPassed
     .map(lookup)
@@ -115,15 +111,13 @@ function indexedRuleToString(rule: IndexedBinaryRule) {
 function indexInsertionRuleToString(rule: IndexInsertionRule) {
   return `$${rule.indexName}index [ ${rule.shared.join(', ')} ] [ ${rule.introduced.join(
     ', ',
-  )} ] :- ${rule.name}${rule.args.map((arg) => ` ${termToString(arg)}`).join('')} is ${termToString(
-    rule.value,
-  )}.\n`;
+  )} ] :- ${rule.name}${rule.args.map((arg) => ` ${termToString(arg)}`).join('')}${
+    rule.value === null ? '' : ` is ${termToString(rule.value)}`
+  }.\n`;
 }
 
 function conclusionRuleToString(rule: IndexedConclusion) {
-  return `${rule.name}${rule.args.map((arg) => ` ${termToString(arg)}`)} is { ${rule.values
-    .map((value) => termToString(value))
-    .join(', ')}${rule.exhaustive ? '' : '?'} } :- $${rule.inName}prefix [  ] [ ${rule.inVars.join(
+  return `${headToString(rule.conclusion)} :- $${rule.inName}prefix [  ] [ ${rule.inVars.join(
     ', ',
   )} ].\n`;
 }
@@ -158,10 +152,7 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
       conclusionRules.push({
         inName: rule.inName,
         inVars: rule.inVars,
-        name: rule.name,
-        args: rule.args,
-        values: rule.values,
-        exhaustive: rule.exhaustive,
+        conclusion: rule.conclusion,
       });
 
       ruleIndexing[rule.inName] = {
@@ -171,7 +162,7 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
         permutation: rule.inVars.map((_, index) => ({ position: 'passed', index })),
       };
     } else {
-      const fv = freeVarsBinarizedPremise(rule.premise);
+      const fv = freeVars(...rule.premise.args, rule.premise.value);
       const inVars = new Set(rule.inVars);
       const outVars = new Set(rule.outVars);
 
@@ -266,7 +257,7 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
         }
       }
 
-      if (rule.premise.type === 'Proposition') {
+      if (rule.premise.type === 'fact') {
         indexInsertionRules.push({
           name: rule.premise.name,
           args: rule.premise.args,
@@ -288,7 +279,18 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
           indexName: rule.inName,
         });
       } else {
+        const matchPosition = rule.premise.args.findIndex((pattern) => {
+          return !theseVarsGroundThisPattern(
+            new Set([...inPrefixIndexing.shared, ...inPrefixIndexing.passed]),
+            pattern,
+          );
+        });
+
         binaryRules.push({
+          type: 'Builtin',
+          name: rule.premise.name,
+          args: rule.premise.args,
+          value: rule.premise.value,
           shared: inPrefixIndexing.shared,
           passed: inPrefixIndexing.passed,
           introduced: inPrefixIndexing.introduced,
@@ -296,7 +298,8 @@ export function indexize(program: BinarizedProgram): IndexedProgram {
           outName: rule.outName,
           outShared,
           outPassed,
-          ...rule.premise,
+          matchPosition: matchPosition === -1 ? null : matchPosition,
+          loc: rule.premise.loc,
         });
       }
     }

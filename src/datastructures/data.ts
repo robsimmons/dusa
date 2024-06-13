@@ -1,7 +1,7 @@
 export type Data = ViewsIndex | bigint;
 
 export type DataView =
-  | { type: 'triv' }
+  | { type: 'trivial' }
   | { type: 'int'; value: bigint }
   | { type: 'bool'; value: boolean }
   | { type: 'string'; value: string }
@@ -11,7 +11,7 @@ export type DataView =
 type ViewsIndex = number;
 let nextRef: number = -1;
 let views: DataView[] = [
-  { type: 'triv' },
+  { type: 'trivial' },
   { type: 'bool', value: true },
   { type: 'bool', value: false },
 ];
@@ -20,12 +20,12 @@ let structures: { [name: string]: DataTrie } = {};
 
 export function DANGER_RESET_DATA() {
   nextRef = -1;
-  views = [{ type: 'triv' }, { type: 'bool', value: true }, { type: 'bool', value: false }];
+  views = [{ type: 'trivial' }, { type: 'bool', value: true }, { type: 'bool', value: false }];
   strings = {};
   structures = {};
 }
 
-export const TRIV_DATA = 0;
+export const TRIVIAL = 0;
 export const BOOL_TRUE = 1;
 export const BOOL_FALSE = 2;
 
@@ -79,7 +79,7 @@ function setStructureIndex(name: string, args: Data[], value: ViewsIndex) {
 
 export function hide(d: DataView): Data {
   switch (d.type) {
-    case 'triv':
+    case 'trivial':
       return 0;
     case 'int':
       return d.value;
@@ -113,26 +113,27 @@ export function compareData(a: Data, b: Data): number {
   const x = expose(a);
   const y = expose(b);
   switch (x.type) {
-    case 'triv':
-      if (y.type === 'triv') return 0;
+    case 'trivial':
+      if (y.type === 'trivial') return 0;
       return -1;
     case 'int':
-      if (y.type === 'triv') return 1;
+      if (y.type === 'trivial') return 1;
       if (y.type === 'int') {
         const c = x.value - y.value;
         return c > 0n ? 1 : c < 0n ? -1 : 0;
       }
       return -1;
     case 'bool':
-      if (y.type === 'triv' || y.type === 'int') return 1;
+      if (y.type === 'trivial' || y.type === 'int') return 1;
       if (y.type === 'bool') return (x.value ? 1 : 0) - (y.value ? 1 : 0);
       return -1;
     case 'ref':
-      if (y.type === 'triv' || y.type === 'int' || y.type === 'bool') return 1;
+      if (y.type === 'trivial' || y.type === 'int' || y.type === 'bool') return 1;
       if (y.type === 'ref') return x.value - y.value;
       return -1;
     case 'string':
-      if (y.type === 'triv' || y.type === 'int' || y.type === 'bool' || y.type === 'ref') return 1;
+      if (y.type === 'trivial' || y.type === 'int' || y.type === 'bool' || y.type === 'ref')
+        return 1;
       if (y.type === 'string') return x.value > y.value ? 1 : x.value < y.value ? -1 : 0;
       return -1;
     case 'const':
@@ -181,7 +182,7 @@ export function escapeString(input: string): string {
 export function dataToString(d: Data, needsParens = true): string {
   const view = expose(d);
   switch (view.type) {
-    case 'triv':
+    case 'trivial':
       return `()`;
     case 'int':
       return `${view.value}`;

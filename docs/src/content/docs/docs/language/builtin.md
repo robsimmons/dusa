@@ -1,19 +1,19 @@
 ---
-title: Built-in functions
+title: Built-in relations
 ---
 
 On their own, built-in numbers and strings act no different than other uninterpreted
-constants, but they can be manipualted with special constructors added by `#builtin`
+constants, but they can be manipulated with special relations added by `#builtin`
 declarations.
 
-A `#builtin` declarations change the lexer to represent certain identifiers as
-operations on built-in types. If you write
+A `#builtin` declarations connects a certain identifiers to a certain built-in
+relation. If you write
 
     #builtin INT_PLUS plus
     #builtin NAT_SUCC s
 
-then the identifiers `plus` and `s` will be parsed as a built-in definition instead
-of as a regular identifiers until those built-ins are redefined.
+then the identifiers `plus` and `s` will be treated, throughout the program, as a
+built-in definition instead of as a regular identifier.
 
 - The `NAT_ZERO` builtin takes no arguments and represents the natural number zero.
 - The `NAT_SUCC` builtin takes one natural number argument, and adds one to it. If
@@ -23,3 +23,7 @@ of as a regular identifiers until those built-ins are redefined.
 - The `INT_MINUS` builtin takes two integer arguments and returns an integer,
   subtracting the second from the first.
 - The `STRING_CONCAT` builtin takes two or more string arguments and concatenates them.
+
+## How built-in relations work
+
+All built-in relations

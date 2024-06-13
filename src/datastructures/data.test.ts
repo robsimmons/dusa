@@ -3,7 +3,7 @@ import { DataView, dataToString, expose, hide } from './data.js';
 
 test('Internalizing basic types', () => {
   const testData: DataView[] = [
-    { type: 'triv' },
+    { type: 'trivial' },
     { type: 'int', value: 123n },
     { type: 'int', value: 0n },
     { type: 'string', value: 'abc' },
@@ -23,7 +23,7 @@ test('Internalizing basic types', () => {
     }
   }
 
-  expect(hide({ type: 'triv' })).toEqual(hide({ type: 'triv' }));
+  expect(hide({ type: 'trivial' })).toEqual(hide({ type: 'trivial' }));
 });
 
 test('Internalizing fibonacci-shaped structured types', () => {

@@ -34,45 +34,47 @@ body {
 }
 
 /** Codemirror syntax highlighting **/
-.tok-variableName {
-  color: var(--oksolar-text-violet);
-}
-
-.tok-predicate .tok-variableName,
-.tok-variableName .tok-predicate {
-  color: var(--oksolar-text-blue);
-}
-
-.tok-variableName2 {
-  color: var(--oksolar-text-pink);
-}
-
-.tok-variableName.tok-local {
-  color: var(--oksolar-text-deemph);
-}
 
 .tok-comment {
   color: var(--oksolar-text);
   font-style: italic;
 }
 
-.tok-literal,
-.tok-number,
-.tok-string,
-.tok-macroName {
+.tok-meta {
+  color: var(--oksolar-text-orange);
+}
+
+.tok-variableName {
+  color: var(--oksolar-text-pink);
+}
+
+.tok-literal {
+  color: var(--oksolar-text-violet);
+}
+
+.tok-user-predicate .tok-literal {
+  color: var(--oksolar-text-blue);
+}
+
+.tok-builtin-predicate .tok-literal {
   color: var(--oksolar-text-green);
 }
 
-.tok-string2 {
+.tok-builtin-name .tok-variableName {
   color: var(--oksolar-text-orange);
+}
+
+.tok-number,
+.tok-string {
+  color: var(--oksolar-text-green);
 }
 
 .tok-invalid {
   color: var(--oksolar-text-red);
 }
 
-.tok-meta {
-  color: var(--oksolar-text-orange);
+.tok-string2 {
+  color: var(--oksolar-text-pink);
 }
 
 /** Inspector **/

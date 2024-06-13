@@ -152,10 +152,10 @@ eventually Winner "wins in round" Round "when" Move1 Defeats Move2 :-
 
 export const GRAPH_GENERATION_EXAMPLE = `
 # Generating graphs
-#builtin NAT_SUCC s
+#builtin INT_MINUS minus
 
 vertex 6.
-vertex N :- vertex (s N).
+vertex (minus N 1) :- vertex N, N > 0.
 
 edge X Y is { extant, absent } :- vertex X, vertex Y, X != Y.
 edge X Y is Z :- edge Y X is Z.
