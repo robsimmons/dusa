@@ -161,7 +161,7 @@ edge X Y is { extant, absent } :- vertex X, vertex Y, X != Y.
 edge X Y is Z :- edge Y X is Z.
 
 reachable N N :- vertex N.
-reachable Start Y :- reachable Start X, edge X Y is extant.
+reachable X Z :- reachable X Y, edge Y Z is extant.
 
 #demand reachable 0 1.
 #demand reachable 5 6.
