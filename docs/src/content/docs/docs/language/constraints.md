@@ -46,17 +46,17 @@ This program again has only one solution, containing the facts `species is bear`
 to fail, but it will cause the solution to contain `name is tweety` to be derived,
 which is rejected by the constraint.
 
-### Syntactic sugar
+#### Syntactic sugar
 
 Forbid constraints are technically syntactic sugar. Instead of a `#forbid` declaration:
 
     #forbid <premises>.
 
-We could introduce a functional proposition `contradiction` and derive a contradictory
+We could introduce a functional proposition `ok` and derive a contradictory
 value for the proposition if the undesirable properties hold.
 
-    contradiction is absent.
-    contradiction is present :- <premises>.
+    ok is yes.
+    ok is no :- <premises>.
 
 ## Demand constraints
 
@@ -81,12 +81,12 @@ declarations:
     #demand <premises_1>.
     #demand <premises_2>.
 
-We could introduce a functional proposition `required _ is _` that is given a default
+We could introduce a functional proposition `present _ is _` that is given a default
 assignment by an [open rule](/docs/language/rules), but forbid that default assignment,
-accepting the solution only if an alterantive value is derived.
+accepting the solution only if an alternative value is derived.
 
-    required 1 is { unsatisfied? }.
-    required 2 is { unsatisfied? }.
-    required 1 is satisfied :- <premises_1>.
-    required 2 is satisfied :- <premises_2>.
-    #forbid required _ is unsatisfied.
+    present 1 is { no? }.
+    present 2 is { no? }.
+    present 1 is yes :- <premises_1>.
+    present 2 is yes :- <premises_2>.
+    #forbid present _ is no.

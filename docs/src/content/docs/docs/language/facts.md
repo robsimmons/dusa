@@ -19,18 +19,6 @@ called an **attribute**, and every attribute must have at most one value: derivi
 both `attr is a` and `attr is b` will result in the solution being invalidated for
 failing an integrity constraint.
 
-## Everything's secretly functional
+## Using propositions like functions
 
-When we don't write an attribute, that's just syntactic sugar for saying that the
-attribute's value is actually `()`, a special term that is pronounced "unit." So the
-program
-
-    edge Y X :- edge X Y.
-    path X Y :- edge X Y.
-    path X Z :- edge X Y, path Y Z.
-
-program above is shorthand for this program:
-
-    edge Y X is () :- edge X Y is ().
-    path X Y is () :- edge X Y is ().
-    path X Z is () :- edge X Y is (), path Y Z is ().
+- TODO add
