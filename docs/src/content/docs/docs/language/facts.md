@@ -21,4 +21,4 @@ failing an integrity constraint.
 
 ## Using propositions like functions
 
-* TODO add
+- TODO add

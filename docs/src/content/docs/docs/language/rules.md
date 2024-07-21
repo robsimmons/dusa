@@ -33,7 +33,6 @@ but if `n` is 1, it can be written like this:
 
     <attribute> is <value_1> :- <premises>.
 
-
 If the premises of a closed rule hold, Dusa must assign the attribute to one of the
 listed values. If we've already given the attribute a value, then that attribute must
 be one of the listed values, or else the solution will be invalidated.
