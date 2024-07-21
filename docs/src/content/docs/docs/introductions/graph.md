@@ -68,7 +68,7 @@ Dusa with two rules and a fact:
         reachable X,
         edge X Y.
 
-[Explore this example](https://dusa.rocks/#program=%23%20Graph%20reachability%0A%0Aedge%20a%20b.%20%23%20a%20%20%20f--k--j%0Aedge%20a%20c.%20%23%20%7C%20%5C%20%20%20%20%7C%20%0Aedge%20b%20c.%20%23%20b--c%20%20%20g%20%20h%0Aedge%20b%20d.%20%23%20%7C%20%20%7C%20%20%20%20%20%20%7C%0Aedge%20c%20e.%20%23%20d--e%20%20%20i--l%0Aedge%20d%20e.%0Aedge%20f%20k.%0Aedge%20g%20k.%0Aedge%20h%20l.%0Aedge%20i%20l.%0Aedge%20k%20j.%0Aedge%20Y%20X%20%3A-%20edge%20X%20Y.%0A%0Astart%20a.%0Areachable%20X%20%3A-%20start%20X.%0Areachable%20Y%20%3A-%0A%20%20%20%20reachable%20X%2C%0A%20%20%20%20edge%20X%20Y.)
+[Explore this example](https://dusa.rocks/#jsonz=VY9JDoMwDEWv8hW2mAP0Ar0CSNlkMHMDonRRtb17ExKglSL56T_bil9iFRcxzexELuxkHjd2IclwXdTcYmFlWqW7sVuf0knHtmEo6AKZL0BNNBD1hzBBvCGld6HGXMdcExkfN0B7CBsHwttGkjDgICwR-7QjGpOwXiSsMezYnNhi3LE7cUC_Y4USF8LGJaoinHVf1bJCeU4Hjxy7oij_ROWFdOG3P815TI6t4vMF)
 
 ## Graph coloring
 
@@ -84,7 +84,7 @@ That rule looks like this:
 
 This rule means that if `node a` is present in a solution, that solution must also
 include one of the following: `color a is red`, `color a is yellow`, or
-`color a is blue`. Whereas `node _`, `edge _ _`, and `node _` are all **relational**
+`color a is blue`. Whereas `node _`, `edge _ _`, and `node _` are **relational**
 propositions, `color _ is _` is a **functional** proposition: the attribute `color a`
 can be assigned at most one value by a database, and any solution that derived both
 `color a is red` and `color a is blue` would be rejected.
@@ -108,10 +108,8 @@ have the same color. We can do this with a `#forbid` constraint:
 
     #forbid edge X Y, color X is Color, color Y is Color.
 
-If a prospective solution tries to give the color `red` to both nodes `a` and `b`,
-then Dusa can assign `X` to `a`, assign `Y` to `b`, and `Color` to `red`, and
-because `edge a b` exists, this will violate the forbid constraint and the solution
-will be rejected.
+Say that prospective solution tries to give the color `red` to both nodes `a` and `b`,
+then Dusa can assign `X` to `a`, assign `Y` to `b`, and `Color` to `red` in the rule above. Because `edge a b` exists, all the parts of the `#forbid` constraint are satisfied, so the solution will be rejected.
 
 ### Making the graph un-colorable
 
@@ -137,11 +135,11 @@ This constraint says that concrete node values `a`, `f`, and `h` all have to
 have the same color, but because `Color` is a variable, the constraint doesn't
 say anything about _what_ that color has to be.
 
-[Explore this example](https://dusa.rocks/#program=%23%20Graph%20coloring%0A%0Aedge%20a%20b.%20%23%20a%20%20%20f--k--j%0Aedge%20a%20c.%20%23%20%7C%20%5C%20%20%20%20%7C%20%0Aedge%20b%20c.%20%23%20b--c%20%20%20g%20%20h%0Aedge%20b%20d.%20%23%20%7C%20%20%7C%20%20%20%20%20%20%7C%0Aedge%20c%20e.%20%23%20d--e%20%20%20i--l%0Aedge%20d%20e.%0Aedge%20f%20k.%0Aedge%20g%20k.%0Aedge%20h%20l.%0Aedge%20i%20l.%0Aedge%20k%20j.%0A%0Aedge%20Y%20X%20%3A-%20edge%20X%20Y.%0Anode%20X%20%3A-%20edge%20X%20_.%0Anode%20X%20%3A-%20edge%20_%20X.%0A%0Acolor%20X%20is%20%7B%20red%2C%20yellow%2C%20blue%20%7D%20%3A-%20node%20X.%0A%23forbid%20edge%20X%20Y%2C%20color%20X%20is%20Color%2C%20color%20Y%20is%20Color.%0A%23demand%20color%20a%20is%20Color%2C%20color%20f%20is%20Color%2C%20color%20h%20is%20Color.%0A%0A%23%20Adding%20these%20edges%20makes%20the%20problem%20unsolvable%0A%23%20edge%20a%20d.%0A%23%20edge%20c%20d.)
+[Explore this example](https://dusa.rocks/#jsonz=ZZFbboMwEEW3cgW_mAXkr-pHtwASUoQ9wyMYO4KQqkqz9455JRUSwtfn-NoIP6JbdIr8lV2UROTN1LMLJMbXUF4bGG_90Lq6cIVjqhkldIpYBqBSqlPqsgsTxC-KQlwYF64XrpUygmug2QUthfDMlVUYcBCkFAttlbKrIBFrrNBtsX7FBnaL7St2uKT79-fIcFKYc4ZchPPE_-D5CM_I5i3m3yG8HfHAwJTgh6313wm0nRjPUFiqsjyu_KBb2s9K8Fb_DHEj-U5CjbgvHa2qPCyuDqR5r8sG-CCSO8Ot4ZHn40f0ZSdvIbgOXlvuMbnR23spOVTWO6R0nxiZRM8_)
 
 ## Connected components
 
-Speaking of connected components, we can use Dusa to calculate the connected components
+We can also use Dusa to calculate the connected components
 of a graph. A common way to describe connected components and equivalence classes is to
 assign a canonical representative for every node. Every element might be the
 representative of its connected component: an arbitrary element is chosen as a leader
@@ -167,4 +165,4 @@ in a connected component to have the same representative:
 There are many different solutions, but they only differ in which node from a
 connected component is arbitrarily chosen as the leader.
 
-[Explore this example](https://dusa.rocks/#program=%23%20Connected%20component%0A%0Aedge%20a%20b.%20%23%20a%20%20%20f--k--j%0Aedge%20a%20c.%20%23%20%7C%20%5C%20%20%20%20%7C%20%0Aedge%20b%20c.%20%23%20b--c%20%20%20g%20%20h%0Aedge%20b%20d.%20%23%20%7C%20%20%7C%20%20%20%20%20%20%7C%0Aedge%20c%20e.%20%23%20d--e%20%20%20i--l%0Aedge%20d%20e.%0Aedge%20f%20k.%0Aedge%20g%20k.%0Aedge%20h%20l.%0Aedge%20i%20l.%0Aedge%20k%20j.%0A%0Aedge%20Y%20X%20%3A-%20edge%20X%20Y.%0Anode%20X%20%3A-%20edge%20X%20_.%0Anode%20X%20%3A-%20edge%20_%20X.%0A%0Arepresentative%20X%20is%20%7B%20X%3F%20%7D%20%3A-%20node%20X.%0Arepresentative%20Y%20is%20Rep%20%3A-%0A%20%20%20%20edge%20X%20Y%2C%0A%20%20%20%20representative%20X%20is%20Rep.)
+[Explore this example](https://dusa.rocks/#jsonz=bZBNDoIwEIWv8lK3Dgdw48IbuIKkiZF2RESnRNCNenenFDBGkybz-r4305-H6c3KhJbFLI0P7nZhic4CmyDCrmcPFy5tEPWtWGFfMfYoMyy0AAeihug0AxfBE9YqizX5ZfJLIqd2BRxn4FNDXEPLCBw4Ak_E6tZE5xF4BaM8oJlk9ZFHnCdZf2SDUzbfv0COFWHQOQoFEjx_mbtfc4d8GHHl9sqd_se-r-8xUHfrFEsN2U-k0Ai23GrGSnzldPIybf9MjPHMvN4)

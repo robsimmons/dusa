@@ -29,20 +29,14 @@ An closed rule looks like this:
 
     <attribute> is { <value_1>, ..., <value_n> } :- <premises>.
 
-and it means that, if the premises hold, Dusa must assign the attribute to one of the
-listed values. (If we've already given the attribute a value, then that attribute must
-be one of the listed values, or else the solution will be invalidated.)
+but if `n` is 1, it can be written like this:
 
-It's quite common that we want, as the conclusion of a rule, to assign one specific value to an attribute.
-In that case, we don't need to write the curly braces. This program:
+    <attribute> is <value_1> :- <premises>.
 
-    p is 1.
-    q is { 2, 3 }.
 
-is syntactic sugar for this program:
-
-    p is { 1 }.
-    q is { 2, 3 }.
+If the premises of a closed rule hold, Dusa must assign the attribute to one of the
+listed values. If we've already given the attribute a value, then that attribute must
+be one of the listed values, or else the solution will be invalidated.
 
 ### Closed rules describe intersections
 
@@ -71,22 +65,32 @@ containing `a is red`.
 
 ## Open rules
 
-Open rules include a question mark after the last choice.
+Open rules use the `is?` keyword instead of the `is` keyword in their conclusion.
 
-    a is { 1, 2? } :- b.
+    <attribute> is? <value> :- <premises>.
+
+It's also possible to use curly braces to make an open rule with multiple values:
+
+    <attribute> is? { <value_1>, ..., <value_n> } :- <premises>.
+
+This rule is shorthand for writing the following `n` rules:
+
+    <attribute> is? <value_1> :- <premises>.
+    ...
+    <attribute> is? <value_n> :- <premises>.
 
 If all premises of an open rule hold, then Dusa will try to evaluate the program
 further with each of the listed attributes, but will **also** leave open the option
 that some other chain of reasoning might assign some different value to the attribute.
 
     color is { brown, blue }.
-    species is { dolphin, fish? }.
-    species is { bear? } :- color is brown.
+    species is? { dolphin, fish }.
+    species is? bear :- color is brown.
 
 When evaluating the first rule, the color must be blue or brown: no other possibility
 is allowed when dealing with a closed rule. When evaluating the second rule, however,
 there are three possibilities: the species is dolphin, the species is fish, and the
-species might be determined later by some other chain of reasoning if we don't commit.
+species might be determined later by some other chain of reasoning.
 And indeed, the third rule allows us to derive that the species is potentially `bear`
 if the color is brown.
 
@@ -104,24 +108,26 @@ species is bear, invalidating the brown+dolphin and brown+fish solutions. By lea
 the third rule open, it didn't invalidate solutions where a different chain of
 reasoning had assigned a different species.
 
+[Explore this example](https://dusa.rocks/#jsonz=ZYy7DcMwDAVXeWBaJQO4yQhewI0lMbAAmRT0QQrDu4dOkSZ43d3DHdRpIi0s5ChqGDvLRW6YjaGOzIi8q7Re155UFlvQrBWp4YDPgx181bfgfCzSCofEzeTTbNRctiQOr9S2P-95rZju-OW-GTvR-QE)
+
 ### Open rules describe unions
 
 The following programs all have exactly 3 solutions: `a is 1`, `a is 2`, and `a is 3`.
 
 **Program 1**
 
-    a is { 1, 2, 3? }.
+    a is? { 1, 2, 3 }.
 
 **Program 2**
 
-    a is { 1? }.
-    a is { 2? }.
-    a is { 3? }.
+    a is? 1.
+    a is? 2.
+    a is? 3.
 
 **Program 3**
 
-    a is { 1, 2? }.
-    a is { 2, 3? }.
+    a is? { 1, 2 }.
+    a is? { 2, 3 }.
 
 Because open rules don't preclude other consistent assignments, the possible
 assignments are the union of the different assignments proposed by different open
@@ -165,9 +171,9 @@ characters:
     name "Luna".
     name "Terra".
 
-    nameOf hero is { Name? } :- name Name.
-    nameOf sidekick is { Name? } :- name Name.
-    nameOf villain is { Name? } :- name Name.
+    nameOf hero is? Name :- name Name.
+    nameOf sidekick is? Name :- name Name.
+    nameOf villain is? Name :- name Name.
 
 The rules above allow for any of the valid names to be given to each character, but
 also provide for the possibility that a different name will get assigned to the
@@ -180,9 +186,9 @@ the attribute as if it has some value that's not yet determined; instead, it tre
 the open rule as if it hasn't ever fired. To see why this matters, consider the
 following program:
 
-    a is { 1, 2? }.
+    a is? { 1, 2 }.
     b :- a is _.
-    a is { 3? } :- b.
+    a is? 3 :- b.
 
 Procedurally, Dusa must follow three chains of logic. In the first chain of logic,
 Dusa derives `a is 1` as a fact, uses that to further derive `b`, and then considers

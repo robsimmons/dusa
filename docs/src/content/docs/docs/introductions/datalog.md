@@ -81,7 +81,7 @@ proposition like this:
     sibling A is B :- parent A P, parent B P, A != B.
 
 This will work initially, deriving that Arya and Sansa are siblings, as are
-Brandon and Eddard. But if we then add a seemingly innocuous additional fact...
+Bran and Eddard. But if we then add a seemingly innocuous additional fact...
 
     parent "Bran" "Eddard".
 
@@ -110,4 +110,4 @@ sure we derive Marna as an ancestor of Arya, we can write this:
 
     #demand ancestor "Arya" "Marna".
 
-[Explore this example](https://dusa.rocks/#program=%23%20Game%20of%20datalog%0A%0Aparent%20%22Arya%22%20%22Catelyn%22.%0Aparent%20%22Arya%22%20%22Eddard%22.%0Aparent%20%22Bran%22%20%22Eddard%22.%0Aparent%20%22Brandon%22%20%22Rickard%22.%0Aparent%20%22Eddard%22%20%22Lyarra%22.%0Aparent%20%22Eddard%22%20%22Rickard%22.%0Aparent%20%22Rickard%22%20%22Edwyle%22.%0Aparent%20%22Rickard%22%20%22Marna%22.%0Aparent%20%22Sansa%22%20%22Catelyn%22.%0Aparent%20%22Sansa%22%20%22Eddard%22.%0A%0A%23%20Some%20family%20relationships%0A%0Agrandparent%20X%20Z%20%3A-%20parent%20X%20Y%2C%20parent%20Y%20Z.%0A%0Aancestor%20X%20Y%20%3A-%20parent%20X%20Y.%0Aancestor%20X%20Z%20%3A-%20parent%20X%20Y%2C%20ancestor%20Y%20Z.%0A%0Asibling%20A%20B%20%3A-%20parent%20A%20P%2C%20parent%20B%20P%2C%20A%20!%3D%20B.%0A%0A%23%20A%20few%20favorite%20weapons%0A%0Aweapon%20%22Arya%22%20is%20%22smallsword%22.%0Aweapon%20%22Eddard%22%20is%20%22greatsword%22.%0Aweapon%20%22Sansa%22%20is%20%22bow%22.%0A%0A%23%20Constraints%20act%20as%20assertions%20about%20the%20database%0A%0A%23forbid%20weapon%20Char1%20is%20W%2C%20weapon%20Char2%20is%20W%2C%20Char1%20!%3D%20Char2.%0A%23demand%20ancestor%20%22Arya%22%20%22Marna%22.)
+[Explore this example](https://dusa.rocks/#jsonz=fZJNT8MwDIb_ismuAwmOkzi0E-ICEmIH2NSL26RdRJpUTkZVIf47adZmHfs41fXzxs5r54c5tmCmEZrNGTfFrha6z8zgGWsBpgSODpWpMp3pBslTyFhCHWbMB0t0QnU6Y3fn6BPnSPwYpoT6KuRmz99l8XUiGA_58KVDIryIzx6PyaBtOyUu81ck_a_8CrW94vuAJ94yPYOV8aMssZaqAxIKnTTabmVje1z1nocan7CBxS3Ev_V8jNewCcVQF8I6Qz08lt4dwZM6kY2VrMyV1BUkkE60CbzFnmkfJ3DzCOlgJIFStN7JtyHpBLQCG--kZ_vwsHxpfWxrVMq2ZhhF1MQ1BVVFAt0Z1TjOIMpNG8e59D0dodTOAhYO0H-sFRTGCpibnQO3FeHl5mhFOFUayiUfrgzLLdJ9X_ljPk09DKk99sZD0redcVH7NR2mOHnl40Nhv38)

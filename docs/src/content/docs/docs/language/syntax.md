@@ -2,6 +2,8 @@
 title: Syntax specification
 ---
 
+* TODO out-of-date, fix
+
 The syntax of Dusa is not whitespace-sensitive. Comments, which begin with a pound
 sign followed by a space or end of line and continue to the end of the line, are
 treated like whitespace.

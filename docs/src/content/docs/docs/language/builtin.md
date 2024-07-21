@@ -2,6 +2,9 @@
 title: Built-in relations
 ---
 
+* TODO FIX: add (in)equality
+* TODO FIX: update with relational interpretation
+
 On their own, built-in numbers and strings act no different than other uninterpreted
 constants, but they can be manipulated with special relations added by `#builtin`
 declarations.
