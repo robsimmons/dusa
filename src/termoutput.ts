@@ -51,3 +51,22 @@ export function termToData(tm: InputTerm): Data {
   }
   return hide({ type: 'int', value: BigInt(tm) });
 }
+
+export function termToString(t: Term) {
+  let s = ""
+  if (t.name) {
+    s += t.name
+  }
+  if (t.args) {
+    s = "(" + s
+    for(const t2 of t.args)
+      s += " " + termToString(t2)
+    s += ")"
+  }
+  if(!t.name && !t.args) {
+    // it's a base type like int or string that js already knows how to print
+    return t 
+  }
+  return s
+}
+
