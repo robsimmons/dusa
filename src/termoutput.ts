@@ -1,4 +1,4 @@
-import { Data, TRIVIAL, expose, hide } from './datastructures/data.js';
+import { Data, TRIVIAL, escapeString, expose, hide } from './datastructures/data.js';
 
 export type Term =
   | null // Trivial type ()
@@ -50,4 +50,16 @@ export function termToData(tm: InputTerm): Data {
     return hide({ type: 'const', name: tm.name, args: tm.args?.map(termToData) ?? [] });
   }
   return hide({ type: 'int', value: BigInt(tm) });
+}
+
+export function termToString(tm: Term, parens = false): string {
+  if (tm === null) return '()';
+  if (typeof tm === 'boolean') return `bool#${tm}`;
+  if (typeof tm === 'string') return `"${escapeString(tm)}"`;
+  if (typeof tm === 'bigint') return `${tm}`;
+  if (tm.name === null) return `ref#${tm.value}`;
+  if (!tm.args) return tm.name;
+  const tmStr = `${tm.name} ${tm.args.map((arg) => termToString(arg, true)).join('')}`;
+  if (!parens) return tmStr;
+  return `(${tmStr})`;
 }

@@ -32,7 +32,7 @@ import {
   termToData,
 } from './termoutput.js';
 export type { Term, Fact, InputTerm, InputFact, JsonData } from './termoutput.js';
-export { dataToTerm, termToData } from './termoutput.js';
+export { dataToTerm, termToData, termToString } from './termoutput.js';
 
 export type { Issue, Stats };
 export type { SourcePosition, SourceLocation } from './parsing/source-location.js';
