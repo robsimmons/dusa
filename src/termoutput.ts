@@ -52,7 +52,7 @@ export function termToData(tm: InputTerm): Data {
   return hide({ type: 'int', value: BigInt(tm) });
 }
 
-export function termToString(tm: Term, parens = false): String {
+export function termToString(tm: Term, parens = false): string {
   if (tm === null) return '()';
   if (typeof tm === 'boolean') return `bool#${tm}`;
   if (typeof tm === 'string') return `"${escapeString(tm)}"`;
