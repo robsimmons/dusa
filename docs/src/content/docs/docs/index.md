@@ -1,6 +1,6 @@
 ---
 title: Dusa Docs
-description: Get started building your docs site with Starlight.
+description: The Dusa logic programming language.
 ---
 
 Dusa is a logic programming language.
