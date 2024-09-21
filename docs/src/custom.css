@@ -21,6 +21,7 @@
   --oksolar-text-pink: oklch(67% 0.15 330);
   --oksolar-text-red: oklch(67% 0.15 20);
   --oksolar-text-orange: oklch(67% 0.15 60);
+  --editor-text: oklch(72% 0 0);
 }
 
 :root[data-theme='light'],
@@ -47,6 +48,7 @@
   --oksolar-text-red: oklch(57% 0.15 20);
   --oksolar-text-red-highlight: oklch(57% 0.15 20);
   --oksolar-text-orange: oklch(57% 0.15 60);
+  --editor-text: oklch(52% 0 0);
 }
 
 :root[data-theme='dark'],
@@ -74,7 +76,49 @@
   --sl-color-black: var(--oksolar-background);
 
   --sl-font: 'Fira Sans';
-  --sl-font-mono: 'Fira Mono';
+  --sl-font-mono: 'Fira Mono', monospace;
+}
+
+.tok-comment {
+  color: var(--oksolar-text);
+  font-style: italic;
+}
+
+.tok-meta {
+  color: var(--oksolar-text-orange);
+}
+
+.tok-variableName {
+  color: var(--oksolar-text-pink);
+}
+
+.tok-literal {
+  color: var(--oksolar-text-violet);
+}
+
+.tok-predicate {
+  color: var(--oksolar-text-blue);
+}
+
+.tok-builtin {
+  color: var(--oksolar-text-green);
+}
+
+.tok-builtin-name .tok-variableName {
+  color: var(--oksolar-text-orange);
+}
+
+.tok-integer,
+.tok-string {
+  color: var(--oksolar-text-green);
+}
+
+.tok-invalid {
+  color: var(--oksolar-text-red);
+}
+
+.tok-string2 {
+  color: var(--oksolar-text-pink);
 }
 
 .expressive-code .frame pre {
@@ -90,14 +134,6 @@
 .site-title {
   font-family: 'Fira Sans Condensed';
   font-weight: 400;
-}
-
-:root[data-theme='dark'],
-[data-theme='dark'] ::backdrop {
-}
-
-:root[data-theme='light'],
-[data-theme='light'] ::backdrop {
 }
 
 /* Dark mode colors. */

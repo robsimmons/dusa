@@ -1,0 +1,72 @@
+---
+title: "Idiom (picking values from a set)"
+description: Introducing Dusa usage for Datalog programmers.
+---
+import Dusa from '../../../../components/Dusa.astro';
+
+
+## Idiom: picking rules
+
+A common pattern in Dusa is having closed rules where the domain of the rule gets
+repeated:
+
+<Dusa predicates={['nameOf']} code={`
+
+nameOf hero is { "Celeste", "Nimbus", "Luna", "Terra" }.
+nameOf sidekick is { "Celeste", "Nimbus", "Luna", "Terra" }.
+nameOf villain is { "Celeste", "Nimbus", "Luna", "Terra" }.
+
+`}/>
+
+Instead of having to repeat the list of names every time, it's desirable to have
+one relation describe the possible names. Using a closed rule will not work:
+
+<Dusa predicates={['nameOf', 'name']} code={`
+
+name "Celeste".
+name "Nimbus".
+name "Luna".
+name "Terra".
+
+nameOf hero is { Name } :- name Name.
+
+`}/>
+
+This program will try to force mutually contradictory names on the hero! That program
+is equivalent to this one, which similarly has no solutions:
+
+<Dusa predicates={['nameOf', 'name']} code={`
+
+nameOf hero is "Celeste".
+nameOf hero is "Nimbus".
+nameOf hero is "Luna".
+nameOf hero is "Terra".
+
+`}/>
+
+Forcing incompatible names on the hero, as the last two programs did, will invalidate
+the database and prevent there from being any solutions.
+
+Using an open rule does allow us to separate the set of names from their assignment to
+characters:
+
+<Dusa predicates={['nameOf', 'name']} code={`
+
+name "Celeste".
+name "Nimbus".
+name "Luna".
+name "Terra".
+
+nameOf hero is? Name :- name Name.
+nameOf sidekick is? Name :- name Name.
+nameOf villain is? Name :- name Name.
+
+`}/>
+
+The rules above allow for any of the valid names to be given to each character, but
+also provide for the possibility that a different name will get assigned to the
+character.
+
+## Idiom: default reasoning
+
+

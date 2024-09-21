@@ -2,8 +2,6 @@
 title: Syntax specification
 ---
 
-- TODO out-of-date, fix
-
 The syntax of Dusa is not whitespace-sensitive. Comments, which begin with a pound
 sign followed by a space or end of line and continue to the end of the line, are
 treated like whitespace.
@@ -19,33 +17,35 @@ treated like whitespace.
 
 ## Context-free grammar
 
-    <program>      ::= <declaration> <program> | ""
-    <declaration>  ::= "#builtin" <builtin> <identifier> [ "." ]
-                    |  "#demand" <premises> "."
-                    |  "#forbid" <premises> "."
-                    |  <conclusion> ":-" <premises> "."
+    <program>         ::= <declaration> <program> | ""
+    <declaration>     ::= "#builtin" <builtin> <identifier> [ "." ]
+                       |  "#demand" <premises> "."
+                       |  "#forbid" <premises> "."
+                       |  <conclusion> [ ":-" <premises> ] "."
 
-    <premises>     ::= <premise> | <premise> "," <premises>
-    <premise>      ::= <term> "!=" <term>
-                    |  <term> "==" <term>
-                    |  <attribute>
-                    |  <attribute> "is" <term>
+    <premises>        ::= <premise> | <premise> "," <premises>
+    <premise>         ::= <term> <oper> <term>
+                       |  <attribute> [ "is" <term> ]
+    <oper>            ::= "==" | "!=" | ">=" | ">" | "<=" | "<"
 
-    <conclusion>   ::= <attribute>
-                    |  <attribute> "is" <term>
-                    |  <attribute> "is" "{" <options> "}"
-    <conc-options> ::= <term> | <term> "?" | <conc-option> "," <conc-options>
-    <conc-option>  ::- <term> | "?"
+    <conclusion>      ::= <attribute>
+                       |  <attribute> "is" <term-or-choices>
+                       |  <attribute> "is?" <term-or-choices>
+    <term-or-choices> ::= <term> | "{" <choice-options> "}"
+    <choice-options>  ::= <term> | <term> "," <conc-options>
 
-    <attribute>   ::= <identifier> | <identifier> <arguments>
-    <arguments>   ::= <atomic-term> | <atomic-term> <arguments>
-    <atomic-term> ::= <wildcard> | <variable>
-                   |  <string-literal> | <int-literal>
-                   |  <identifier> | <builtin-identifier>
-                   |  "(" <term> ")"
-    <term>        ::= <atomic-term>
-                   |  <identifier> <arguments>
-                   |  <builtin-identifier> <arguments>
-    <builtin>     ::= "INT_PLUS" | "INT_MINUS"
-                   |  "NAT_ZERO" | "NAT_SUCC"
-                   |  "STRING_CONCAT"
+    <attribute>       ::= <identifier> | <identifier> <arguments>
+    <arguments>       ::= <atomic-term> | <atomic-term> <arguments>
+    <atomic-term>     ::= <wildcard> | <variable>
+                       |  <string-literal> | <int-literal>
+                       |  <identifier> | <builtin-identifier>
+                       |  "(" <term> ")"
+    <term>            ::= <atomic-term>
+                       |  <identifier> <arguments>
+                       |  <builtin-identifier> <arguments>
+    <builtin>         ::= "BOOLEAN_TRUE" | "BOOLEAN_FALSE"
+                       |  "NAT_ZERO" | "NAT_SUCC"
+                       |  "INT_PLUS" | "INT_MINUS" | "INT_TIMES
+                       |  "STRING_CONCAT"
+                       |  "CHECK_GT" | "CHECK_GEQ"
+                       |  "CHECK_LT" | "CHECK_LEQ"
