@@ -2,23 +2,54 @@
 title: Terms
 ---
 
-Most declarations in Dusa contain terms. Numbers (`0`, `-213`, `100`), strings (`"Hello world"`, `"whatever?"`), and constructors (`a`, `b`, `f c`, `h (f d) a`) are
-all terms. When you write `edge a b` in Dusa, both `a` and `b` get treated as
-constructors that take no arguments (we'll usually call these "constants.")
+import Dusa from '../../../../components/Dusa.astro';
+
+Most declarations in Dusa contain terms. If you've been following the language reference,
+you've already seen numbers (`0`, `-213`, `100`) and strings
+strings (`"Hello world"`, `"whatever?"`), but constructors
+(`a`, `b`, `f c`, `h (f d) a`) also play an important role.
+
+When you write a rule like `edge a b.` in Dusa, `edge` will be treated as a predicate, but
+both `a` and `b` will get treated as
+_constructors_ that take no arguments (we'll usually call these "constants.")
+
+When you a rule like this:
+
+<Dusa predicates={['rel']} code={`
+
+rel (h (g my_fish) 4 aWalk) is 3.
+
+`}/>
+
+- `rel` will get treated as a predicate,
+- `h` and `g` will get treated as constructors that take other terms as arguments, and
+- `my_fish` and `aWalk` will get treated as constants.
+
+Syntax highlighting gives a hint here: predicates are highlighted in a blue color, and 
+constructors and constants are highlighted in a purple color.
 
 ## Variables
 
 Rules in Dusa may contain logic variables, which start with uppercase letters.
 The following rule says the `edge` relation is symmetric:
 
-    edge X Y :- edge Y X.
+<Dusa predicates={['edge', 'self', 'node', 'path']} code={`
+
+edge X Y :- edge Y X.
+
+`}/>
+
 
 If we have the fact `edge a b`, this rule will allow us to match `Y = a` and
 `X = b` in the premise, and then use the rule to derive the fact `edge b a`.
 
 Each variable can only be assigned one value. This rule:
 
-    self X :- edge X X.
+<Dusa predicates={['edge', 'self', 'node', 'path']} code={`
+
+self X :- edge X X.
+
+`}/>
 
 cannot make use of the fact `edge a b`, because there's no way to assign `X = a` and
 `X = b` simultaneously. However, if we have the fact `edge c c`, then we can match
