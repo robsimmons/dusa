@@ -4,7 +4,7 @@ export function spanHighlight<State, Token>(
   tokenizer: StreamParser<State, Token>,
   string: string,
 ): { tag: string | null; contents: string }[][] {
-  let outputLines: { tag: string | null; contents: string }[][] = [];
+  const outputLines: { tag: string | null; contents: string }[][] = [];
   let output: { tag: string | null; contents: string }[] = [];
   let workingTag: string | undefined = undefined;
   let workingContents: string = '';
@@ -23,13 +23,14 @@ export function spanHighlight<State, Token>(
   }
 
   let state: State = tokenizer.startState;
-  for (let [lineOffByOne, remainingLine] of string.split('\n').entries()) {
+  for (const [lineOffByOne, ...restLine] of string.split('\n').entries()) {
+    let remainingLine = restLine[0];
     const line = lineOffByOne + 1;
     let column = 1;
 
     let currentStartColumn: number;
     let currentMatch: string;
-    let stream: StringStream = {
+    const stream: StringStream = {
       eat: (match: string | RegExp) => {
         const peek = stream.peek(match);
         if (peek === null) return null;
