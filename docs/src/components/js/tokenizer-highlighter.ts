@@ -1,20 +1,20 @@
-import type { StreamParser, StringStream } from "./tokenizer-types";
+import type { StreamParser, StringStream } from './tokenizer-types';
 
 export function spanHighlight<State, Token>(
   tokenizer: StreamParser<State, Token>,
-  string: string
+  string: string,
 ): { tag: string | null; contents: string }[][] {
   let outputLines: { tag: string | null; contents: string }[][] = [];
   let output: { tag: string | null; contents: string }[] = [];
   let workingTag: string | undefined = undefined;
-  let workingContents: string = "";
+  let workingContents: string = '';
   function reduce(newTag: string | undefined, newContents: string) {
-    if (newContents === "") {
+    if (newContents === '') {
       // Do nothing
     } else if (newTag === workingTag) {
       workingContents += newContents;
     } else {
-      if (workingContents !== "") {
+      if (workingContents !== '') {
         output.push({ tag: workingTag ?? null, contents: workingContents });
       }
       workingTag = newTag;
@@ -23,7 +23,7 @@ export function spanHighlight<State, Token>(
   }
 
   let state: State = tokenizer.startState;
-  for (let [lineOffByOne, remainingLine] of string.split("\n").entries()) {
+  for (let [lineOffByOne, remainingLine] of string.split('\n').entries()) {
     const line = lineOffByOne + 1;
     let column = 1;
 
@@ -39,7 +39,7 @@ export function spanHighlight<State, Token>(
         return peek;
       },
       peek: (match: string | RegExp): string | null => {
-        if (typeof match === "string") {
+        if (typeof match === 'string') {
           return remainingLine.startsWith(match) ? match : null;
         }
         const success = remainingLine.match(match);
@@ -49,7 +49,7 @@ export function spanHighlight<State, Token>(
         return column === 1;
       },
       eol: () => {
-        return remainingLine === "";
+        return remainingLine === '';
       },
       matchedLocation: () => ({
         start: { line, column: currentStartColumn },
@@ -59,7 +59,7 @@ export function spanHighlight<State, Token>(
 
     let i = 0;
     do {
-      currentMatch = "";
+      currentMatch = '';
       currentStartColumn = column;
       const response = tokenizer.advance(stream, state);
       reduce(response.tag, currentMatch);
@@ -68,11 +68,11 @@ export function spanHighlight<State, Token>(
       if (i++ > 10000) {
         throw new Error(`loop parsing line ${line}: '${remainingLine}'`);
       }
-    } while (remainingLine !== "");
+    } while (remainingLine !== '');
 
-    if (workingContents !== "") {
+    if (workingContents !== '') {
       output.push({ tag: workingTag ?? null, contents: workingContents });
-      workingContents = "";
+      workingContents = '';
     }
     outputLines.push(output);
     output = [];
