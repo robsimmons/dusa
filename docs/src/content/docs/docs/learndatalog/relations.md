@@ -7,11 +7,11 @@ If you've programmed in other languages, you may be used to working with functio
 
 These are the basic components of a Datalog program in Dusa:
 
-* **Integers** `12` and `-31`
-* **Strings** `"This is a string"`
-* **Operators** like `>`, `<`, `>=`, `<=`, `==`, and `!=`
-* **Symbols** are a lowercase letter followed by letters, numbers, and underscores, like `result`, `bigFish13`, `pair`, or `this_is_fine`.
-* **Variables** are an uppercase letter followed by letters, numbers, and underscores, like `X`, `Title`, `Sum` or `N4`.
+- **Integers** `12` and `-31`
+- **Strings** `"This is a string"`
+- **Operators** like `>`, `<`, `>=`, `<=`, `==`, and `!=`
+- **Symbols** are a lowercase letter followed by letters, numbers, and underscores, like `result`, `bigFish13`, `pair`, or `this_is_fine`.
+- **Variables** are an uppercase letter followed by letters, numbers, and underscores, like `X`, `Title`, `Sum` or `N4`.
 
 ```python
 def f: pass
