@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
 import { parse } from './dusa-parser.js';
-import { flatDeclToString, flattenDecls } from './flatten.js';
+import { flatDeclToString, flatProgramToString, flattenDecls } from './flatten.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
 
 function flatten(preds: ([string] | [string, BUILT_IN_PRED])[], source: string) {
@@ -12,6 +12,16 @@ function flatten(preds: ([string] | [string, BUILT_IN_PRED])[], source: string) 
   );
   return flattened.map(flatDeclToString);
 }
+
+test('flatProgramToString', () => {
+  const parsed = parse('a X:- b, c X, d.');
+  if (parsed.errors !== null) throw parsed.errors;
+  const flattened = flattenDecls(new Map(), parsed.document).map((decl, i) => ({
+    name: `#${i}`,
+    decl,
+  }));
+  expect(flatProgramToString(flattened)).toStrictEqual('#0: a X :- b, c X, d.');
+});
 
 test('Program flattening', () => {
   expect(flatten([], 'a X :- b (s X).')).toStrictEqual(['a X :- b (s X).']);
