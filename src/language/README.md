@@ -21,4 +21,4 @@ is a program like this:
 
 ### Binarization
 
-Binarization is a key part of the "machine model" our implementation uses: 
+Binarization is a key part of the "machine model" our implementation uses:
