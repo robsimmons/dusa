@@ -70,6 +70,24 @@ test('Equality on structures', () => {
   expect(solutionsToStrings(solutions)).toEqual(['a (pair 10 2), b 10, c 2, d (pair 2 10), e 10']);
 });
 
+test('Inequality on numbers', () => {
+  const { solutions } = testExecution(`
+    a :- 3 < 4.
+    b :- 4 < 4.
+    c :- 5 < 4.
+    d :- 3 <= 4.
+    e :- 4 <= 4.
+    f :- 5 <= 4.
+    g :- 3 > 4.
+    h :- 4 > 4.
+    i :- 5 > 4.
+    j :- 3 >= 4.
+    k :- 4 >= 4.
+    l :- 5 >= 4.
+    `);
+  expect(solutionsToStrings(solutions)).toEqual(['a, d, e, i, k, l']);
+});
+
 test('Exhaustive choices', () => {
   const { solutions, deadEnds } = testExecution(`
     a is { true, false }.

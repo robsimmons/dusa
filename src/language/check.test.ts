@@ -100,6 +100,18 @@ test('Built-in connected error messages', () => {
   expect(runForErrors('a :- 4 != X.')).toStrictEqual([
     '1:6-1:12: The built-in relation NOT_EQUAL was given 2 arguments, and the argument in position 2 contains variables not bound by previous premises. This builtin does not support that mode of operation.',
   ]);
+  expect(runForErrors('a :- 4 < _.')).toStrictEqual([
+    '1:6-1:11: The built-in relation CHECK_LT was given 2 arguments, and the argument in position 2 contains variables not bound by previous premises. This builtin does not support that mode of operation.',
+  ]);
+  expect(runForErrors('a :- 4 <= _.')).toStrictEqual([
+    '1:6-1:12: The built-in relation CHECK_LEQ was given 2 arguments, and the argument in position 2 contains variables not bound by previous premises. This builtin does not support that mode of operation.',
+  ]);
+  expect(runForErrors('a :- 4 > _.')).toStrictEqual([
+    '1:6-1:11: The built-in relation CHECK_GT was given 2 arguments, and the argument in position 2 contains variables not bound by previous premises. This builtin does not support that mode of operation.',
+  ]);
+  expect(runForErrors('a :- 4 >= _.')).toStrictEqual([
+    '1:6-1:12: The built-in relation CHECK_GEQ was given 2 arguments, and the argument in position 2 contains variables not bound by previous premises. This builtin does not support that mode of operation.',
+  ]);
   expect(runForErrors('#builtin INT_PLUS plus\na X :- plus 1 2 is X.')).toStrictEqual([]);
   expect(runForErrors('#builtin INT_PLUS plus\na X :- plus 1 X is 2.')).toStrictEqual([]);
   expect(runForErrors('#builtin INT_PLUS plus\na X :- plus X X is 2.')).toStrictEqual([
