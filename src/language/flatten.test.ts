@@ -58,4 +58,18 @@ test('Program flattening', () => {
   expect(flatten([['b']], 'a (b X Y Z) :- c X Y Z.')).toStrictEqual([
     'a #1 :- c X Y Z, b X Y Z is #1.',
   ]);
+  expect(flatten([], 'c is ().\nd.')).toStrictEqual(['c is ().', 'd.']);
+  expect(
+    flatten(
+      [['a'], ['b'], ['s', 'NAT_SUCC']],
+      `#builtin NAT_SUCC s
+    a is 4.
+    b is (s X) :- a == X.
+    c :- a > b.`,
+    ),
+  ).toStrictEqual([
+    'a is 4.',
+    'b is #2 :- a is #1, .EQUAL #1 X is (), .NAT_SUCC X is #2.',
+    'c :- a is #1, b is #2, .CHECK_GT #1 #2 is #tt.',
+  ]);
 });
