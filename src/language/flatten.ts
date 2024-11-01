@@ -6,8 +6,7 @@ import {
   ParsedPremise,
   ParsedTopLevel,
   headToString,
-} from './syntax.js';
-import { ParsedPattern, Pattern, termToString } from './terms.js';
+} from './syntax.js';import { freeVars, ParsedPattern, Pattern, termToString } from './terms.js';
 
 export type FlatPremise = {
   args: Pattern[];
@@ -26,6 +25,13 @@ export type FlatDeclaration =
       conclusion: Conclusion;
       loc?: SourceLocation;
     };
+
+export function freeVarsFlatPremise(premise: FlatPremise) {
+  if (premise.type === 'builtin' || premise.value !== null) {
+    return freeVars(...premise.args, premise.value);
+  }
+  return freeVars(...premise.args);
+}
 
 function flattenPattern(
   preds: Map<string, undefined | BUILT_IN_PRED>,
@@ -250,3 +256,4 @@ export function flatDeclToString(decl: FlatDeclaration) {
 export function flatProgramToString(flatProgram: { name: string; decl: FlatDeclaration }[]) {
   return flatProgram.map(({ name, decl }) => `${name}: ${flatDeclToString(decl)}`).join('\n');
 }
+

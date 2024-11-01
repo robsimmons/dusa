@@ -66,7 +66,13 @@ export function propToString(p: ParsedProposition) {
   return `${p.name}${args}${value}`;
 }
 
-export function headToString(head: ParsedConclusion | Conclusion): string {
+export function headToString(
+  head: { name: string; args: Pattern[] } & (
+    | { type: 'datalog' }
+    | { type: 'open'; values: Pattern[] }
+    | { type: 'closed'; values: Pattern[] }
+  ),
+): string {
   const args = head.args.map((arg) => ` ${termToString(arg)}`).join('');
   const base = `${head.name}${args}`;
   switch (head.type) {

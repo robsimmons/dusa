@@ -1,0 +1,75 @@
+import { test, expect } from 'vitest';
+import { binarize, BinarizedProgram, binarizedProgramToString } from './binarize.js';
+import { FlatDeclaration, flatProgramToString } from './flatten.js';
+import { Pattern } from './terms.js';
+import { permuteIntroduced } from './indexize2.js';
+
+const loc = { start: { line: 1, column: 1, index: 1 }, end: { line: 1, column: 2, index: 2 } };
+const x: Pattern = { type: 'var', name: 'X' };
+const y: Pattern = { type: 'var', name: 'Y' };
+
+const z: Pattern = { type: 'var', name: 'Z' };
+const w: Pattern = { type: 'var', name: 'W' };
+const v: Pattern = { type: 'var', name: 'V' };
+
+test(`Permuting `, () => {
+  const prog: BinarizedProgram = {
+    seeds: ['r-0'],
+    forbids: [],
+    demands: [],
+    rules: [
+      {
+        type: 'Binary',
+        inName: 'r-0',
+        inVars: [],
+        outName: 'r-1',
+        outVars: ['W', 'X', 'Z'],
+        premise: { name: 'b', args: [w, x, z], type: 'fact', value: null, loc },
+      },
+      {
+        type: 'Binary',
+        inName: 'r-1',
+        inVars: ['W', 'X', 'Z'],
+        outName: 'r-2',
+        outVars: ['W', 'X', 'Z', 'Y', 'V'],
+        premise: { name: 'c', args: [z, x, y, v], type: 'fact', value: null, loc },
+      },
+      {
+        type: 'Binary',
+        inName: 'r-2',
+        inVars: ['W', 'X', 'Z', 'Y', 'V'],
+        outName: 'r-3',
+        outVars: ['W', 'X', 'Z', 'Y', 'V'],
+        premise: { name: 'd', args: [w, z, v, v], type: 'fact', value: null, loc },
+      },
+      {
+        type: 'Conclusion',
+        inName: 'r-3',
+        inVars: ['W', 'X', 'Z', 'Y', 'V'],
+        conclusion: { name: 'a', args: [x, y, z, w, v], type: 'datalog', loc },
+      },
+    ],
+  };
+
+  expect(binarizedProgramToString(prog)).toStrictEqual(
+    `Initial seeds: $r-0
+Demands to derive: 
+Forbids to derive: 
+Rules:
+$r-1 W X Z :- $r-0, b W X Z.
+$r-2 W X Z Y V :- $r-1 W X Z, c Z X Y V.
+$r-3 W X Z Y V :- $r-2 W X Z Y V, d W Z V V.
+a X Y Z W V :- $r-3 W X Z Y V.`,
+  );
+
+  expect(binarizedProgramToString(permuteIntroduced(prog))).toStrictEqual(
+    `Initial seeds: $r-0
+Demands to derive: 
+Forbids to derive: 
+Rules:
+$r-1 X Z W :- $r-0, b W X Z.
+$r-2 W Z V X Y :- $r-1 X Z W, c Z X Y V.
+$r-3 W X Z Y V :- $r-2 W Z V X Y, d W Z V V.
+a X Y Z W V :- $r-3 W X Z Y V.`,
+  );
+});

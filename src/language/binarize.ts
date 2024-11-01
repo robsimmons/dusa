@@ -122,7 +122,8 @@ function binarizePremises(
  *     conclusion    inName inVars
  *
  * One of the critical properties of a binarized program is that each introduced predicate
- * only appears as a *premise* of a single rule.
+ * only appears as a *premise* of a single rule and only appears as the *conclusion* of a
+ * single (different) rule.
  */
 export function binarize(decls: { name: string; decl: FlatDeclaration }[]): BinarizedProgram {
   const seeds: string[] = [];

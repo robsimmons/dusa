@@ -6,6 +6,9 @@ import { Pattern } from './terms.js';
 const loc = { start: { line: 1, column: 1, index: 1 }, end: { line: 1, column: 2, index: 2 } };
 const x: Pattern = { type: 'var', name: 'X' };
 const y: Pattern = { type: 'var', name: 'Y' };
+const z: Pattern = { type: 'var', name: 'Z' };
+const w: Pattern = { type: 'var', name: 'W' };
+const v: Pattern = { type: 'var', name: 'V' };
 
 test(`binarizing a regular rule`, () => {
   const decl: FlatDeclaration = {
@@ -73,6 +76,6 @@ Demands to derive:
 Forbids to derive: $r-1
 Rules:
 $r-1 :- $r-0, b.
-  `.trim(),
+    `.trim(),
   );
 });
