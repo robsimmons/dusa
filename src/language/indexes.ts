@@ -6,7 +6,7 @@ import {
   freeVarsConclusion,
   joinVars,
   usedPremiseVars,
-} from './binarize2.js';
+} from './binarize.js';
 import { Pattern } from './terms.js';
 
 type Shape =
@@ -178,8 +178,14 @@ function partitionIfPossible(ordering: Constraint, first: Set<number>, extensibl
     return null;
   }
 
-  if (extensible) return [...ordering, first];
-  return null;
+  // This case can't be encountered unless there's an index we're only using
+  // partially, like if we know `c X X Y :- p _ X Y`, we can use c/1 but not c/2 or c/3
+  // as an index for p. Because all user-defined predicates can be extended, we never
+  // do this optimization so never take this if-statement.
+
+  /* istanbul ignore next */
+  if (!extensible) throw new Error('I should probably return null here');
+  return [...ordering, first];
 }
 
 /**
@@ -309,18 +315,13 @@ export function generateIndices(program: BinarizedProgram): BinarizedProgram {
     rules.push(...newRules);
     finalizedIndexMap.set(pred, finalizedSpecs);
   }
-  console.log(finalizedIndexMap);
   for (const rule of program.rules) {
     if (rule.type === 'Unary' || rule.type === 'Builtin') {
       rules.push(rule);
     } else {
       const indices = finalizedIndexMap.get(rule.premise.name)!;
       for (const index of indices) {
-        if (refineIfPossible(index, rule)) {
-          if (index.identity.pred === null) {
-            throw new Error('Impossible: finalized index not refined');
-          }
-
+        if (refineIfPossible(index, rule) && index.identity.pred !== null) {
           const { revLookup } = termsToShape(rule.premise.args);
           const args: Pattern[] = index.identity.vars
             .slice(0, usedPremiseVars(rule).size)
@@ -338,7 +339,7 @@ export function generateIndices(program: BinarizedProgram): BinarizedProgram {
         // Danger! If we exit this loop without ever breaking
         // then the program is definitely wrong. (But we shouldn't
         // be able to ever exit the loop without breaking, because
-        // we've ensured that there's a pattern that can match every 
+        // we've ensured that there's a pattern that can match every
         // premise.)
       }
     }

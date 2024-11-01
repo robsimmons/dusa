@@ -1,13 +1,12 @@
-import { binarize, binarizedProgramToString } from './binarize.js';
+import { Program } from '../bytecode.js';
 import {
-  binarize as bin2,
-  binarizedProgramToString as binStr2,
+  binarize,
+  binarizedProgramToString,
   makeIntermediatePredicatesMatchJoinOrder,
-} from './binarize2.js';
+} from './binarize.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { flattenDecls, flatProgramToString } from './flatten.js';
 import { generateIndices } from './indexes.js';
-import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
 import { ParsedDeclaration, ParsedTopLevel } from './syntax.js';
 
 export function indexToRuleName(index: number): string {
@@ -23,7 +22,7 @@ export function compile(
   arities: Map<string, { args: number; value: boolean }>,
   program: ParsedTopLevel[],
   debug = false,
-): IndexedProgram {
+): Program {
   const decls = program.filter((x): x is ParsedDeclaration => x.type !== 'Builtin');
 
   const flattened = flattenDecls(
@@ -61,17 +60,11 @@ ${flatProgramToString(named)}`);
 ${binarizedProgramToString(binarized)}`);
   }
 
-  const indexed = indexize(binarized);
+  const indexed = makeIntermediatePredicatesMatchJoinOrder(generateIndices(binarized));
   if (debug) {
     console.log(`\nForm 3: Index-aware program
-${indexedProgramToString(indexed)}`);
+${binarizedProgramToString(indexed)}`);
   }
 
-  if (debug) {
-    const binarized = bin2(named);
-    const indexesAdded = makeIntermediatePredicatesMatchJoinOrder(generateIndices(binarized));
-    console.log(binStr2(indexesAdded));
-  }
-
-  return indexed;
+  return { seeds: [], forbids: [], demands: [], rules: [] };
 }
