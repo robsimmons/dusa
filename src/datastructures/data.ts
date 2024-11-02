@@ -1,3 +1,11 @@
+type ViewsIndex = number;
+
+/**
+ * Outside data.ts, the type Data should be treated externally as an opaque type.
+ *
+ * A piece of Data belongs to a specific HashCons object, and Data returned from
+ * one HashCons.hide() cannot be given to another HashCons object.
+ */
 export type Data = ViewsIndex | bigint;
 
 export type DataView =
@@ -8,145 +16,122 @@ export type DataView =
   | { type: 'const'; name: string; args: Data[] }
   | { type: 'ref'; value: number };
 
-type ViewsIndex = number;
-let nextRef: number = -1;
-let views: DataView[] = [
-  { type: 'trivial' },
-  { type: 'bool', value: true },
-  { type: 'bool', value: false },
-];
-let strings: { [s: string]: number } = {};
-let structures: { [name: string]: DataTrie } = {};
-
-export function DANGER_RESET_DATA() {
-  nextRef = -1;
-  views = [{ type: 'trivial' }, { type: 'bool', value: true }, { type: 'bool', value: false }];
-  strings = {};
-  structures = {};
-}
-
-export const TRIVIAL = 0;
-export const BOOL_TRUE = 1;
-export const BOOL_FALSE = 2;
-
-export function expose(d: Data): DataView {
-  if (typeof d === 'bigint') return { type: 'int', value: d };
-  if (d <= nextRef) throw new Error(`Internalized ref ${-d} too small.`);
-  if (d < 0) return { type: 'ref', value: -d };
-  if (d >= views.length) throw new Error(`Internalized value ${d} invalid`);
-  return views[d];
-}
-
 type DataTrie = {
   value?: ViewsIndex;
-  indexChildren: { [value: ViewsIndex]: DataTrie };
-  bigintChildren: { [value: string]: DataTrie };
+  children: { [value: string | ViewsIndex]: DataTrie };
 };
 
-function getStructureIndex(name: string, args: Data[]): ViewsIndex | null {
-  let structure: DataTrie | undefined = structures[name];
-  for (const arg of args) {
-    if (structure === undefined) return null;
-    if (typeof arg === 'bigint') structure = structure.bigintChildren[`${arg}`];
-    else structure = structure.indexChildren[arg];
-  }
-  if (structure?.value === undefined) return null;
-  return structure.value;
-}
+export class HashCons {
+  private nextRef: number = -1;
+  private views: DataView[] = [
+    { type: 'trivial' },
+    { type: 'bool', value: true },
+    { type: 'bool', value: false },
+  ];
+  private strings: { [s: string]: number } = {};
+  private structures: { [name: string]: DataTrie } = {};
 
-function setStructureIndex(name: string, args: Data[], value: ViewsIndex) {
-  if (!structures[name]) {
-    structures[name] = { bigintChildren: {}, indexChildren: {} };
+  static readonly TRIVIAL = 0;
+  static readonly BOOL_TRUE = 1;
+  static readonly BOOL_FALSE = 2;
+
+  expose(d: Data): DataView {
+    if (typeof d === 'bigint') return { type: 'int', value: d };
+    if (d <= this.nextRef) throw new Error(`Internalized ref ${-d} is invalid.`);
+    if (d < 0) return { type: 'ref', value: -d };
+    if (d >= this.views.length) throw new Error(`Internalized value ${d} is invalid.`);
+    return this.views[d];
   }
-  let structure = structures[name];
-  for (const arg of args) {
-    if (typeof arg === 'bigint') {
-      const index = `${arg}`;
-      if (!structure.bigintChildren[index]) {
-        structure.bigintChildren[index] = { bigintChildren: {}, indexChildren: {} };
+
+  private getStructureIndex(name: string, args: Data[]): ViewsIndex | null {
+    let structure: DataTrie | undefined = this.structures[name];
+    for (const arg of args) {
+      if (structure === undefined) return null;
+      structure = structure.children[typeof arg === 'bigint' ? `${arg}n` : arg];
+    }
+    return structure?.value ?? null;
+  }
+
+  private setStructureIndex(name: string, args: Data[], value: ViewsIndex) {
+    if (!this.structures[name]) this.structures[name] = { children: {} };
+    let structure = this.structures[name];
+
+    for (const arg of args) {
+      const index = typeof arg === 'bigint' ? `${arg}n` : arg;
+      if (!structure.children[index]) structure.children[index] = { children: {} };
+      structure = structure.children[index];
+    }
+    structure.value = value;
+  }
+
+  hide(d: DataView): Data {
+    switch (d.type) {
+      case 'trivial':
+        return HashCons.TRIVIAL;
+      case 'int':
+        return d.value;
+      case 'bool':
+        return d.value ? HashCons.BOOL_TRUE : HashCons.BOOL_FALSE;
+      case 'ref':
+        return -d.value;
+      case 'string': {
+        const candidate = this.strings[d.value];
+        if (candidate !== undefined) return candidate;
+        const result = this.views.length;
+        this.views.push({ type: 'string', value: d.value });
+        this.strings[d.value] = result;
+        return result;
       }
-      structure = structure.bigintChildren[index];
-    } else {
-      if (!structure.indexChildren[arg]) {
-        structure.indexChildren[arg] = { bigintChildren: {}, indexChildren: {} };
+      case 'const': {
+        const candidate = this.getStructureIndex(d.name, d.args);
+        if (candidate !== null) return candidate;
+        const result = this.views.length;
+        this.views.push({ type: 'const', name: d.name, args: d.args });
+        this.setStructureIndex(d.name, d.args, result);
+        return result;
       }
-      structure = structure.indexChildren[arg];
     }
   }
-  if (structure.value !== undefined) throw new Error(`Invariant, setting an existing structure`);
-  structure.value = value;
-}
 
-export function hide(d: DataView): Data {
-  switch (d.type) {
-    case 'trivial':
-      return 0;
-    case 'int':
-      return d.value;
-    case 'bool':
-      return d.value ? 1 : 2;
-    case 'ref':
-      if (-d.value <= nextRef || d.value >= 0) {
-        throw new Error(`Ref value is invalid`);
+  genRef(): Data {
+    return this.nextRef--;
+  }
+
+  toString(d: Data, needsParens = false): String {
+    const view = this.expose(d);
+    switch (view.type) {
+      case 'trivial':
+        return `()`;
+      case 'int':
+        return `${view.value}`;
+      case 'bool':
+        return `#${view.value ? 'tt' : 'ff'}`;
+      case 'ref':
+        return `#${view.value}`;
+      case 'string': {
+        return `"${escapeString(view.value)}"`;
       }
-      return -d.value;
-    case 'string': {
-      const candidate = strings[d.value];
-      if (candidate) return candidate;
-      const result = views.length;
-      views.push({ type: 'string', value: d.value });
-      strings[d.value] = result;
-      return result;
-    }
-    case 'const': {
-      const candidate = getStructureIndex(d.name, d.args);
-      if (candidate !== null) return candidate;
-      const result = views.length;
-      views.push({ type: 'const', name: d.name, args: d.args });
-      setStructureIndex(d.name, d.args, result);
-      return result;
+      case 'const':
+        return view.args.length === 0
+          ? view.name
+          : needsParens
+            ? `(${view.name} ${view.args.map((arg) => this.toString(arg, true)).join(' ')})`
+            : `${view.name} ${view.args.map((arg) => this.toString(arg, true)).join(' ')}`;
     }
   }
 }
 
+/** Compares data without accessing memory; suitable for internal data structures. */
 export function compareData(a: Data, b: Data): number {
-  const x = expose(a);
-  const y = expose(b);
-  switch (x.type) {
-    case 'trivial':
-      if (y.type === 'trivial') return 0;
-      return -1;
-    case 'int':
-      if (y.type === 'trivial') return 1;
-      if (y.type === 'int') {
-        const c = x.value - y.value;
-        return c > 0n ? 1 : c < 0n ? -1 : 0;
-      }
-      return -1;
-    case 'bool':
-      if (y.type === 'trivial' || y.type === 'int') return 1;
-      if (y.type === 'bool') return (x.value ? 1 : 0) - (y.value ? 1 : 0);
-      return -1;
-    case 'ref':
-      if (y.type === 'trivial' || y.type === 'int' || y.type === 'bool') return 1;
-      if (y.type === 'ref') return x.value - y.value;
-      return -1;
-    case 'string':
-      if (y.type === 'trivial' || y.type === 'int' || y.type === 'bool' || y.type === 'ref')
-        return 1;
-      if (y.type === 'string') return x.value > y.value ? 1 : x.value < y.value ? -1 : 0;
-      return -1;
-    case 'const':
-      if (y.type !== 'const') return 1;
-      if (x.name > y.name) return 1;
-      if (x.name < y.name) return -1;
-      if (x.args.length !== y.args.length) return x.args.length - y.args.length;
-      for (let i = 0; i < x.args.length; i++) {
-        const c = compareData(x.args[i], y.args[i]);
-        if (c !== 0) return c;
-      }
-      return 0;
+  if (typeof a === 'bigint') {
+    if (typeof b === 'bigint') {
+      return a > b ? 1 : a < b ? -1 : 0;
+    }
+    return 1;
+  } else if (typeof b === 'bigint') {
+    return -1;
   }
+  return a - b;
 }
 
 export function escapeString(input: string): string {
@@ -177,31 +162,4 @@ export function escapeString(input: string): string {
     }
   }
   return escaped.join('');
-}
-
-export function dataToString(d: Data, needsParens = true): string {
-  const view = expose(d);
-  switch (view.type) {
-    case 'trivial':
-      return `()`;
-    case 'int':
-      return `${view.value}`;
-    case 'bool':
-      return `#${view.value ? 'tt' : 'ff'}`;
-    case 'ref':
-      return `#${view.value}`;
-    case 'string': {
-      return `"${escapeString(view.value)}"`;
-    }
-    case 'const':
-      return view.args.length === 0
-        ? view.name
-        : needsParens
-          ? `(${view.name} ${view.args.map((arg) => dataToString(arg)).join(' ')})`
-          : `${view.name} ${view.args.map((arg) => dataToString(arg)).join(' ')}`;
-  }
-}
-
-export function getRef(): Data {
-  return nextRef--;
 }
