@@ -1,4 +1,4 @@
-import { Data } from '../datastructures/data.js';
+import { Data, DataSet } from '../datastructures/data.js';
 import { TrieMap } from '../datastructures/datamap.js';
 
 type Intermediate = { type: 'intermediate'; name: string; shared: Data[]; passed: Data[] };
@@ -17,6 +17,6 @@ function lstArr<T>(xs: Lst<T>): T[] {
 export interface Database {
   factValues: TrieMap<
     Data,
-    { type: 'just'; value: Data } | { type: 'noneOf'; value: Data[] } | null
+    { type: 'just'; value: Data } | { type: 'noneOf'; value: DataSet } | null
   >;
 }

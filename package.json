@@ -8,6 +8,10 @@
     "require": "./lib/client.cjs",
     "import": "./lib/client.js"
   },
+  "engine": {
+    "node": ">=22.0.0",
+    "npm": ">=v10.9.0"
+  },
   "homepage": "https://dusa.rocks",
   "repository": {
     "type": "git",

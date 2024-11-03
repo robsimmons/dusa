@@ -82,10 +82,18 @@ function binarizedRuleToString(rule: BinarizedRule) {
       return `${concToString(rule.conclusion)} :- ${rule.premise.name}${args}.`;
     }
     case 'Join': {
-      return `${concToString(rule.conclusion)} :- @${rule.inName}${rule.inVars.map((x) => ` ${x}`).join('')}, ${rule.premise.name}${rule.premise.args.map((arg) => ` ${termToString(arg)}`).join('')}.`;
+      return `${concToString(rule.conclusion)} :- @${rule.inName}${rule.inVars
+        .map((x) => ` ${x}`)
+        .join('')}, ${rule.premise.name}${rule.premise.args
+        .map((arg) => ` ${termToString(arg)}`)
+        .join('')}.`;
     }
     case 'Builtin': {
-      return `${concToString(rule.conclusion)} :- @${rule.inName}${rule.inVars.map((x) => ` ${x}`).join('')}, .${rule.premise.name}${rule.premise.args.map((arg) => ` ${termToString(arg)}`).join('')} is ${termToString(rule.premise.value)}.`;
+      return `${concToString(rule.conclusion)} :- @${rule.inName}${rule.inVars
+        .map((x) => ` ${x}`)
+        .join('')}, .${rule.premise.name}${rule.premise.args
+        .map((arg) => ` ${termToString(arg)}`)
+        .join('')} is ${termToString(rule.premise.value)}.`;
     }
   }
 }

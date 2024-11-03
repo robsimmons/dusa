@@ -1,3 +1,10 @@
+import {
+  AVL as Tree,
+  lookup as lookupTree,
+  insert as insertTree,
+  choose as chooseTree,
+} from './avl.js';
+
 type ViewsIndex = number;
 
 /**
@@ -123,15 +130,16 @@ export class HashCons {
 
 /** Compares data without accessing memory; suitable for internal data structures. */
 export function compareData(a: Data, b: Data): number {
-  if (typeof a === 'bigint') {
-    if (typeof b === 'bigint') {
-      return a > b ? 1 : a < b ? -1 : 0;
+  if (typeof a === 'number') {
+    if (typeof b === 'number') {
+      return a - b;
     }
     return 1;
-  } else if (typeof b === 'bigint') {
-    return -1;
   }
-  return a - b;
+  if (typeof b === 'bigint') {
+    return a > b ? 1 : a < b ? -1 : 0;
+  }
+  return -1;
 }
 
 export function escapeString(input: string): string {
@@ -162,4 +170,51 @@ export function escapeString(input: string): string {
     }
   }
   return escaped.join('');
+}
+
+export class DataMap<T> {
+  private tree: Tree<Data, T>;
+  private size: number;
+
+  private constructor(tree: Tree<Data, T>, size: number) {
+    this.tree = tree;
+    this.size = size;
+  }
+
+  static new<T>(): DataMap<T> {
+    return new DataMap<T>(null, 0);
+  }
+
+  set(key: Data, value: T) {
+    const [newTree, removed] = insertTree(compareData, this.tree, key, value);
+    return new DataMap(newTree, removed === null ? this.size : this.size + 1);
+  }
+
+  get(key: Data) {
+    return lookupTree(compareData, this.tree, key);
+  }
+
+  choose() {
+    return chooseTree(this.tree);
+  }
+}
+
+export class DataSet {
+  private map: DataMap<true>;
+
+  private constructor(map: DataMap<true>) {
+    this.map = map;
+  }
+
+  static new(): DataSet {
+    return new DataSet(DataMap.new());
+  }
+
+  add(key: Data) {
+    return new DataSet(this.map.set(key, true));
+  }
+
+  has(key: Data) {
+    return !!this.map.get(key);
+  }
 }
