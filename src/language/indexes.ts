@@ -221,6 +221,13 @@ function refineIfPossible(index: IndexSpec, rule: JoinRule): IndexSpec | null {
   return { ...index, order: order2 };
 }
 
+function isAlwaysClosed(program: BinarizedProgram, pred: string) {
+  for (const rule of program.rules) {
+    if (rule.conclusion.name === pred && rule.conclusion.type === 'open') return false;
+  }
+  return true;
+}
+
 function learnNeededIndices(program: BinarizedProgram): IndexMap {
   // Find every regular predicate used in a premise
   const maxArgs = new Map<string, number>();
@@ -233,9 +240,16 @@ function learnNeededIndices(program: BinarizedProgram): IndexMap {
   }
 
   // Add the default index-you-get-for-free for every predicate
+  // that can't include negative information (we don't use predicates
+  // with negative information as indices, because if `a 4 2 |-> noneOf { 1,2,3 }`
+  // we don't want that to indicate support for `a 4`.
   const learnedSpecs = new Map<string, IndexSpec[]>();
   for (const [pred, arity] of maxArgs) {
-    learnedSpecs.set(pred, [defaultIndices(pred, arity)]);
+    if (isAlwaysClosed(program, pred)) {
+      learnedSpecs.set(pred, [defaultIndices(pred, arity)]);
+    } else {
+      learnedSpecs.set(pred, []);
+    }
   }
 
   // Ensure that there's a spec for every rule

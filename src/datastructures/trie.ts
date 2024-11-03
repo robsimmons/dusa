@@ -57,15 +57,14 @@ export function insert<K, V>(
 
 type TreeIterator<K, V> = Iterator<{ key: K; value: TrieNode<K, V> }>;
 
-export function* visit<K, V>(tr: TrieNode<K, V>) {
+export function* visit<K, V>(tr: Trie<K, V>, depth: number) {
   const keys: K[] = [];
   const stack: TreeIterator<K, V>[] = [];
   let current: Trie<K, V> = tr;
 
   while (current !== null) {
     // Descend
-    // loop invariant: current != null
-    while (current!.child !== null) {
+    while (stack.length < depth) {
       const iterator: TreeIterator<K, V> = visitTree(current!.child);
       const result = iterator.next();
       if (result.done) throw new Error('Empty trie child');
@@ -75,7 +74,7 @@ export function* visit<K, V>(tr: TrieNode<K, V>) {
       current = child.value;
     }
 
-    yield { keys: [...keys], value: current.value };
+    yield { keys: [...keys], value: current };
 
     // Ascend
     while (true) {

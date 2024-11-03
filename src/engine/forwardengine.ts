@@ -1,5 +1,5 @@
 import { Data, DataSet } from '../datastructures/data.js';
-import { TrieMap } from '../datastructures/datamap.js';
+import { Database } from '../datastructures/database.js';
 
 type Intermediate = { type: 'intermediate'; name: string; shared: Data[]; passed: Data[] };
 type NewFact = { type: 'fact'; name: string; args: Data[] };
@@ -14,9 +14,9 @@ function lstArr<T>(xs: Lst<T>): T[] {
   return result;
 }
 
-export interface Database {
-  factValues: TrieMap<
-    Data,
-    { type: 'just'; value: Data } | { type: 'noneOf'; value: DataSet } | null
-  >;
+export interface SearchState {
+  facts: Database;
+  intermediates: Database;
+  agenda: Lst<AgendaMember>;
+  deferred: 
 }

@@ -103,6 +103,28 @@ a X :- p _ X.
 b X :- @b-1-1 X, $p-1 X.`);
 });
 
+test("don't rules that might be open as indexes", () => {
+  const program = srcToIndexed(`
+a 3 2.
+b 3 2 is { x, y, z }.
+c 3 2 is? { x, y, z }.
+q :- p, a _ _.
+q :- p, b _ _ is _.
+q :- p, c _ _ is _.`);
+  expect(binarizedProgramToString(program)).toStrictEqual(`seeds: $seed
+rules:
+$c-0 :- c #0 #1 #2.
+a 3 2 :- $seed.
+b 3 2 is { x, y, z } :- $seed.
+c 3 2 is? { x, y, z } :- $seed.
+@q-1-1 :- p.
+q :- @q-1-1, a.
+@q-2-1 :- p.
+q :- @q-2-1, b.
+@q-3-1 :- p.
+q :- @q-3-1, $c-0.`);
+});
+
 test('example from src/language/README.md', () => {
   let program: BinarizedProgram;
 

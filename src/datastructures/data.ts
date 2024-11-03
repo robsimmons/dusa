@@ -181,7 +181,7 @@ export class DataMap<T> {
     this.size = size;
   }
 
-  static new<T>(): DataMap<T> {
+  static empty<T>(): DataMap<T> {
     return new DataMap<T>(null, 0);
   }
 
@@ -206,8 +206,8 @@ export class DataSet {
     this.map = map;
   }
 
-  static new(): DataSet {
-    return new DataSet(DataMap.new());
+  static empty(): DataSet {
+    return new DataSet(DataMap.empty());
   }
 
   add(key: Data) {
@@ -218,3 +218,4 @@ export class DataSet {
     return !!this.map.get(key);
   }
 }
+
