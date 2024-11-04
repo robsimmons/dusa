@@ -203,6 +203,11 @@ export class DataMap<T> {
   choose() {
     return chooseTree(this.tree);
   }
+
+  getSingletonKey() {
+    if (this.size !== 1) return null;
+    return this.tree!.key;
+  }
 }
 
 export class DataSet {
@@ -226,5 +231,9 @@ export class DataSet {
 
   has(key: Data) {
     return !!this.map.get(key);
+  }
+
+  getSingleton() {
+    return this.map.getSingletonKey();
   }
 }

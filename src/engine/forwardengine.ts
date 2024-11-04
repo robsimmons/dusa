@@ -18,18 +18,30 @@ function lstArr<T>(xs: Lst<T>): T[] {
 }
 
 /**
- * The *database* D covers all stored state.
- * The least upper bound (in the lattice of choice sets) of the *chart* C and the database
- * *D* represents all immediate consequences of the facts in the database.
+ * The semi-naive, tuple-at-a-time forward-chaining algorithm for
+ * finite-choice logic programming is written in terms of a database D
+ * (a map from attributes to constraints) and a chart C containing the
+ * immediate consequences of D. The chart can be interpreted as a (non-empty)
+ * choice set or as a map from attributes to (non-empty) sets of pairwise
+ * incompatible constraints, and it is always the case that `{D[a]} <= C[a]`.
+ * 
+ * The database D is represented by `state.explored`:
+ * If `D[a] = noneOf {}`, then `!state.explored`.
+ * Otherwise, `state.explored[a] = D[a]`.
+ * 
+ * The chart C is represented by the combination of `state.explored` and `state.frontier`.
+ * If `{D[a]} = C[a]`, then `!state.frontier[a]`.
+ * If `{D[a]} < C[a]`, then `state.frontier[a] = C[a]`.
  *
- * Every premise in the chart corresponds to a fact in the agenda or an attribute in
- * the deferredAgenda.
+ * The agenda A contains exactly the attributes where `{D[a]} < C[a]`.
+ * If `C[a] = { just v }`, then `a` is in `state.agenda`.
+ * Otherwise, `a` is in `state.deferred`.
  */
 export interface SearchState {
-  database: Database;
-  chart: AttributeMap<{ values: DataSet; open: boolean }>;
+  explored: Database;
+  frontier: AttributeMap<{ values: DataSet; open: boolean }>;
   agenda: Lst<AgendaMember>;
-  deferredAgenda: AttributeMap<true>;
+  deferred: AttributeMap<true>;
   demands: DataSet;
 }
 
@@ -63,18 +75,33 @@ export function learnImmediateConsequences(
   state: SearchState,
   popped: AgendaMember,
 ): boolean {
+  // We're removing an attribute from the agenda: it must be on the chart.
+  const [chart, leaf] = state.chart.remove(popped.name, popped.args)!;
+  state.chart = chart;
+  if (!leaf || leaf.open) throw new Error('learnImmedaiteConsequence invariant');
+  const value = leaf.values.getSingleton()!;
+  const poppedData = [...popped.args, value];
+
+  // Add the mapping removed from the chart to the database
+  const [database] = state.database.set(popped.name, popped.args, { type: 'just', value });
+  state.database = database;
+
+  // Now we've broken our central invariant: the chart no longer
+  // contains all the immediate consequences of the database!
+  //
+  // The rest of the function restores this invariant.
   if (popped.type === 'fact') {
     for (const { args, conclusion } of prog.predUnary[popped.name] ?? []) {
       const subst: Data[] = [];
-      if (popped.args.every((arg, i) => match(prog.data, subst, args[i], arg))) {
+      if (args.every((arg, i) => match(prog.data, subst, arg, poppedData[i]))) {
         if (assertConclusion(prog, state, subst, conclusion)) {
           return true;
         }
       }
     }
     for (const { inName, inVars, conclusion } of prog.predBinary[popped.name] ?? []) {
-      const shared = popped.args.slice(0, inVars.shared);
-      const introduced = popped.args.slice(inVars.shared);
+      const shared = poppedData.slice(0, inVars.shared);
+      const introduced = poppedData.slice(inVars.shared);
       for (const passed of state.database.visit(inName, shared, inVars.passed)) {
         if (assertConclusion(prog, state, [...shared, ...passed, ...introduced], conclusion)) {
           return true;
@@ -84,8 +111,8 @@ export function learnImmediateConsequences(
   } else {
     if (prog.forbids[popped.name]) return true;
     for (const { premise, conclusion } of prog.intermediates[popped.name] ?? []) {
-      const shared = popped.args.slice(0, premise.shared);
-      const passed = popped.args.slice(premise.shared);
+      const shared = poppedData.slice(0, premise.shared);
+      const passed = poppedData.slice(premise.shared);
       for (const introduced of state.database.visit(premise.name, shared, premise.introduced)) {
         if (assertConclusion(prog, state, [...shared, ...passed, ...introduced], conclusion)) {
           return true;
@@ -116,7 +143,10 @@ export function assertConclusion(
 
   switch (conclusion.type) {
     case 'open': {
+      // An open rule has no effect if D[a] = just v
       if (committed && committed.type === 'just') return false;
+
+      // An open rule also has no effect if C[a] has no noneOf values
       const deferred = { ...(state.chart.get(conclusion.name, args) ?? noConstraint) };
       if (!deferred.open) return false;
 
