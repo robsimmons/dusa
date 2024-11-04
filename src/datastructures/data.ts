@@ -193,7 +193,7 @@ export class DataMap<T> {
 
   set(key: Data, value: T) {
     const [newTree, removed] = insertTree(compareData, this.tree, key, value);
-    return new DataMap(newTree, removed === null ? this.size : this.size + 1);
+    return new DataMap(newTree, removed === null ? this.size + 1 : this.size);
   }
 
   get(key: Data) {
@@ -204,9 +204,17 @@ export class DataMap<T> {
     return chooseTree(this.tree);
   }
 
+  isEmpty() {
+    return this.size === 0;
+  }
+
   getSingletonKey() {
     if (this.size !== 1) return null;
     return this.tree!.key;
+  }
+
+  example(): null | [Data, T] {
+    return this.tree === null ? null : [this.tree.key, this.tree.value];
   }
 }
 
@@ -233,7 +241,15 @@ export class DataSet {
     return !!this.map.get(key);
   }
 
+  isEmpty() {
+    return this.map.isEmpty();
+  }
+
   getSingleton() {
     return this.map.getSingletonKey();
+  }
+
+  example() {
+    return this.map.example()?.[0] ?? null;
   }
 }

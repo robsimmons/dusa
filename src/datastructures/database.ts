@@ -14,7 +14,7 @@ import {
   visit as visitTrie,
 } from './trie.js';
 
-export type Constraint = { type: 'just'; value: Data } | { type: 'noneOf'; value: DataSet };
+export type Constraint = { type: 'just'; just: Data } | { type: 'noneOf'; noneOf: DataSet };
 
 interface Relation {
   pos: number;
@@ -88,7 +88,7 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
 
     // handle access pattern like `a [+]+ is +`
     if (parent.children === null) {
-      if (parent.value.type === 'just' && parent.value.value === args[args.length - 1]) {
+      if (parent.value.type === 'just' && parent.value.just === args[args.length - 1]) {
         yield [];
       }
       return;
@@ -106,7 +106,7 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
   for (const { keys, value } of visitTrie(base, depth - 1)) {
     if (value.children === null) {
       if (value.value.type === 'just') {
-        keys.push(value.value.value);
+        keys.push(value.value.just);
         yield keys;
         keys.pop();
       }
