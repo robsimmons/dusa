@@ -19,7 +19,7 @@ function lstArr<T>(xs: Lst<T>): T[] {
 
 /**
  * The semi-naive, tuple-at-a-time forward-chaining algorithm for
- * finite-choice logic programming is written in terms of a database D
+ * finite-choice logic programming can be described in terms of a database D
  * (a map from attributes to constraints) and a chart C containing the
  * immediate consequences of D. The chart can be interpreted as a (non-empty)
  * choice set or as a map from attributes to (non-empty) sets of pairwise
