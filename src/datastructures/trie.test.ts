@@ -1,15 +1,26 @@
 import { test, expect } from 'vitest';
-import { Trie, lookup as lookupTrie, insert as insertTrie, visit } from './trie.js';
+import {
+  Trie,
+  lookup as lookupTrie,
+  insert as insertTrie,
+  remove as removeTrie,
+  visit,
+} from './trie.js';
 
 const compare = (x: string, y: string) => (x < y ? 1 : x > y ? -1 : 0);
 const lookup = <T>(t: Trie<string, T>, x: string[]) => {
   const res = lookupTrie(compare, t, x);
-  if (res === null || res.child !== null) return null;
+  if (res === null || res.children !== null) return null;
   return res.value;
 };
-const insert = <T>(t: Trie<string, T>, x: string[], y: T) => insertTrie(compare, t, 0, x, y);
+const insert = <T>(t: Trie<string, T>, x: string[], y: T) => insertTrie(compare, t, x, 0, y);
+const remove = <T>(t: Trie<string, T>, x: string[]): null | [Trie<string, T>, T] => {
+  const res = removeTrie(compare, t, x, 0);
+  if (res === null || res[1].children !== null) return null;
+  return [res[0], res[1].value];
+};
 
-test('simple tries', () => {
+test('tries data structure', () => {
   let t: Trie<string, number> = null;
   let r: Trie<string, number>;
 
@@ -54,14 +65,14 @@ test('simple tries', () => {
   expect(lookup(t, ['s', 't', 'o', 'v', 'e'])).toBe(8);
   expect(lookup(t, ['a', 't', 'o', 'n', 'e'])).toBe(9);
   expect(lookup(t, ['s', 't', 'o', 'n', 'k'])).toBe(3);
-  expect(r).toStrictEqual({ child: null, value: 6 });
+  expect(r).toStrictEqual({ children: null, value: 6 });
 
   expect([...visit(t, 0).map(({ keys }) => keys.join(''))]).toStrictEqual(['']);
   expect([...visit(t, 1).map(({ keys }) => keys.join(''))]).toStrictEqual(['a', 's']);
   expect([...visit(t, 2).map(({ keys }) => keys.join(''))]).toStrictEqual(['at', 'st']);
   expect([...visit(t, 3).map(({ keys }) => keys.join(''))]).toStrictEqual(['ato', 'sta', 'sto']);
   expect([
-    ...visit(t, 5).map(({ keys, value }) => [keys.join(''), value.child ?? value.value]),
+    ...visit(t, 5).map(({ keys, value }) => [keys.join(''), value.children ?? value.value]),
   ]).toStrictEqual([
     ['atone', 9],
     ['stare', 1],
@@ -71,4 +82,28 @@ test('simple tries', () => {
     ['store', 5],
     ['stove', 8],
   ]);
+  expect(() => [...visit(t, 6)]).toThrowError('Empty trie child');
+
+  expect(remove(null, [])).toBeNull();
+  expect(remove(null, ['a'])).toBeNull();
+  expect(remove(null, ['a', 't', 'o', 'n', 'e'])).toBeNull();
+  expect(remove(t, ['s', 't', 'o', 'm', 'p'])).toBeNull();
+  expect(() => remove(t, ['s', 't', 'o', 'n', 'e', 's'])).toThrowError('Empty trie child');
+
+  let n: number;
+  [t, n] = remove(t, ['s', 't', 'o', 'n', 'k']) ?? [null, -1];
+  expect(n).toBe(3);
+  [t, n] = remove(t, ['s', 't', 'a', 'r', 'e']) ?? [null, -1];
+  expect(n).toBe(1);
+  [t, n] = remove(t, ['s', 't', 'o', 'n', 'e']) ?? [null, -1];
+  expect(n).toBe(2);
+  [t, n] = remove(t, ['a', 't', 'o', 'n', 'e']) ?? [null, -1];
+  expect(n).toBe(9);
+  [t, n] = remove(t, ['s', 't', 'o', 'r', 'e']) ?? [null, -1];
+  expect(n).toBe(5);
+  [t, n] = remove(t, ['s', 't', 'o', 'n', 'y']) ?? [null, -1];
+  expect(n).toBe(7);
+  [t, n] = remove(t, ['s', 't', 'o', 'v', 'e']) ?? [null, -1];
+  expect(n).toBe(8);
+  expect(t).toBeNull();
 });

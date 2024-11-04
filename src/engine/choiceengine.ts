@@ -2,7 +2,7 @@ import { Data, TRIVIAL, dataToString, hide } from '../datastructures/data.js';
 import { DataMap } from '../datastructures/datamap.js';
 import { Database, dbToString, insertFact, listFacts, stepDb } from './forwardengine.js';
 import { IndexedProgram } from '../language/indexize.js';
-import { equal } from './dataterm.js';
+import { equal } from './dataterm-old.js';
 
 export interface ChoiceTreeLeaf {
   type: 'leaf';

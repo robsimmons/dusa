@@ -196,7 +196,6 @@ export function* visit<K, V>(t: AVL<K, V>): IterableIterator<{ key: K; value: V 
   }
 }
 
-/*
 function removeMin<K, V>(t: AVLNode<K, V>): [K, V, AVLNode<K, V> | null] {
   if (t.left === null) {
     return [t.key, t.value, t.right];
@@ -205,65 +204,19 @@ function removeMin<K, V>(t: AVLNode<K, V>): [K, V, AVLNode<K, V> | null] {
   return [key, value, createAndFix(t.key, t.value, left, t.right)];
 }
 
-function remove<K, V>(t: AVLNode<K, V> | null, key: K): [V, AVLNode<K, V> | null] | null {
+export function remove<K, V>(compare: Compare<K>, t: AVL<K, V>, key: K): [AVL<K, V>, V] | null {
   if (t === null) return null;
-  if (key < t.key) {
-    const result = remove(t.left, key);
-    return result === null ? null : [result[0], createAndFix(t.key, t.value, result[1], t.right)];
+
+  const comp = compare(t.key, key);
+  if (comp < 0) {
+    const result = remove(compare, t.left, key);
+    return result === null ? null : [createAndFix(t.key, t.value, result[0], t.right), result[1]];
   }
-  if (key > t.key) {
-    const result = remove(t.right, key);
-    return result === null ? null : [result[0], createAndFix(t.key, t.value, t.left, result[1])];
+  if (comp > 0) {
+    const result = remove(compare, t.right, key);
+    return result === null ? null : [createAndFix(t.key, t.value, t.left, result[0]), result[1]];
   }
-  if (t.right === null) return [t.value, t.left];
+  if (t.right === null) return [t.left, t.value];
   const [rootKey, rootValue, newRight] = removeMin(t.right);
-  return [t.value, createAndFix(rootKey, rootValue, t.left, newRight)];
+  return [createAndFix(rootKey, rootValue, t.left, newRight), t.value];
 }
-
-function removeNth<K, V>(t: AVLNode<K, V> | null, n: number): [K, V, AVLNode<K, V> | null] {
-  if (t === null) throw new Error('Out of bounds removal');
-  if (n < size(t.left)) {
-    const [key, value, left] = removeNth(t.left, n);
-    return [key, value, createAndFix(t.key, t.value, left, t.right)];
-  }
-  if (n > size(t.left)) {
-    const [key, value, right] = removeNth(t.right, n - size(t.left) - 1);
-    return [key, value, createAndFix(t.key, t.value, t.left, right)];
-  }
-  if (t.right === null) return [t.key, t.value, t.left];
-  const [rootKey, rootValue, newRight] = removeMin(t.right);
-  return [t.key, t.value, createAndFix(rootKey, rootValue, t.left, newRight)];
-}
-
-function <K, V>(t: AVLNode<K, V> | null, n: number): [K, V] {
-  if (t === null) throw new Error('Out of bounds lookup');
-  if (n < size(t.left)) return getNth(t.left, n);
-  if (n > size(t.left)) return getNth(t.right, n - size(t.left) - 1);
-  return [t.key, t.value];
-}
-
-function isTreeNode<K, V>(t: null | AVLNode<K, V>, lo?: K, hi?: K): boolean {
-  if (t === null) return true;
-  return (
-    (lo == null || lo < t.key) &&
-    (hi == null || hi > t.key) &&
-    t.height === 1 + Math.max(height(t.left), height(t.right)) &&
-    t.size === 1 + size(t.left) + size(t.right) &&
-    isTreeNode(t.left, lo, t.key) &&
-    isTreeNode(t.right, t.key, hi)
-  );
-}
-
-function accumEntries<K, V>(accum: [K, V][], t: null | AVLNode<K, V>) {
-  if (t === null) return;
-  accumEntries(accum, t.left);
-  accum.push([t.key, t.value]);
-  accumEntries(accum, t.right);
-}
-
-function every<K, V>(t: null | AVLNode<K, V>, test: (key: K, value: V) => boolean): boolean {
-  if (t === null) return true;
-  return test(t.key, t.value) && every(t.left, test) && every(t.right, test);
-}
-
-*/

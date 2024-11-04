@@ -1,6 +1,6 @@
 import { BUILT_IN_PRED } from '../language/dusa-builtins.js';
 import { BOOL_FALSE, BOOL_TRUE, TRIVIAL, Data, expose, hide } from '../datastructures/data.js';
-import { Substitution, equal, match } from './dataterm.js';
+import { Substitution, equal, match } from './dataterm-old.js';
 import { Pattern } from '../language/terms.js';
 
 export function* runBuiltinBackward(

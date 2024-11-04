@@ -1,4 +1,4 @@
-import { Data, DataSet, compareData } from './data.js';
+import { Data, DataSet, compareData, compareString } from './data.js';
 import {
   AVL as Tree,
   lookup as lookupTree,
@@ -23,12 +23,6 @@ interface Relation {
 }
 const emptyRelation = { trie: null, neg: 0, pos: 0 };
 
-function compareString(a: string, b: string): number {
-  if (a > b) return 1;
-  if (a < b) return -1;
-  return 0;
-}
-
 export class Database {
   private t: Tree<string, Relation>;
 
@@ -40,11 +34,18 @@ export class Database {
     return new Database(null);
   }
 
+  get(name: string, args: Data[]) {
+    const trie = lookupTree(compareString, this.t, name);
+    const leaf = lookupTrie(compareData, trie?.trie ?? null, args);
+    if (leaf === null || leaf.children !== null) return null;
+    return leaf.value;
+  }
+
   set(name: string, args: Data[], value: Constraint): [Database, Constraint | null] {
     const { trie, pos, neg } = lookupTree(compareString, this.t, name) ?? emptyRelation;
-    const [result, removed] = insertTrie(compareData, trie, 0, args, value);
+    const [result, removed] = insertTrie(compareData, trie, args, 0, value);
 
-    if (removed && removed.child) throw new Error('Invariant');
+    if (removed && removed.children) throw new Error('Database.set invariant');
     const [posInc, negInc] = value.type === 'just' ? [1, 0] : [0, 1];
     const [posDec, negDec] =
       removed === null ? [0, 0] : removed.value.type === 'just' ? [1, 0] : [0, 1];
@@ -56,13 +57,6 @@ export class Database {
     const [newTree] = insertTree(compareString, this.t, name, newRel);
 
     return [new Database(newTree), removed?.value ?? null];
-  }
-
-  get(name: string, args: Data[]) {
-    const trie = lookupTree(compareString, this.t, name);
-    const leaf = lookupTrie(compareData, trie?.trie ?? null, args);
-    if (leaf === null || leaf.child !== null) return null;
-    return leaf.value;
   }
 
   visit(name: string, args: Data[], depth: number): Generator<Data[]> {
@@ -78,7 +72,7 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
     // even more corner case: access pattern like `a [_]* is _`
     if (args.length === 0) {
       if (
-        t.child !== null /* the predicate has arguments */ ||
+        t.children !== null /* the predicate has arguments */ ||
         t.value.type === 'just' /* the constraint is positive */
       ) {
         yield [];
@@ -93,7 +87,7 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
     }
 
     // handle access pattern like `a [+]+ is +`
-    if (parent.child === null) {
+    if (parent.children === null) {
       if (parent.value.type === 'just' && parent.value.value === args[args.length - 1]) {
         yield [];
       }
@@ -101,7 +95,7 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
     }
 
     // handle access pattern like `a [+]+ [_]* is _`
-    const child = lookupTree(compareData, parent.child, args[args.length - 1]);
+    const child = lookupTree(compareData, parent.children, args[args.length - 1]);
     if (child !== null) {
       yield [];
     }
@@ -110,14 +104,14 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
 
   const base = lookupTrie(compareData, t, args);
   for (const { keys, value } of visitTrie(base, depth - 1)) {
-    if (value.child === null) {
+    if (value.children === null) {
       if (value.value.type === 'just') {
         keys.push(value.value.value);
         yield keys;
         keys.pop();
       }
     } else {
-      for (const { key } of visitTree(value.child)) {
+      for (const { key } of visitTree(value.children)) {
         keys.push(key);
         yield keys;
         keys.pop();

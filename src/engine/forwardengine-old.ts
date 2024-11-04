@@ -1,4 +1,4 @@
-import { AttributeMap } from '../datastructures/attributemap.js';
+import { AttributeMap } from '../datastructures/attributemap-old.js';
 import PQ from '../datastructures/binqueue.js';
 import { Data, TRIVIAL, dataToString } from '../datastructures/data.js';
 import { TrieMap } from '../datastructures/datamap.js';
@@ -9,7 +9,7 @@ import {
   IndexedProgram,
 } from '../language/indexize.js';
 import { runBuiltinBackward, runBuiltinForward } from './builtin.js';
-import { Substitution, apply, equal, match } from './dataterm.js';
+import { Substitution, apply, equal, match } from './dataterm-old.js';
 
 type Prefix = { type: 'prefix'; name: string; shared: Data[]; passed: Data[] };
 type NewFact = { type: 'fact'; name: string; args: Data[]; value: Data };

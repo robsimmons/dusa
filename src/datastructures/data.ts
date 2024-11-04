@@ -142,6 +142,12 @@ export function compareData(a: Data, b: Data): number {
   return -1;
 }
 
+export function compareString(a: string, b: string): number {
+  if (a > b) return 1;
+  if (a < b) return -1;
+  return 0;
+}
+
 export function escapeString(input: string): string {
   const escaped = [];
   let i = 0;
@@ -210,6 +216,10 @@ export class DataSet {
     return new DataSet(DataMap.empty());
   }
 
+  static singleton(key: Data) {
+    return new DataSet(DataMap.empty<true>().set(key, true));
+  }
+
   add(key: Data) {
     return new DataSet(this.map.set(key, true));
   }
@@ -218,4 +228,3 @@ export class DataSet {
     return !!this.map.get(key);
   }
 }
-
