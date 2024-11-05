@@ -4,6 +4,7 @@ import {
   binarizedProgramToString,
   makeIntermediatePredicatesMatchJoinOrder,
 } from './binarize.js';
+import { generateBytecode } from './bytecode.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { flattenDecls, flatProgramToString } from './flatten.js';
 import { generateIndices } from './indexes.js';
@@ -66,5 +67,5 @@ ${binarizedProgramToString(binarized)}`);
 ${binarizedProgramToString(indexed)}`);
   }
 
-  return { seeds: [], forbids: [], demands: [], rules: [] };
+  return generateBytecode(indexed);
 }

@@ -6,13 +6,13 @@ import { Pattern, freeVars, termToString } from './terms.js';
 export type Conclusion =
   | { type: 'intermediate'; name: string; vars: string[] }
   | { type: 'datalog'; name: string; args: Pattern[] }
-  | { type: 'open'; name: string; args: Pattern[]; values: Pattern[] }
-  | { type: 'closed'; name: string; args: Pattern[]; values: Pattern[] };
+  | { type: 'open'; name: string; args: Pattern[]; choices: Pattern[] }
+  | { type: 'closed'; name: string; args: Pattern[]; choices: Pattern[] };
 
 export function freeVarsConclusion(conc: Conclusion) {
   if (conc.type === 'intermediate') return new Set(conc.vars);
   if (conc.type === 'datalog') return freeVars(...conc.args);
-  return freeVars(...conc.args, ...conc.values);
+  return freeVars(...conc.args, ...conc.choices);
 }
 
 function concToString(conc: Conclusion): string {
@@ -239,7 +239,7 @@ export function binarize(decls: { name: string; decl: FlatDeclaration }[]): Bina
         conclusion = simplifyConclusion(decl.conclusion);
         conclusionUsedVars = freeVars(
           ...decl.conclusion.args,
-          ...(decl.conclusion.type === 'datalog' ? [] : decl.conclusion.values),
+          ...(decl.conclusion.type === 'datalog' ? [] : decl.conclusion.choices),
         );
         break;
     }
@@ -322,9 +322,9 @@ function simplifyConclusion(conc: RawConclusion): Conclusion {
     case 'datalog':
       return { type: 'datalog', name: conc.name, args: conc.args };
     case 'open':
-      return { type: 'open', name: conc.name, args: conc.args, values: conc.values };
+      return { type: 'open', name: conc.name, args: conc.args, choices: conc.choices };
     case 'closed':
-      return { type: 'closed', name: conc.name, args: conc.args, values: conc.values };
+      return { type: 'closed', name: conc.name, args: conc.args, choices: conc.choices };
   }
 }
 

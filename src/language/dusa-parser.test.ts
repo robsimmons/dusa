@@ -126,7 +126,7 @@ test('Test full parses', () => {
           args: [],
           type: 'open',
           loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 9, index: 8 } },
-          values: [
+          choices: [
             {
               name: 'tt',
               type: 'const',

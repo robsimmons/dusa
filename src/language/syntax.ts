@@ -26,8 +26,8 @@ export type Conclusion = {
   loc?: SourceLocation;
 } & (
   | { type: 'datalog' }
-  | { type: 'open'; values: Pattern[] }
-  | { type: 'closed'; values: Pattern[] }
+  | { type: 'open'; choices: Pattern[] }
+  | { type: 'closed'; choices: Pattern[] }
 );
 
 export type ParsedConclusion = {
@@ -36,8 +36,8 @@ export type ParsedConclusion = {
   loc: SourceLocation;
 } & (
   | { type: 'datalog' }
-  | { type: 'open'; values: ParsedPattern[] }
-  | { type: 'closed'; values: ParsedPattern[] }
+  | { type: 'open'; choices: ParsedPattern[] }
+  | { type: 'closed'; choices: ParsedPattern[] }
 );
 
 export type ParsedDeclaration =
@@ -69,8 +69,8 @@ export function propToString(p: ParsedProposition) {
 export function headToString(
   head: { name: string; args: Pattern[] } & (
     | { type: 'datalog' }
-    | { type: 'open'; values: Pattern[] }
-    | { type: 'closed'; values: Pattern[] }
+    | { type: 'open'; choices: Pattern[] }
+    | { type: 'closed'; choices: Pattern[] }
   ),
 ): string {
   const args = head.args.map((arg) => ` ${termToString(arg)}`).join('');
@@ -82,10 +82,10 @@ export function headToString(
     case 'open':
     case 'closed': {
       const is = head.type === 'open' ? 'is?' : 'is';
-      if (head.values.length === 1) {
-        return `${base} ${is} ${termToString(head.values[0])}`;
+      if (head.choices.length === 1) {
+        return `${base} ${is} ${termToString(head.choices[0])}`;
       }
-      return `${base} ${is} { ${head.values.map((term) => termToString(term, false)).join(', ')} }`;
+      return `${base} ${is} { ${head.choices.map((choice) => termToString(choice, false)).join(', ')} }`;
     }
   }
 }
@@ -198,7 +198,7 @@ export function* visitTermsInDecl(decl: ParsedDeclaration) {
         break;
       case 'open':
       case 'closed':
-        for (const term of decl.conclusion.values) {
+        for (const term of decl.conclusion.choices) {
           yield* visitSubterms(term);
         }
         break;
@@ -220,7 +220,7 @@ export function* visitTermsinProgram(decls: (Issue | ParsedDeclaration)[]) {
           break;
         case 'open':
         case 'closed':
-          for (const term of decl.conclusion.values) {
+          for (const term of decl.conclusion.choices) {
             yield* visitSubterms(term);
           }
           break;

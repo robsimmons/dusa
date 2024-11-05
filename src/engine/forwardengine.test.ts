@@ -6,6 +6,20 @@ import {
   SearchState,
 } from './forwardengine.js';
 import { HashCons } from '../datastructures/data.js';
+import { parse } from '../language/dusa-parser.js';
+import { check } from '../language/check.js';
+import { compile } from '../language/compile.js';
+import { builtinModes } from '../language/dusa-builtins.js';
+import { ingestBytecodeProgram, Program } from './program.js';
+
+function build(source: string) {
+  const parsed = parse(source);
+  if (parsed.errors !== null) throw parsed.errors;
+  const { errors, arities, builtins } = check(builtinModes, parsed.document);
+  if (errors.length !== 0) throw errors;
+  const bytecode = compile(builtins, arities, parsed.document);
+  return ingestBytecodeProgram(bytecode);
+}
 
 function step(prog: InternalProgram, state: SearchState) {
   if (state.agenda === null) throw new Error();
@@ -15,176 +29,92 @@ function step(prog: InternalProgram, state: SearchState) {
 }
 
 test('datalog, unary consequences', () => {
-  // c :- a.  d :- c. e :- c. g :- f.
-  const prog: InternalProgram = {
-    seeds: ['a'],
-    predUnary: {
-      a: [{ args: [], conclusion: { type: 'datalog', name: 'c', args: [] } }],
-      c: [
-        { args: [], conclusion: { type: 'datalog', name: 'd', args: [] } },
-        { args: [], conclusion: { type: 'datalog', name: 'e', args: [] } },
-      ],
-      f: [{ args: [], conclusion: { type: 'datalog', name: 'g', args: [] } }],
-    },
-    predBinary: {},
-    intermediates: {},
-    demands: [],
-    forbids: {},
-    data: new HashCons(),
-  };
-
+  let program: Program;
   let state: SearchState;
   let result: any;
 
-  state = createSearchState(prog);
-  expect(step(prog, state)).toBeNull();
-  expect(state.explored.get('a', [])).toStrictEqual({ type: 'just', just: HashCons.TRIVIAL });
-  expect(step(prog, state)).toBeNull();
+  program = build(`c. d :- c. e :- c. g :- f.`);
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed
+  expect(step(program, state)).toBeNull(); // pop c
   expect(state.explored.get('c', [])).toStrictEqual({ type: 'just', just: HashCons.TRIVIAL });
-  expect(step(prog, state)).toBeNull();
-  expect(step(prog, state)).toBeNull();
+  expect(step(program, state)).toBeNull(); // pop d or e
+  expect(step(program, state)).toBeNull(); // pop e or d
   expect(state.explored.get('d', [])).toStrictEqual({ type: 'just', just: HashCons.TRIVIAL });
   expect(state.explored.get('e', [])).toStrictEqual({ type: 'just', just: HashCons.TRIVIAL });
   expect(state.agenda).toBeNull();
 
-  prog.predUnary['a'].push({
-    args: [],
-    conclusion: { type: 'intermediate', name: '@x', vars: [] },
-  });
-  prog.forbids = { '@x': true };
-  state = createSearchState(prog);
-  expect(step(prog, state)).toBeNull();
-  expect(step(prog, state)).toStrictEqual({ type: 'forbid', name: '@x' });
+  program = build('f. c :- a. d :- c. e :- c. g :- f. #forbid g.');
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed
+  expect(step(program, state)).toBeNull(); // pop f
+  expect(step(program, state)).toBeNull(); // pop g
+  expect(step(program, state)?.type).toBe('forbid');
 
-  prog.predUnary['a'].pop();
-  prog.forbids = {};
-  prog.demands = ['@x'];
-  prog.predUnary.e = [
-    {
-      args: [],
-      conclusion: { type: 'intermediate', name: '@x', vars: [] },
-    },
-  ];
-  state = createSearchState(prog);
-  expect(state.demands.get('@x', [])).not.toBeNull();
-  expect(step(prog, state)).toBeNull(); // pop a
+  program = build('c. d :- c. e :- c. #demand d. #demand e.');
+  state = createSearchState(program);
+  expect(state.demands.size).toBe(2);
+  expect(step(program, state)).toBeNull(); // pop $seed
   expect(state.agenda!.next).toBeNull();
-  expect(step(prog, state)).toBeNull(); // pop c
+  expect(step(program, state)).toBeNull(); // pop c
   expect(state.agenda!.next!.next).toBeNull();
-  expect(step(prog, state)).toBeNull(); // pop d or e
-  expect(step(prog, state)).toBeNull(); // pop d or e or @x
-  expect(step(prog, state)).toBeNull(); // pop d or e or @x
+  expect(step(program, state)).toBeNull(); // pop d or e
+  expect(step(program, state)).toBeNull(); // pop d or e or @demand-d or @demand-e
+  expect(step(program, state)).toBeNull(); // pop d or e or @demand-d or @demand-e
+  expect(step(program, state)).toBeNull(); // pop d or e or @demand-d or @demand-e
   expect(state.agenda).toBeNull();
-  expect(state.demands.get('@x', [])).toBeNull();
+  expect(state.demands.size).toBe(0);
 
-  prog.predUnary.d = [
-    {
-      args: [],
-      conclusion: {
-        type: 'closed',
-        name: 'h',
-        args: [],
-        values: [{ type: 'bool', value: true }],
-      },
-    },
-  ];
-  prog.predUnary.e = [
-    {
-      args: [],
-      conclusion: {
-        type: 'closed',
-        name: 'h',
-        args: [],
-        values: [{ type: 'bool', value: false }],
-      },
-    },
-  ];
-  state = createSearchState(prog);
-  expect(step(prog, state)).toBeNull(); // pop a
-  expect(step(prog, state)).toBeNull(); // pop b
-  expect(step(prog, state)).toBeNull(); // pop c
-  expect(step(prog, state)).toBeNull(); // pop d or e
-  result = step(prog, state) ?? step(prog, state); // if h is popped first, need 2 steps
+  program = build('c. d :- c. e :- c. h is 1 :- d. h is 2 :- e.');
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed
+  expect(step(program, state)).toBeNull(); // pop c
+  expect(step(program, state)).toBeNull(); // pop d or e
+  expect(step(program, state)).toBeNull(); // pop the other one, or h
+  result = step(program, state) ?? step(program, state); // if h was popped first, need 2 steps
   expect(result).not.toBeNull();
   result.new.push(result.old);
   delete result.old;
   result.new.sort();
-  expect(result).toStrictEqual({ type: 'incompatible', name: 'h', args: [], new: [1, 2] });
+  expect(result).toStrictEqual({ type: 'incompatible', name: 'h', args: [], new: [1n, 2n] });
 
-  prog.predUnary.d = [
-    {
-      args: [],
-      conclusion: {
-        type: 'closed',
-        name: 'h',
-        args: [],
-        values: [
-          { type: 'int', value: 5n },
-          { type: 'int', value: 6n },
-        ],
-      },
-    },
-  ];
-  prog.predUnary.e = [
-    {
-      args: [],
-      conclusion: {
-        type: 'closed',
-        name: 'h',
-        args: [],
-        values: [
-          { type: 'int', value: 6n },
-          { type: 'int', value: 7n },
-        ],
-      },
-    },
-  ];
-  state = createSearchState(prog);
-  expect(step(prog, state)).toBeNull(); // pop a
-  expect(step(prog, state)).toBeNull(); // pop c
-  expect(step(prog, state)).toBeNull(); // pop d or e
+  program = build(
+    'c. d :- c. e :- c. h is { 5, 6, a } :- d. h is { 6, "what", garbage "in" } :- e.',
+  );
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed
+  expect(step(program, state)).toBeNull(); // pop c
+  expect(step(program, state)).toBeNull(); // pop d or e
   expect(state.deferred.get('h', [])).toBe(true);
-  expect(step(prog, state)).toBeNull(); // pop d or e (h is deferred)
+  expect(step(program, state)).toBeNull(); // pop the other one (h is deferred)
   expect(state.deferred.get('h', [])).toBe(null);
   expect(state.agenda!.data.name).toBe('h');
   expect(state.frontier.get('h', [])).not.toBeNull();
-  expect(step(prog, state)).toBeNull(); // pop h
+  expect(step(program, state)).toBeNull(); // pop h
   expect(state.explored.get('h', [])).toStrictEqual({ type: 'just', just: 6n });
   expect(state.frontier.get('h', [])).toBeNull();
 
-  prog.predUnary.e = [
-    {
-      args: [],
-      conclusion: {
-        type: 'closed',
-        name: 'h',
-        args: [],
-        values: [
-          { type: 'int', value: 16n },
-          { type: 'int', value: 17n },
-        ],
-      },
-    },
-  ];
-  state = createSearchState(prog);
-  expect(step(prog, state)).toBeNull(); // pop a
-  expect(step(prog, state)).toBeNull(); // pop c
-  expect(step(prog, state)).toBeNull(); // pop d or e
+  program = build('c. d :- c. e :- c. h is { 1, 2, 3, 4, 5 } :- d. h is { 11, 12, 13, 14 } :- e.');
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed
+  expect(step(program, state)).toBeNull(); // pop c
+  expect(step(program, state)).toBeNull(); // pop d or e
   expect(state.deferred.get('h', [])).toBe(true);
-  result = step(prog, state); // pop d or e (h is deferred)
+  result = step(program, state); // pop the other one (h is deferred)
   expect(result).not.toBeNull();
   delete result.new;
   delete result.old;
   expect(result).toStrictEqual({ type: 'incompatible', name: 'h', args: [] });
 
-  prog.predUnary.d[0].conclusion.type = 'open';
-  prog.predUnary.e[0].conclusion.type = 'open';
-  state = createSearchState(prog);
-  expect(step(prog, state)).toBeNull();
-  expect(step(prog, state)).toBeNull(); // pop c
-  expect(step(prog, state)).toBeNull(); // pop d or e
+  program = build(
+    'c. d :- c. e :- c. h is? { 1, 2, 5, 16, 17, 19 } :- d. h is? { 5, 6, 99 } :- e.',
+  );
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed
+  expect(step(program, state)).toBeNull(); // pop c
+  expect(step(program, state)).toBeNull(); // pop d or e
   expect(state.deferred.get('h', [])).toBe(true);
-  expect(step(prog, state)).toBeNull(); // pop d or e (h is deferred)
+  expect(step(program, state)).toBeNull(); // pop d or e (h is deferred)
   expect(state.deferred.get('h', [])).toBe(true);
   expect(state.agenda).toBeNull();
   expect(state.frontier.get('h', [])!.open).toBe(true);

@@ -113,7 +113,7 @@ export function learnImmediateConsequences(
   // Step 1: remove `a` from `state.frontier`.
   const [frontier, leaf] = state.frontier.remove(attribute.name, attribute.args)!;
   state.frontier = frontier;
-  if (!leaf || leaf.open) throw new Error('learnImmedaiteConsequence invariant');
+  if (!leaf || leaf.open) throw new Error('learnImmediateConsequences invariant');
   const value = leaf.values.getSingleton()!;
   const factArgs = [...attribute.args, value]; // The full fact is the args + the value
 
@@ -204,7 +204,7 @@ export function assertConclusion(
       //  - `state.frontier[a] = { open: true, values: { v1, v2, ... vn } }`
       //
       // We need to update `state.frontier[a].values` with all the open rule's conclusions.
-      const choices = conclusion.values.map((value) => apply(prog.data, subst, value));
+      const choices = conclusion.choices.map((choice) => apply(prog.data, subst, choice));
       let newFrontierChoices = frontierChoices.values;
       for (const choice of choices) {
         if (!exploredValue.noneOf.has(choice)) {
@@ -226,7 +226,7 @@ export function assertConclusion(
 
     /**** ASSERT CLOSED CONCLUSION: `a is { t1, ..., tn }` ****/
     case 'closed': {
-      let choices = conclusion.values.map((value) => apply(prog.data, subst, value));
+      let choices = conclusion.choices.map((choice) => apply(prog.data, subst, choice));
 
       // If `D[a] = just v`, signal failure if `v` is not among the choices in the conclusion
       if (exploredValue.type === 'just') {
@@ -305,7 +305,6 @@ export function assertConclusion(
 
         // If C[a] = {}, signal failure
         if (intersection.isEmpty()) {
-        
           return {
             type: 'incompatible',
             name: conclusion.name,

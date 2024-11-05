@@ -1,6 +1,6 @@
 # Language checking and transforming
 
-This folder contains the code for checking surface-level programs and repeatedly transforming statically-checked programs into an intermediate representation. The structure of the directory has the structure of a standard multi-pass compiler, and all the compromises that come with that. The static checks establish a rather sophisticated set of invariants while also attempting to give good feedback to the learner; none of the subsequent passes are permitted to be the source of errors.
+This folder contains the code for checking surface-level programs and repeatedly transforming statically-checked programs into an intermediate representation. The structure of the directory has the structure of a standard multi-pass compiler, for good or ill. The static checks establish a rather sophisticated set of invariants while also attempting to give good feedback to the learner. None of the subsequent passes are permitted to be the source of errors.
 
 ## Compiler passes
 
@@ -60,7 +60,7 @@ A binary rule like this...
 
     @p-4 X Y Z W :- @p-3 X Y Z, a X Y 17 (h X W) V
 
-can't immediately be computed efficiently, because we want shared premises brought up front. 
+can't immediately be computed efficiently, because we want shared premises brought up front.
 
 So we could introduce a new predicate $a2 and replace those two rules with these equivalent rules:
 
@@ -71,7 +71,7 @@ BUT WAIT! What if we have another rule somewhere else:
 
     @q-3 X Y Z W :- @q-2 Y Z, a X Y 17 (h X W) V.
 
-We can't rewrite this rule to use $a2, because we need the shared variable, `Y`, to come before `X`, which is an introduced variable here. But there was nothing about the first rule that forced `X` to be before `Y`: we could rewrite the whole program as: 
+We can't rewrite this rule to use $a2, because we need the shared variable, `Y`, to come before `X`, which is an introduced variable here. But there was nothing about the first rule that forced `X` to be before `Y`: we could rewrite the whole program as:
 
     $a2 Y X W :- a X Y 17 (h X W) V.
     @p-4 X Y Z W :- @p-3 X Y Z, $a2 Y X W.
@@ -97,7 +97,7 @@ here, we're going to have to introduce a new predicate $a3, like this:
     $a3 V X :- a X Y 17 (h X W) V.
     @s-4 Z V Q X :- @s-3 V Q, $a3 V X.
 
-(This part TODO) BUT WAIT! What if there's already a predicate that could serve as this index, because the program already contains a predicate `c` that's only the conclusion of one rule and that has this form:
+(This part TODO, maybe?) BUT WAIT! What if there's already a predicate that could serve as this index, because the program already contains a predicate `c` that's only the conclusion of one rule and that has this form:
 
     c V X Y V :- a X Y 17 (h X W) V.
 
@@ -105,32 +105,4 @@ Ideally, in this case, we can reuse this existing predicate `c` as an index for 
 
     @s-4 Z V Q X :- @s-3 V Q, c V X _ _.
 
-Unfortunately, this cannot be done currently, because everything would go to hell if we asserted elements of type `c` through the programmatic API. This would be fixed by separating EDB from IDB and only allowing the EDB to be extended: https://github.com/users/robsimmons/projects/1?pane=issue&itemId=66307565
-
-### Indexization
-
-The indexization transformation uses multiple steps to prepare programs to be subject to an indexed implementation, which can efficiently compute joins between two relations that have identical prefixes of variables and then disjoint sequences of variables. Concretely, if I have a four-place relation `a` and a four place relation `b`, the implementation only supports binary rules with one of the following five forms (up to alpha renaming of variables):
-
-    ... :- a A B C D, b D E F G.
-    ... :- a X A B C, b X D E F.
-    ... :- a X Y A B, b X Y C D.
-    ... :- a X Y Z A, b X Y Z B.
-    ... :- a X Y Z W, b X Y Z W.
-
-Consider this rule:
-
-    path X Y :- edge X Y, path Y Z.
-
-Its binarization will look something like this:
-
-    $path-0.
-    $path-1 X Y :- $path-0, edge X Y.
-    $path-2 X Z :- $path-1 X Y, path Y Z.
-    path X Z :- $path-2 X Z.
-
-The third rule (the last binary rule) doesn't fit the required form: we need Y to come before X. But because the flattening transformation ensured that $path-1 only appears as the premise of one rule and the conclusion of one rule, we can always safely swap these arguments without changing the meaning of the program:
-
-    $path-0.
-    $path-1 Y X :- $path-0, edge X Y.
-    $path-2 X Z :- $path-1 Y X, path Y Z.
-    path X Z :- $path-2 X Z.
+Unfortunately (here's why it's a TODO), this cannot be done currently, because everything would go to hell if we asserted elements of type `c` through the programmatic API. This would be fixed by separating EDB from IDB and only allowing the EDB to be extended: https://github.com/users/robsimmons/projects/1?pane=issue&itemId=66307565

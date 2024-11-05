@@ -15,43 +15,55 @@ import {
 } from './trie.js';
 
 export class AttributeMap<T> {
-  private t: Tree<string, Trie<Data, T>>;
+  private tree: Tree<string, Trie<Data, T>>;
+  private _size: number;
 
-  private constructor(t: Tree<string, Trie<Data, T>>) {
-    this.t = t;
+  private constructor(tree: Tree<string, Trie<Data, T>>, size: number) {
+    this.tree = tree;
+    this._size = size;
+  }
+
+  get size() {
+    return this._size;
   }
 
   static empty<T>(): AttributeMap<T> {
-    return new AttributeMap(null);
+    return new AttributeMap(null, 0);
   }
 
   get(name: string, args: Data[]) {
-    const trie = lookupTree(compareString, this.t, name);
+    const trie = lookupTree(compareString, this.tree, name);
     const leaf = lookupTrie(compareData, trie, args);
     if (leaf === null || leaf.children !== null) return null;
     return leaf.value;
   }
 
   set(name: string, args: Data[], value: T): [AttributeMap<T>, T | null] {
-    const trie = lookupTree(compareString, this.t, name);
+    const trie = lookupTree(compareString, this.tree, name);
     const [newTrie, removed] = insertTrie(compareData, trie, args, 0, value);
     if (removed && removed.children) throw new Error('Attribute.set invariant');
-    const [newTree] = insertTree(compareString, this.t, name, newTrie);
-    return [new AttributeMap(newTree), removed?.value ?? null];
+    const [newTree] = insertTree(compareString, this.tree, name, newTrie);
+    return [
+      new AttributeMap(newTree, removed === null ? this._size + 1 : this._size),
+      removed?.value ?? null,
+    ];
   }
 
   remove(name: string, args: Data[]): null | [AttributeMap<T>, T | null] {
-    const trie = lookupTree(compareString, this.t, name);
+    const trie = lookupTree(compareString, this.tree, name);
     const removeResult = removeTrie(compareData, trie, args, 0);
     if (removeResult === null) return null;
     const [newTrie, removed] = removeResult;
     if (removed && removed.children) throw new Error('Attribute.remove invariant');
     let newTree: Tree<string, Trie<Data, T>>;
     if (newTrie === null) {
-      [newTree] = removeTree(compareString, this.t, name)!;
+      [newTree] = removeTree(compareString, this.tree, name)!;
     } else {
-      [newTree] = insertTree(compareString, this.t, name, newTrie);
+      [newTree] = insertTree(compareString, this.tree, name, newTrie);
     }
-    return [new AttributeMap(newTree), removed?.value ?? null];
+    return [
+      new AttributeMap(newTree, removed === null ? this._size : this._size - 1),
+      removed?.value ?? null,
+    ];
   }
 }

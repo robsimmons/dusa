@@ -436,7 +436,7 @@ export function check(
             break;
           case 'closed':
           case 'open':
-            patterns = [...decl.conclusion.args, ...decl.conclusion.values];
+            patterns = [...decl.conclusion.args, ...decl.conclusion.choices];
         }
 
         errors.push(

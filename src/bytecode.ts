@@ -1,22 +1,22 @@
-export type Pattern =
+export type PatternN<N> =
   | { type: 'trivial' }
-  | { type: 'int'; value: bigint }
+  | { type: 'int'; value: N }
   | { type: 'bool'; value: boolean }
   | { type: 'string'; value: string }
-  | { type: 'const'; name: string; args: Pattern[] }
+  | { type: 'const'; name: string; args: PatternN<N>[] }
   | { type: 'var'; ref: number };
 
-export type Conclusion =
+export type ConclusionN<N> =
   | { type: 'intermediate'; name: string; vars: number[] }
-  | { type: 'datalog'; name: string; args: Pattern[] }
-  | { type: 'open'; name: string; args: Pattern[]; values: Pattern[] }
-  | { type: 'closed'; name: string; args: Pattern[]; values: Pattern[] };
+  | { type: 'datalog'; name: string; args: PatternN<N>[] }
+  | { type: 'open'; name: string; args: PatternN<N>[]; choices: PatternN<N>[] }
+  | { type: 'closed'; name: string; args: PatternN<N>[]; choices: PatternN<N>[] };
 
-export type Rule =
+export type RuleN<N> =
   | {
       type: 'unary';
-      premise: { name: string; args: Pattern[] };
-      conclusion: Conclusion;
+      premise: { name: string; args: PatternN<N>[] };
+      conclusion: ConclusionN<N>;
     }
   | {
       type: 'join';
@@ -24,12 +24,17 @@ export type Rule =
       inVars: number;
       premise: { name: string; args: number };
       shared: number;
-      conclusion: Conclusion;
+      conclusion: ConclusionN<N>;
     };
 
-export interface Program {
+export interface ProgramN<N> {
   seeds: string[];
   forbids: string[];
   demands: string[];
-  rules: Rule[];
+  rules: RuleN<N>[];
 }
+
+export type Pattern = PatternN<bigint>;
+export type Conclusion = ConclusionN<bigint>;
+export type Rule = RuleN<bigint>;
+export type Program = ProgramN<bigint>;

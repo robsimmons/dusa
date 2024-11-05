@@ -178,10 +178,10 @@ function flattenDecl(
           };
         case 'open':
         case 'closed': {
-          const values: Pattern[] = [];
-          for (const value of decl.conclusion.values) {
+          const choices: Pattern[] = [];
+          for (const value of decl.conclusion.choices) {
             const result = flattenPattern(preds, counter, value);
-            values.push(result.pattern);
+            choices.push(result.pattern);
             premises.push(...result.before);
           }
           return {
@@ -191,7 +191,7 @@ function flattenDecl(
               name: decl.conclusion.name,
               args,
               type: decl.conclusion.type,
-              values,
+              choices,
               loc: decl.conclusion.loc,
             },
           };
