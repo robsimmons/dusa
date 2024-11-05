@@ -8,83 +8,8 @@ import {
   usedPremiseVars,
 } from './binarize.js';
 import { Pattern } from './terms.js';
-
-type Shape =
-  | { type: 'trivial' }
-  | { type: 'int'; value: number }
-  | { type: 'bool'; value: boolean }
-  | { type: 'string'; value: string }
-  | { type: 'const'; name: string; args: Shape[] }
-  | { type: 'var'; ref: number };
-
-function termsToShape(args: Pattern[]): {
-  shape: Shape[];
-  lookup: Map<string, number>;
-  revLookup: string[];
-} {
-  const seenVars: string[] = [];
-  const varToRef = new Map<string, number>();
-
-  function traverse(term: Pattern): Shape {
-    if (
-      term.type === 'bool' ||
-      term.type === 'int' ||
-      term.type === 'string' ||
-      term.type === 'trivial'
-    )
-      return term;
-    if (term.type === 'const') {
-      return { type: 'const', name: term.name, args: term.args.map((arg) => traverse(arg)) };
-    }
-    if (term.type === 'wildcard') {
-      const index = seenVars.length;
-      seenVars.push(`#anon#${index}`);
-      return { type: 'var', ref: index };
-    }
-
-    let index = seenVars.indexOf(term.name);
-    if (index === -1) {
-      index = seenVars.length;
-      seenVars.push(term.name);
-      varToRef.set(term.name, index);
-    }
-    return { type: 'var', ref: index };
-  }
-
-  return { shape: args.map(traverse), lookup: varToRef, revLookup: seenVars };
-}
-
-function shapeToTerms(args: Shape[]) {
-  function traverse(term: Shape): Pattern {
-    if (
-      term.type === 'bool' ||
-      term.type === 'int' ||
-      term.type === 'string' ||
-      term.type === 'trivial'
-    )
-      return term;
-    if (term.type === 'const') {
-      return { type: 'const', name: term.name, args: term.args.map((arg) => traverse(arg)) };
-    }
-    return { type: 'var', name: `#${term.ref}` };
-  }
-
-  return args.map((arg) => traverse(arg));
-}
-
-function shapesEqual(term1: Shape, term2: Shape): boolean {
-  if (term1.type === 'trivial') return term2.type === 'trivial';
-  if (term1.type === 'bool') return term2.type === 'bool' && term1.value === term2.value;
-  if (term1.type === 'int') return term2.type === 'int' && term1.value === term2.value;
-  if (term1.type === 'string') return term2.type === 'string' && term1.value === term2.value;
-  if (term1.type === 'var') return term2.type === 'var' && term1.ref === term2.ref;
-  return (
-    term2.type === 'const' &&
-    term1.name === term2.name &&
-    term1.args.length === term2.args.length &&
-    term1.args.every((subterm1, i) => shapesEqual(subterm1, term2.args[i]))
-  );
-}
+import { Pattern as Shape } from '../bytecode.js';
+import { patternsToShapes, shapesEqual, shapesToPatterns } from './shape.js';
 
 /**
  * An IndexMap contains partial information about the indices needed for each
@@ -137,7 +62,7 @@ type Constraint = Set<number>[];
 type IndexSpec = {
   args: Shape[];
   order: Constraint;
-  identity: { pred: string; vars: number[] } | { pred: null; revLookup: string[] };
+  identity: { pred: string; vars: number[] } | { pred: null; varsKnown: string[] };
 };
 
 function defaultIndices(pred: string, args: number): IndexSpec {
@@ -197,24 +122,23 @@ function partitionIfPossible(ordering: Constraint, first: Set<number>, extensibl
  * rule. (This means index.args.length === rule.premise.args.length)
  */
 function refineIfPossible(index: IndexSpec, rule: JoinRule): IndexSpec | null {
-  const { shape, lookup } = termsToShape(rule.premise.args);
+  const { shapes, varsKnown } = patternsToShapes(rule.premise.args);
 
   // shared vars: all the variables used in both premises
-  const shared: Set<number> = new Set([...joinVars(rule)].map((x) => lookup.get(x)!));
+  const shared: Set<number> = new Set([...joinVars(rule)].map((x) => varsKnown.indexOf(x)!));
 
   // needed vars: all the variables in the second premise that appear in the conclusion
   const needed = [...freeVarsConclusion(rule.conclusion)]
-    .map((x) => lookup.get(x))
-    .filter((x): x is number => x !== undefined);
+    .map((x) => varsKnown.indexOf(x))
+    .filter((x): x is number => x !== -1);
 
   // used = shared or needed
   const used = shared.union(new Set(needed));
 
-  if (!index.args.every((arg, i) => shapesEqual(arg, shape[i]))) return null;
+  if (!index.args.every((arg, i) => shapesEqual(arg, shapes[i]))) return null;
 
   const order1 = partitionIfPossible(index.order, shared, index.identity.pred === null);
   if (order1 === null) return null;
-
   const order2 = partitionIfPossible(order1, used, index.identity.pred === null);
   if (order2 === null) return null;
 
@@ -256,7 +180,7 @@ function learnNeededIndices(program: BinarizedProgram): IndexMap {
   for (const rule of program.rules) {
     if (rule.type === 'Join') {
       const indices = learnedSpecs.get(rule.premise.name)!;
-      const { shape, lookup, revLookup } = termsToShape(rule.premise.args);
+      const { shapes, varsKnown } = patternsToShapes(rule.premise.args);
 
       let success = false;
       for (const [i, index] of indices.entries()) {
@@ -270,13 +194,13 @@ function learnNeededIndices(program: BinarizedProgram): IndexMap {
 
       if (!success) {
         // No indexes are compatible, a new index is needed
-        const shared = new Set([...joinVars(rule)].map((x) => lookup.get(x)!));
-        const used = new Set([...usedPremiseVars(rule)].map((x) => lookup.get(x)!));
+        const shared = new Set([...joinVars(rule)].map((x) => varsKnown.indexOf(x)!));
+        const used = new Set([...usedPremiseVars(rule)].map((x) => varsKnown.indexOf(x)!));
 
         indices.push({
-          args: shape,
+          args: shapes,
           order: shared.size === 0 ? [used] : shared.size === used.size ? [shared] : [shared, used],
-          identity: { pred: null, revLookup },
+          identity: { pred: null, varsKnown },
         });
       }
     }
@@ -308,7 +232,7 @@ function finalizeIndices(pred: string, specs: IndexSpec[]) {
     newSpecs.push({ args: indexSpec.args, order, identity: { pred: newPred, vars: argVars } });
     newRules.push({
       type: 'Unary',
-      premise: { name: pred, args: shapeToTerms(indexSpec.args) },
+      premise: { name: pred, args: shapesToPatterns(indexSpec.args) },
       conclusion: {
         type: 'datalog',
         name: newPred,
@@ -336,10 +260,10 @@ export function generateIndices(program: BinarizedProgram): BinarizedProgram {
       const indices = finalizedIndexMap.get(rule.premise.name)!;
       for (const index of indices) {
         if (refineIfPossible(index, rule) && index.identity.pred !== null) {
-          const { revLookup } = termsToShape(rule.premise.args);
+          const { varsKnown } = patternsToShapes(rule.premise.args);
           const args: Pattern[] = index.identity.vars
             .slice(0, usedPremiseVars(rule).size)
-            .map((x) => ({ type: 'var', name: revLookup[x] }));
+            .map((x) => ({ type: 'var', name: varsKnown[x] }));
 
           rules.push({
             type: 'Join',

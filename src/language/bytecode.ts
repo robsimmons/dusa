@@ -4,8 +4,7 @@ import {
   Conclusion as BytecodeConclusion,
 } from '../bytecode.js';
 import { BinarizedProgram, BinarizedRule, Conclusion as BinarizedConclusion } from './binarize.js';
-
-function generatePattern(subst: { [name: ]})
+import { termsToShape } from './indexes.js';
 
 function generateConclusion(
   subst: { [name: string]: number },
@@ -18,11 +17,16 @@ function generateConclusion(
         name: conclusion.name,
         vars: conclusion.vars.map((x) => subst[x]),
       };
-    
+    case 'datalog'
   }
 }
 
-function generateRule(rule: BinarizedRule): BytecodeRule {}
+function generateRule(rule: BinarizedRule): BytecodeRule {
+  switch (rule.type) {
+    case 'Unary':
+      const { shape, lookup, revLookup } = termsToShape()
+  }
+}
 
 export function generateBytecode(program: BinarizedProgram): BytecodeProgram {
   return {

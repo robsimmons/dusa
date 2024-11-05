@@ -1,20 +1,3 @@
-export enum Builtin {
-  BOOLEAN_FALSE = 0,
-  BOOLEAN_TRUE = 1,
-  NAT_ZERO = 2,
-  NAT_SUCC = 3,
-  INT_PLUS = 4,
-  INT_MINUS = 5,
-  INT_TIMES = 6,
-  STRING_CONCAT = 7,
-  CHECK_GT = 8,
-  CHECK_GEQ = 9,
-  CHECK_LT = 10,
-  CHECK_LEQ = 11,
-  EQUAL = 12,
-  NOT_EQUAL = 13,
-}
-
 export type Pattern =
   | { type: 'trivial' }
   | { type: 'int'; value: bigint }
@@ -41,13 +24,6 @@ export type Rule =
       inVars: number;
       premise: { name: string; args: number };
       shared: number;
-      conclusion: Conclusion;
-    }
-  | {
-      type: 'builtin';
-      inName: string;
-      inVars: number;
-      premise: { name: Builtin; args: Pattern[] };
       conclusion: Conclusion;
     };
 
