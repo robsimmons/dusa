@@ -142,7 +142,12 @@ function stepState(prog: Program, state: SearchState): StepResult | Conflict {
     const [agenda, attribute] = uncons(state.agenda);
     state.agenda = agenda;
     const conflict = learnImmediateConsequences(prog, state, attribute);
-    return conflict ?? StepResult.STEPPED;
+    const demandFailure =
+      state.agenda === null && state.deferred.size === 0 && state.demands.size > 0;
+    return (
+      conflict ??
+      (demandFailure ? { type: 'demand', name: state.demands.example()!.name } : StepResult.STEPPED)
+    );
   }
 }
 
@@ -167,17 +172,17 @@ function stepLeaf(
       for (const choice of choices) {
         justChild = justChild.set(choice, { ref: null });
       }
-      return [
-        path,
-        {
-          type: 'choice',
-          state: tree.state,
-          attribute: [name, args],
-          justChild,
-          noneOfChild,
-        },
-        null,
-      ];
+      const replacementTree: ChoiceTreeNode = {
+        type: 'choice',
+        state: tree.state,
+        attribute: [name, args],
+        justChild,
+        noneOfChild,
+      };
+      if (path !== null) {
+        followChoice(path.data[0], path.data[1]).ref = replacementTree;
+      }
+      return [path, replacementTree, null];
     }
     default: {
       // Conflict, UNSAT

@@ -132,3 +132,39 @@ test('Absent/extant regression full', () => {
     ),
   ).toStrictEqual(['reachable 0 0, reachable 1 1, reachable 1 2, reachable 2 1, reachable 2 2']);
 });
+
+test('Forbid and demand', () => {
+  expect(
+    testExecution(
+      `
+        p a is { tt, ff }.
+        p b is { tt, ff }.
+        #demand p a is tt.
+        #forbid p b is ff.
+      `,
+      [['p', 2]],
+    ),
+  ).toStrictEqual(['p a tt, p b tt']);
+});
+
+test('Three sets of choices', () => {
+  expect(
+    testExecution(
+      `
+        p a is { tt, ff }.
+        p b is { tt, ff }.
+        p c is { tt, ff }.
+      `,
+      [['p', 2]],
+    ),
+  ).toStrictEqual([
+    'p a ff, p b ff, p c ff',
+    'p a ff, p b ff, p c tt',
+    'p a ff, p b tt, p c ff',
+    'p a ff, p b tt, p c tt',
+    'p a tt, p b ff, p c ff',
+    'p a tt, p b ff, p c tt',
+    'p a tt, p b tt, p c ff',
+    'p a tt, p b tt, p c tt',
+  ]);
+});

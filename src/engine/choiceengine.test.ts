@@ -400,3 +400,246 @@ test('Multiple choice', () => {
     solution: { neg: 0, pos: 3 },
   });
 });
+
+test('three levels', () => {
+  const prog = build(`q a. q b. q c. p X is { tt, ff } :- q X.`);
+  let path: ChoiceZipper = null;
+  let tree: ChoiceTree | null = { type: 'leaf', state: createSearchState(prog) };
+  let solution: Database | null = null;
+
+  const last = (ab: string[]) => {
+    switch (ab.toSorted().join('')) {
+      case 'ab':
+        return 'c';
+      case 'ac':
+        return 'b';
+      default:
+        return 'a';
+    }
+  };
+
+  [path, tree, solution] = step(prog, path, tree!); // pop $seed
+  [path, tree, solution] = step(prog, path, tree!); // pop q a
+  [path, tree, solution] = step(prog, path, tree!); // pop q b
+  [path, tree, solution] = step(prog, path, tree!); // pop q c
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: 'leaf with 3 deferred options',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // agenda empty, create branch point on p [A]
+  const a = `${simplify(prog, path, tree, solution).tree}`.slice(-1);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: 'branch on p ' + a,
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // descend, pop p [A] is [T]
+  const at = simplify(prog, path, tree, solution).path[0].slice(-2);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at],
+    tree: 'leaf with 2 deferred options',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // agenda empty, create branch point on p [B]
+  const b = `${simplify(prog, path, tree, solution).tree}`.slice(-1);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at],
+    tree: 'branch on p ' + b,
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // descend, pop p [B] is [T]
+  const bt = simplify(prog, path, tree, solution).path[1].slice(-2);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at, 'p ' + b + ' is ' + bt],
+    tree: 'leaf with 1 deferred options',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // agenda empty, create branch point on p [B]
+  const c = last([a, b]);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at, 'p ' + b + ' is ' + bt],
+    tree: 'branch on p ' + c,
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // descend, pop p [B] is [T]
+  const ct = simplify(prog, path, tree, solution).path[2].slice(-2);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at, 'p ' + b + ' is ' + bt, 'p ' + c + ' is ' + ct],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #1: { p [A] is [T], p [B] is [T], p [C] is [T]}
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at, 'p ' + b + ' is ' + bt],
+    tree: ['p ' + c],
+    solution: { pos: 7, neg: 0 },
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // pop p [C] is [F]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at, 'p ' + b + ' is ' + bt],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #2: { p [A] is [T], p [B] is [T], p [C] is [F]}
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at],
+    tree: ['p ' + b],
+    solution: { pos: 7, neg: 0 },
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // pop p [B] is [F]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at],
+    tree: 'leaf with 1 deferred options',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // agenda empty, create branch point on p [C]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at],
+    tree: 'branch on p ' + c,
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // descend and pop p [C] is [T]
+  const ct2 = simplify(prog, path, tree, solution).path[1].slice(-2);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at, 'p ' + c + ' is ' + ct2],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #3: { p [A] is [T], p [B] is [F], p [C] is [T]}
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at],
+    tree: ['p ' + c],
+    solution: { pos: 7, neg: 0 },
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // pop p [C] is [F]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + a + ' is ' + at],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #4: { p [A] is [T], p [B] is [F], p [C] is [F]}
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: ['p ' + a],
+    solution: { pos: 7, neg: 0 },
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // pop p [A] is [F]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: 'leaf with 2 deferred options',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // agenda empty, create branch point on p [B]
+  const b2 = `${simplify(prog, path, tree, solution).tree}`.slice(-1);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: 'branch on p ' + b2,
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // descend, pop p [B] is [T]
+  const bt2 = simplify(prog, path, tree, solution).path[0].slice(-2);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + b2 + ' is ' + bt2],
+    tree: 'leaf with 1 deferred options',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // agenda empty, create branch point on p [C]
+  const c2 = last([a, b2]);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + b2 + ' is ' + bt2],
+    tree: 'branch on p ' + c2,
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // descend and pop p [C] is [T]
+  const ct3 = simplify(prog, path, tree, solution).path[1].slice(-2);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + b2 + ' is ' + bt2, 'p ' + c2 + ' is ' + ct3],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #5: { p [A] is [F], p [B] is [T], p [C] is [T]}
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + b2 + ' is ' + bt2],
+    tree: ['p ' + c2],
+    solution: { pos: 7, neg: 0 },
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // pop p [C] is [F]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + b2 + ' is ' + bt2],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #6: { p [A] is [F], p [B] is [T], p [C] is [F]}
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: ['p ' + b2],
+    solution: { pos: 7, neg: 0 },
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // pop p [B] is [F]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: 'leaf with 1 deferred options',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // agenda empty: create branch point on p [C]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: 'branch on p ' + c2,
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // descend and pop p [C] is [T]
+  const ct4 = simplify(prog, path, tree, solution).path[0].slice(-2);
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: ['p ' + c2 + ' is ' + ct4],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #7: { p [A] is [F], p [B] is [F], p [C] is [T] }
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: ['p ' + c2],
+    solution: { pos: 7, neg: 0 },
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // pop p [C] is [F]
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: 'leaf containing solution',
+    solution: null,
+  });
+
+  [path, tree, solution] = step(prog, path, tree!); // return #8: { p [A] is [F], p [B] is [F], p [C] is [F] }
+  expect(simplify(prog, path, tree, solution)).toStrictEqual({
+    path: [],
+    tree: null,
+    solution: { pos: 7, neg: 0 },
+  });
+});
