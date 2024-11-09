@@ -168,3 +168,49 @@ test('Three sets of choices', () => {
     'p a tt, p b tt, p c tt',
   ]);
 });
+
+test('Generating edges', () => {
+  expect(
+    testExecution(
+      `
+        vertex a. vertex b.
+
+        edge X X is absent :- vertex X.
+        edge X Y is { extant, absent } :- vertex X, vertex Y.
+      `,
+      [['edge', 3]],
+    ),
+  ).toStrictEqual([
+    'edge a a absent, edge a b absent, edge b a absent, edge b b absent',
+    'edge a a absent, edge a b absent, edge b a extant, edge b b absent',
+    'edge a a absent, edge a b extant, edge b a absent, edge b b absent',
+    'edge a a absent, edge a b extant, edge b a extant, edge b b absent',
+  ]);
+});
+
+test('Generating edges', () => {
+  expect(
+    testExecution(
+      `
+        vertex a. vertex b. vertex c.
+
+        edge X X is absent :- vertex X.
+        edge X Y is { extant, absent } :- vertex X, vertex Y.
+        edge X Y is Z :- edge Y X is Z.
+
+        reach N N :- vertex N.
+        reach Start Y :- reach Start X, edge X Y is extant.
+      `,
+      [['reach', 2]],
+    ),
+  ).toStrictEqual([
+    'reach a a, reach a b, reach a c, reach b a, reach b b, reach b c, reach c a, reach c b, reach c c',
+    'reach a a, reach a b, reach a c, reach b a, reach b b, reach b c, reach c a, reach c b, reach c c',
+    'reach a a, reach a b, reach a c, reach b a, reach b b, reach b c, reach c a, reach c b, reach c c',
+    'reach a a, reach a b, reach a c, reach b a, reach b b, reach b c, reach c a, reach c b, reach c c',
+    'reach a a, reach a b, reach b a, reach b b, reach c c',
+    'reach a a, reach a c, reach b b, reach c a, reach c c',
+    'reach a a, reach b b, reach b c, reach c b, reach c c',
+    'reach a a, reach b b, reach c c',
+  ]);
+});

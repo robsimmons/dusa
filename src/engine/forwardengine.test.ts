@@ -167,3 +167,31 @@ test('multiple premises (datalog, no arguments)', () => {
   expect(state.frontier.size).toBe(0);
   expect(state.explored.size).toStrictEqual({ pos: 7, neg: 0 });
 });
+
+test('multiple premises (datalog, no arguments)', () => {
+  let program: Program;
+  let state: SearchState;
+
+  program = build(
+    'vertex a. vertex b. edge X X is absent :- vertex X. edge X Y is { extant, absent } :- vertex X, vertex Y.',
+  );
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed. agenda now, in some order: [vertex a, vertex b]
+  expect(state.agenda?.data.name).toBe('vertex');
+  expect(state.agenda?.next?.data.name).toBe('vertex');
+  expect(step(program, state)).toBeNull(); // agenda now, in some order: [vertex [A], edge [B] [B] is extant, @edge-2-1 [B]]
+  expect(
+    [
+      state.agenda?.data.name,
+      state.agenda?.next?.data.name,
+      state.agenda?.next?.next?.data.name,
+    ].toSorted(),
+  ).toStrictEqual(['@edge-2-1', 'edge', 'vertex']);
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [vertex [A], edge [B] [B] is extant]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [vertex [A]]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [edge [A] [A] is extant, @edge-2-1 [A]]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [edge [A] [A] is extant]
+  expect(step(program, state)).toBeNull(); // agenda now empty
+  expect(state.agenda).toBeNull();
+  expect(state.deferred.size).toBe(2);
+});

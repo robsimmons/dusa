@@ -100,7 +100,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
         const indexMatches = predBinary[rule.premise.name] ?? [];
         predBinary[rule.premise.name] = indexMatches;
         indexMatches.push({
-          inName: rule.inName,
+          inName: `@${rule.inName}`,
           inVars: { shared: rule.shared, passed },
           conclusion: ingestConclusion(rule.conclusion),
         });
