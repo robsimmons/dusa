@@ -6,6 +6,7 @@ import {
   choose as chooseAVL,
   remove as removeAVL,
   visit,
+  iterator,
 } from './avl.js';
 
 // Adapted from https://www.cs.cmu.edu/~rjsimmon/15122-m15/lec/16-avl/bst-test.c0
@@ -122,6 +123,10 @@ test('insert and remove in different orders', () => {
   expect(remove(t, 'c')).toBeNull();
   expect(remove(t, 'd')).toStrictEqual([tb, 2]);
   expect(remove(t, 'e')).toBeNull();
+  expect([...iterator(t)]).toStrictEqual([
+    ['b', 1],
+    ['d', 2],
+  ]);
 });
 
 test('insert random', () => {
@@ -142,6 +147,9 @@ test('insert random', () => {
     for (let j = i; j < LIMIT; j++) {
       expect(lookup(t, A[j])).toBeNull();
     }
+    expect([...iterator(t)].toSorted(([_kA, a], [_kB, b]) => a - b).map(([_, x]) => x)).toStrictEqual(
+      Array.from({ length: i }).map((_, n) => n),
+    );
     [t] = insert(t, key, i);
   }
 

@@ -3,6 +3,8 @@ import {
   lookup as lookupTree,
   insert as insertTree,
   choose as chooseTree,
+  remove as removeTree,
+  iterator as iteratorTree,
 } from './avl.js';
 
 type ViewsIndex = number;
@@ -180,41 +182,59 @@ export function escapeString(input: string): string {
 
 export class DataMap<T> {
   private tree: Tree<Data, T>;
-  private size: number;
+  private _size: number;
 
   private constructor(tree: Tree<Data, T>, size: number) {
     this.tree = tree;
-    this.size = size;
+    this._size = size;
+  }
+
+  get size() {
+    return this._size;
   }
 
   static empty<T>(): DataMap<T> {
     return new DataMap<T>(null, 0);
   }
 
-  set(key: Data, value: T) {
-    const [newTree, removed] = insertTree(compareData, this.tree, key, value);
-    return new DataMap(newTree, removed === null ? this.size + 1 : this.size);
+  static singleton<T>(key: Data, value: T) {
+    return new DataMap<T>({ height: 1, key, value, left: null, right: null }, 1);
   }
 
   get(key: Data) {
     return lookupTree(compareData, this.tree, key);
   }
 
-  choose() {
+  set(key: Data, value: T) {
+    const [newTree, removed] = insertTree(compareData, this.tree, key, value);
+    return new DataMap(newTree, removed === null ? this._size + 1 : this._size);
+  }
+
+  remove(key: Data): null | [DataMap<T>, T] {
+    const removeResult = removeTree(compareData, this.tree, key);
+    if (removeResult === null) return null;
+    const [newTree, removed] = removeResult;
+    return [new DataMap(newTree, removed === null ? this._size : this._size - 1), removed];
+  }
+
+  /** Return the only element if it exists, otherwise return null */
+  getSingleton(): null | [Data, T] {
+    if (this._size !== 1) return null;
+    return [this.tree!.key, this.tree!.value];
+  }
+
+  /** Quickly return a single element, or null if one exists */
+  example(): null | [Data, T] {
+    return this.tree === null ? null : [this.tree.key, this.tree.value];
+  }
+
+  /** Return an element if one exists, with some chance that any element will be selected. */
+  choose(): null | [Data, T] {
     return chooseTree(this.tree);
   }
 
-  isEmpty() {
-    return this.size === 0;
-  }
-
-  getSingletonKey() {
-    if (this.size !== 1) return null;
-    return this.tree!.key;
-  }
-
-  example(): null | [Data, T] {
-    return this.tree === null ? null : [this.tree.key, this.tree.value];
+  [Symbol.iterator]() {
+    return iteratorTree(this.tree);
   }
 }
 
@@ -225,31 +245,48 @@ export class DataSet {
     this.map = map;
   }
 
+  get size() {
+    return this.map.size;
+  }
+
   static empty(): DataSet {
     return new DataSet(DataMap.empty());
   }
 
   static singleton(key: Data) {
-    return new DataSet(DataMap.empty<true>().set(key, true));
-  }
-
-  add(key: Data) {
-    return new DataSet(this.map.set(key, true));
+    return new DataSet(DataMap.singleton(key, true));
   }
 
   has(key: Data) {
     return !!this.map.get(key);
   }
 
-  isEmpty() {
-    return this.map.isEmpty();
+  add(key: Data) {
+    return new DataSet(this.map.set(key, true));
   }
 
+  /** Return the only element if it exists, otherwise return null */
   getSingleton() {
-    return this.map.getSingletonKey();
+    return this.map.getSingleton();
   }
 
+  /** Quickly return a single element, or null if one exists */
   example() {
     return this.map.example()?.[0] ?? null;
+  }
+
+  /** Return an element if one exists, with some chance that any element will be selected. */
+  choose() {
+    return this.map.choose()?.[0] ?? null;
+  }
+
+  [Symbol.iterator]() {
+    return keyIterator(this.map);
+  }
+}
+
+function* keyIterator<T>(map: DataMap<T>) {
+  for (const [key] of map) {
+    yield key;
   }
 }

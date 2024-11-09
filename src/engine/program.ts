@@ -22,7 +22,8 @@ type PredBinary = {
 
 type Intermediates = {
   [inName: string]: {
-    premise: { name: string; shared: number; introduced: number };
+    inVars: { shared: number; total: number };
+    premise: { name: string; introduced: number };
     conclusion: Conclusion;
   }[];
 };
@@ -88,14 +89,15 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
         const passed = rule.inVars - rule.shared;
         const introduced = rule.premise.args - rule.shared;
 
-        const intermediateMatches = intermediates[rule.inName];
-        intermediates[rule.inName] = intermediateMatches;
+        const intermediateMatches = intermediates[rule.inName] ?? [];
+        intermediates[`@${rule.inName}`] = intermediateMatches;
         intermediateMatches.push({
-          premise: { name: rule.premise.name, shared: rule.shared, introduced },
+          inVars: { shared: rule.shared, total: rule.inVars },
+          premise: { name: rule.premise.name, introduced },
           conclusion: ingestConclusion(rule.conclusion),
         });
 
-        const indexMatches = predBinary[rule.premise.name];
+        const indexMatches = predBinary[rule.premise.name] ?? [];
         predBinary[rule.premise.name] = indexMatches;
         indexMatches.push({
           inName: rule.inName,

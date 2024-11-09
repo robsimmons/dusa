@@ -3,11 +3,9 @@ import {
   AVL as Tree,
   lookup as lookupTree,
   insert as insertTree,
-  choose as chooseTree,
   visit as visitTree,
 } from './avl.js';
 import {
-  Trie,
   TrieNode,
   lookup as lookupTrie,
   insert as insertTrie,
@@ -24,25 +22,33 @@ interface Relation {
 const emptyRelation = { trie: null, neg: 0, pos: 0 };
 
 export class Database {
-  private t: Tree<string, Relation>;
+  private tree: Tree<string, Relation>;
+  private pos: number;
+  private neg: number;
 
-  private constructor(t: Tree<string, Relation>) {
-    this.t = t;
+  private constructor(tree: Tree<string, Relation>, pos: number, neg: number) {
+    this.tree = tree;
+    this.pos = pos;
+    this.neg = neg;
+  }
+
+  get size() {
+    return { pos: this.pos, neg: this.neg };
   }
 
   static empty(): Database {
-    return new Database(null);
+    return new Database(null, 0, 0);
   }
 
   get(name: string, args: Data[]) {
-    const trie = lookupTree(compareString, this.t, name);
+    const trie = lookupTree(compareString, this.tree, name);
     const leaf = lookupTrie(compareData, trie?.trie ?? null, args);
     if (leaf === null || leaf.children !== null) return null;
     return leaf.value;
   }
 
   set(name: string, args: Data[], value: Constraint): [Database, Constraint | null] {
-    const { trie, pos, neg } = lookupTree(compareString, this.t, name) ?? emptyRelation;
+    const { trie, pos, neg } = lookupTree(compareString, this.tree, name) ?? emptyRelation;
     const [result, removed] = insertTrie(compareData, trie, args, 0, value);
 
     if (removed && removed.children) throw new Error('Database.set invariant');
@@ -54,13 +60,16 @@ export class Database {
       neg: neg + negInc - negDec,
       trie: result,
     };
-    const [newTree] = insertTree(compareString, this.t, name, newRel);
+    const [newTree] = insertTree(compareString, this.tree, name, newRel);
 
-    return [new Database(newTree), removed?.value ?? null];
+    return [
+      new Database(newTree, this.pos + posInc - posDec, this.neg + negInc - negDec),
+      removed?.value ?? null,
+    ];
   }
 
   visit(name: string, args: Data[], depth: number): Generator<Data[]> {
-    const relation = lookupTree(compareString, this.t, name);
+    const relation = lookupTree(compareString, this.tree, name);
     if (relation === null) return nullIterator();
     return visitor(relation.trie, args, depth);
   }

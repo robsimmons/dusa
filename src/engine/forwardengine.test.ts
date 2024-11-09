@@ -1,10 +1,5 @@
 import { test, expect } from 'vitest';
-import {
-  createSearchState,
-  InternalProgram,
-  learnImmediateConsequences,
-  SearchState,
-} from './forwardengine.js';
+import { createSearchState, learnImmediateConsequences, SearchState } from './forwardengine.js';
 import { HashCons } from '../datastructures/data.js';
 import { parse } from '../language/dusa-parser.js';
 import { check } from '../language/check.js';
@@ -21,14 +16,14 @@ function build(source: string) {
   return ingestBytecodeProgram(bytecode);
 }
 
-function step(prog: InternalProgram, state: SearchState) {
+function step(prog: Program, state: SearchState) {
   if (state.agenda === null) throw new Error();
   const { data, next } = state.agenda;
   state.agenda = next;
   return learnImmediateConsequences(prog, state, data);
 }
 
-test('datalog, unary consequences', () => {
+test('forward engine with unary rules and argument-free premises', () => {
   let program: Program;
   let state: SearchState;
   let result: any;
@@ -124,4 +119,51 @@ test('datalog, unary consequences', () => {
   expect(state.frontier.get('h', [])!.values.has(16n)).toBe(true);
   expect(state.frontier.get('h', [])!.values.has(17n)).toBe(true);
   expect(state.frontier.get('h', [])!.values.has(18n)).toBe(false);
+});
+
+test('consequences, unary rules', () => {
+  let program: Program;
+  let state: SearchState;
+
+  program = build('p is ff. q is tt :- p is ff.');
+  const tt = program.data.hide({ type: 'const', name: 'tt', args: [] });
+  const ff = program.data.hide({ type: 'const', name: 'ff', args: [] });
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed
+  expect(state.explored.get('p', [])).toStrictEqual(null);
+  expect(state.explored.get('q', [])).toStrictEqual(null);
+  expect(state.frontier.get('p', [])!.open).toStrictEqual(false);
+  expect([...state.frontier.get('p', [])!.values]).toStrictEqual([ff]);
+  expect(state.frontier.get('q', [])).toStrictEqual(null);
+
+  expect(step(program, state)).toBeNull(); // pop p is ff
+  expect(state.explored.get('p', [])).toStrictEqual({ type: 'just', just: ff });
+  expect(state.explored.get('q', [])).toStrictEqual(null);
+  expect(state.frontier.get('p', [])).toStrictEqual(null);
+  expect([...state.frontier.get('q', [])!.values]).toStrictEqual([tt]);
+
+  expect(step(program, state)).toBeNull(); // pop q is tt
+  expect(state.explored.get('p', [])).toStrictEqual({ type: 'just', just: ff });
+  expect(state.explored.get('q', [])).toStrictEqual({ type: 'just', just: tt });
+  expect(state.frontier.get('p', [])).toStrictEqual(null);
+  expect(state.frontier.get('q', [])).toStrictEqual(null);
+});
+
+test('multiple premises (datalog, no arguments)', () => {
+  let program: Program;
+  let state: SearchState;
+
+  program = build('a. b. c. d :- a, b, c.');
+  state = createSearchState(program);
+  expect(step(program, state)).toBeNull(); // pop $seed. agenda now possibly: [a,b,c]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [a,b]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [a]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [@d-1-1]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [@d-1-2]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [d]
+  expect(step(program, state)).toBeNull(); // agenda now possibly: [d]
+  expect(state.agenda).toBeNull();
+  expect(state.deferred.size).toBe(0);
+  expect(state.frontier.size).toBe(0);
+  expect(state.explored.size).toStrictEqual({ pos: 7, neg: 0 });
 });

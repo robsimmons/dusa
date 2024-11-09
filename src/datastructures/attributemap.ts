@@ -4,14 +4,13 @@ import {
   lookup as lookupTree,
   insert as insertTree,
   remove as removeTree,
-  visit as visitTree,
+  choose as chooseTree,
 } from './avl.js';
 import {
   Trie,
   lookup as lookupTrie,
   insert as insertTrie,
   remove as removeTrie,
-  visit as visitTrie,
 } from './trie.js';
 
 export class AttributeMap<T> {
@@ -49,7 +48,7 @@ export class AttributeMap<T> {
     ];
   }
 
-  remove(name: string, args: Data[]): null | [AttributeMap<T>, T | null] {
+  remove(name: string, args: Data[]): null | [AttributeMap<T>, T] {
     const trie = lookupTree(compareString, this.tree, name);
     const removeResult = removeTrie(compareData, trie, args, 0);
     if (removeResult === null) return null;
@@ -63,7 +62,33 @@ export class AttributeMap<T> {
     }
     return [
       new AttributeMap(newTree, removed === null ? this._size : this._size - 1),
-      removed?.value ?? null,
+      removed.value,
     ];
+  }
+
+  /** Quickly return a single element, or null if one exists */
+  example(): null | { name: string; args: Data[]; value: T } {
+    if (this.tree === null) return null;
+    let { key: name, value: trie } = this.tree;
+    const args: Data[] = [];
+    while (trie !== null && trie.children !== null) {
+      const { key: arg, value: subTrie } = trie.children;
+      args.push(arg);
+      trie = subTrie;
+    }
+    return { name, args, value: trie!.value };
+  }
+
+  /** Return an element if one exists, with some chance that any element will be selected */
+  choose(): null | { name: string; args: Data[]; value: T } {
+    if (this.tree === null) return null;
+    let [name, trie] = chooseTree(this.tree)!;
+    const args: Data[] = [];
+    while (trie !== null && trie.children !== null) {
+      const [arg, subTrie] = chooseTree(trie.children)!;
+      args.push(arg);
+      trie = subTrie;
+    }
+    return { name, args, value: trie!.value };
   }
 }

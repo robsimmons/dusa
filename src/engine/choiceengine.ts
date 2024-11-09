@@ -1,307 +1,231 @@
-import { Data, TRIVIAL, dataToString, hide } from '../datastructures/data.js';
-import { DataMap } from '../datastructures/datamap.js';
-import { Database, dbToString, insertFact, listFacts, stepDb } from './forwardengine.js';
-import { IndexedProgram } from '../language/indexize.js';
-import { equal } from './dataterm-old.js';
-
-export interface ChoiceTreeLeaf {
-  type: 'leaf';
-  db: Database;
-}
-
-export interface ChoiceTreeNode {
-  type: 'choice';
-  base: Database;
-  attribute: [string, Data[]];
-  children: DataMap<null | ChoiceTree>;
-  defer: 'exhaustive' | ChoiceTree;
-}
+import { cons, List, uncons } from '../datastructures/conslist.js';
+import { Data, DataMap, DataSet } from '../datastructures/data.js';
+import { Database } from '../datastructures/database.js';
+import {
+  Conflict,
+  createSearchState,
+  empty,
+  learnImmediateConsequences,
+  SearchState,
+} from './forwardengine.js';
+import { Program } from './program.js';
 
 export type ChoiceTree = ChoiceTreeLeaf | ChoiceTreeNode;
+export type ChoiceZipper = List<[ChoiceTreeNode, ChoiceIndex]>;
 
-function maybeStep(
-  program: IndexedProgram,
-  ref: { db: Database },
-): 'solution' | 'discard' | 'choose' | 'stepped' {
-  if (ref.db.queue.length === 0) {
-    if (ref.db.deferredChoices.length === 0) {
-      // Saturation! Check that it meets requirements
-      // TODO this "every" is quite inefficient. As an alternative, we could
-      // add facts that need to be positively asserted to remainingDemands or
-      // something equivalent, and just check that the remaining un-asserted
-      // fact set is null
-      if (
-        [...ref.db.factValues.entries()].every(({ value }) => value.type === 'is') &&
-        ref.db.remainingDemands.length === 0
-      ) {
-        return 'solution';
-      } else {
-        return 'discard';
+interface ChoiceTreeLeaf {
+  type: 'leaf';
+  state: SearchState; // state.agenda !== null
+}
+
+/** A valid ChoiceTreeNode must have at least one LazyChoiceTree child */
+interface ChoiceTreeNode {
+  type: 'choice';
+  state: SearchState; // state.agenda === null
+  attribute: [string, Data[]];
+  justChild: DataMap<LazyChoiceTree>;
+  noneOfChild: null | LazyChoiceTree;
+}
+
+/** A lazy choice tree might not have had its child state created yet */
+type LazyChoiceTree = { ref: ChoiceTree | null };
+type ForcedChoiceTree = { ref: ChoiceTree };
+type ChoiceIndex = { type: 'just'; just: Data } | { type: 'noneOf' };
+
+export function followChoice(parent: ChoiceTreeNode, choice: ChoiceIndex): LazyChoiceTree {
+  switch (choice.type) {
+    case 'just':
+      return parent.justChild.get(choice.just)!;
+    case 'noneOf':
+      return parent.noneOfChild!;
+  }
+}
+
+function forceChoice(parent: ChoiceTreeNode, choice: ChoiceIndex): ForcedChoiceTree {
+  const child = followChoice(parent, choice);
+  if (child.ref !== null) return child as ForcedChoiceTree;
+
+  const state = { ...parent.state };
+  const [name, args] = parent.attribute;
+
+  switch (choice.type) {
+    case 'just': {
+      // Collapse the frontier down to a single value and add the attribute to the agenda
+      const values = DataSet.singleton(choice.just);
+      const [frontier] = state.frontier.set(name, args, { values, open: false });
+      const [deferred] = state.deferred.remove(name, args)!;
+      state.frontier = frontier;
+      state.deferred = deferred;
+      state.agenda = cons(null, { type: 'fact', name, args });
+      break;
+    }
+    case 'noneOf': {
+      // Get existing noneOf constraint, extend it with the choices not taken at the frontier
+      const alreadyExplored = state.explored.get(name, args) ?? { type: 'noneOf', noneOf: empty };
+      if (alreadyExplored.type !== 'noneOf') throw new Error('forceNoneOf invariant');
+      let noneOf: DataSet = alreadyExplored.noneOf;
+
+      const [frontier, removed] = state.frontier.remove(name, args)!;
+      if (!removed.open) throw new Error('forceChoice invariant');
+      for (const choice of removed.values) {
+        noneOf = noneOf.add(choice);
       }
+      const [explored] = state.explored.set(name, args, { type: 'noneOf', noneOf });
+      const [deferred] = state.deferred.remove(name, args)!;
+      state.frontier = frontier;
+      state.deferred = deferred;
+      state.explored = explored;
+    }
+  }
+
+  child.ref = { type: 'leaf', state };
+  return child as ForcedChoiceTree;
+}
+
+enum StepResult {
+  SOLUTION = 0,
+  DEFERRED = 2,
+  STEPPED = 3,
+}
+
+/** When a node has been fully explored, this function will remove it from the tree. */
+function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, ChoiceTree | null] {
+  if (pathToCollapseUp === null) return [null, null];
+  const [path, [tree, fullyExploredChoiceToCollapse]] = uncons(pathToCollapseUp);
+
+  // Remove the fully explored choice from the choiceNode
+  switch (fullyExploredChoiceToCollapse.type) {
+    case 'just': {
+      const [justChild] = tree.justChild.remove(fullyExploredChoiceToCollapse.just)!;
+      tree.justChild = justChild;
+      break;
+    }
+    case 'noneOf': {
+      tree.noneOfChild = null;
+      break;
+    }
+  }
+
+  // Ensure that we're returning a tree that has more than one child
+  const noneOfSize = tree.noneOfChild === null ? 0 : 1;
+  if (tree.justChild.size + noneOfSize > 1) {
+    return [path, tree];
+  } else {
+    let choiceIndex: ChoiceIndex;
+    if (tree.noneOfChild !== null) {
+      choiceIndex = { type: 'noneOf' };
     } else {
-      // Must make a choice
-      return 'choose';
+      const [just] = tree.justChild.getSingleton()!;
+      choiceIndex = { type: 'just', just };
+    }
+
+    const replacementTree = forceChoice(tree, choiceIndex).ref;
+    if (path !== null) {
+      // We need to fix the parent's pointer to point to our replacement tree
+      const [parent, choiceIndexToChild] = path.data;
+      followChoice(parent, choiceIndexToChild).ref = replacementTree;
+    }
+    return [path, replacementTree];
+  }
+}
+
+function stepState(prog: Program, state: SearchState): StepResult | Conflict {
+  if (state.agenda === null) {
+    if (state.deferred.size > 0) {
+      return StepResult.DEFERRED;
+    } else if (state.demands.size > 1) {
+      return { type: 'demand', name: state.demands.example()!.name };
+    } else {
+      return StepResult.SOLUTION;
     }
   } else {
-    const db = stepDb(program, ref.db);
-    if (db === null) {
-      return 'discard';
-    } else {
-      ref.db = db;
-      return 'stepped';
+    const [agenda, attribute] = uncons(state.agenda);
+    state.agenda = agenda;
+    const conflict = learnImmediateConsequences(prog, state, attribute);
+    return conflict ?? StepResult.STEPPED;
+  }
+}
+
+function stepLeaf(
+  prog: Program,
+  path: ChoiceZipper,
+  tree: ChoiceTreeLeaf,
+): [ChoiceZipper, null | ChoiceTree, Database | null] {
+  switch (stepState(prog, tree.state)) {
+    case StepResult.STEPPED: {
+      return [path, tree, null];
+    }
+    case StepResult.SOLUTION: {
+      const solution = tree.state.explored;
+      return [...collapseTreeUp(path), solution];
+    }
+    case StepResult.DEFERRED: {
+      const { name, args } = tree.state.deferred.choose()!;
+      const { values: choices, open } = tree.state.frontier.get(name, args)!;
+      const noneOfChild: null | LazyChoiceTree = open ? { ref: null } : null;
+      let justChild: DataMap<LazyChoiceTree> = DataMap.empty();
+      for (const choice of choices) {
+        justChild = justChild.set(choice, { ref: null });
+      }
+      return [
+        path,
+        {
+          type: 'choice',
+          state: tree.state,
+          attribute: [name, args],
+          justChild,
+          noneOfChild,
+        },
+        null,
+      ];
+    }
+    default: {
+      // Conflict, UNSAT
+      return [...collapseTreeUp(path), null];
     }
   }
 }
 
-export interface Stats {
-  cycles: number;
-  deadEnds: number;
+function ascendToRoot(path: ChoiceZipper, tree: ChoiceTree | null): ChoiceTree | null {
+  while (path !== null) {
+    tree = path.data[0];
+    path = path.next;
+  }
+  return tree;
 }
 
-function cleanPath(
-  path: [ChoiceTreeNode, Data | 'defer'][],
-): { tree: null } | { tree: ChoiceTree; path: [ChoiceTreeNode, Data | 'defer'][] } {
-  while (path.length > 0) {
-    const [parentNode, parentChoice] = path.pop()!;
-    if (parentChoice === 'defer') {
-      parentNode.defer = 'exhaustive';
-    } else {
-      parentNode.children = parentNode.children.remove(parentChoice)![1];
-    }
-    if (parentNode.defer !== 'exhaustive' || parentNode.children.length > 0) {
-      return { tree: parentNode, path };
-    }
+function descendToLeaf(path: ChoiceZipper, tree: ChoiceTree): [ChoiceZipper, ChoiceTreeLeaf] {
+  while (tree.type !== 'leaf') {
+    const [just] = tree.justChild.choose()!;
+    const choice: ChoiceIndex = { type: 'just', just };
+    const child = forceChoice(tree, choice);
+    path = cons(path, [tree, choice]);
+    tree = child.ref;
   }
-  return { tree: null };
+  return [path, tree];
 }
 
-/* A decision will always take the form "this attribute takes one of these values", or
- * "this attribute takes one of these values, or maybe some other values."
- *
- * Given a database, we can prune any possibilities that are inconsistent with respect to that
- * database, ideally getting a single possibility that we can then use to continue reasoning.
- */
-function prune(pred: string, args: Data[], values: Data[], exhaustive: boolean, db: Database) {
-  const knownValue = db.factValues.get(pred, args);
-
-  if (knownValue?.type === 'is') {
-    // Each choice is redundant or is immediately contradictory
-    // Check for contradiction with the provided options
-    if (exhaustive && !values.some((value) => equal(value, knownValue.value))) {
-      return { values: [], exhaustive: true };
-    }
-
-    // No contradiction, so just continue, nothing was learned
-    return { values: [knownValue.value], exhaustive: true };
-  }
-
-  if (knownValue?.type === 'is not') {
-    values = values.filter(
-      (value) => !knownValue.value.some((excludedValue) => equal(excludedValue, value)),
-    );
-  }
-
-  return { values, exhaustive };
-}
-
-export function stepTreeRandomDFS(
-  program: IndexedProgram,
+export function step(
+  prog: Program,
+  path: ChoiceZipper,
   tree: ChoiceTree,
-  path: [ChoiceTreeNode, Data | 'defer'][],
-  stats: Stats,
-):
-  | { tree: ChoiceTree; path: [ChoiceTreeNode, Data | 'defer'][]; solution?: Database }
-  | { tree: null; solution?: Database } {
-  switch (tree.type) {
-    case 'leaf': {
-      const stepResult = maybeStep(program, tree);
-      switch (stepResult) {
-        case 'stepped': {
-          stats.cycles += 1;
-          return { tree, path };
-        }
+): [ChoiceZipper, ChoiceTree | null, Database | null] {
+  let leaf: ChoiceTreeLeaf;
+  [path, leaf] = descendToLeaf(path, tree);
+  return stepLeaf(prog, path, leaf);
+}
 
-        case 'solution': {
-          // Return to the root
-          const cleaned = cleanPath(path);
-          if (cleaned.tree === null) return { tree: null, solution: tree.db };
-          if (cleaned.path.length === 0) return { tree: cleaned.tree, path: [], solution: tree.db };
-          return { tree: cleaned.path[0][0], path: [], solution: tree.db };
-        }
+export function* execute(prog: Program) {
+  let tree: null | ChoiceTree = { type: 'leaf', state: createSearchState(prog) };
+  let path: ChoiceZipper = null;
+  let solution: Database | null;
 
-        case 'choose': {
-          // Forced to make a choice
-          // TODO prune everything: if a choice has become unitary we shouldn't branch
-          if (tree.db.deferredChoices.length === 0) {
-            // This case may be impossible?
-            console.error('====== unexpected point reached ======');
-            return cleanPath(path);
-          }
-
-          const [pred, args, unpruned, deferredChoices] = tree.db.deferredChoices.popRandom();
-          const { values, exhaustive } = prune(
-            pred,
-            args,
-            unpruned.values,
-            unpruned.exhaustive,
-            tree.db,
-          );
-          const newTree: ChoiceTreeNode = {
-            type: 'choice',
-            base: { ...tree.db, deferredChoices },
-            attribute: [pred, args],
-            children: DataMap.new(), // A default, we may change this below
-            defer: 'exhaustive', // A default, we may change this below
-          };
-
-          // Add a child for each positive choice of value
-          for (const choice of values) {
-            newTree.children = newTree.children.set(choice, null);
-          }
-
-          // If the tree is open-ended, add a child for all negative choices of value
-          if (!exhaustive) {
-            const currentAssignment = tree.db.factValues.get(pred, args) ?? {
-              type: 'is not',
-              value: [],
-            };
-            if (currentAssignment.type === 'is') {
-              throw new Error('Invariant: prunedChoice should have returned exhaustive === true');
-            }
-            newTree.defer = {
-              type: 'leaf',
-              db: {
-                ...tree.db,
-                deferredChoices,
-                factValues: tree.db.factValues.set(pred, args, {
-                  type: 'is not',
-                  value: currentAssignment.value.concat(
-                    values.filter((v1) => !currentAssignment.value.some((v2) => equal(v1, v2))),
-                  ),
-                }).result,
-              },
-            };
-          }
-
-          // Fix up the parent pointer
-          if (path.length > 0) {
-            const [parent, route] = path[path.length - 1];
-            if (route === 'defer') {
-              parent.defer = newTree;
-            } else {
-              parent.children = parent.children.set(route, newTree);
-            }
-          }
-
-          return { tree: newTree, path };
-        }
-
-        case 'discard': {
-          // Return only as far as possible
-          stats.deadEnds += 1;
-          const result = cleanPath(path);
-          if (result.tree === null || result.path.length === 0) return result;
-          if (Math.random() > 0.01) return result;
-          return { tree: result.path[0][0], path: [] };
-        }
-
-        default:
-          throw new Error('should be unreachable');
-      }
-    }
-
-    case 'choice': {
-      if (tree.children.length === 0) {
-        if (tree.defer === 'exhaustive') {
-          return cleanPath(path);
-        }
-        path.push([tree, 'defer']);
-        return { tree: tree.defer, path };
-      } else {
-        const [value, existingChild] = tree.children.getNth(
-          Math.floor(Math.random() * tree.children.length),
-        );
-        if (existingChild !== null) {
-          path.push([tree, value]);
-          return { tree: existingChild, path };
-        }
-        const newDb = { ...tree.base };
-        if (!insertFact(tree.attribute[0], tree.attribute[1], value, newDb)) {
-          tree.children = tree.children.remove(value)![1];
-          return { tree, path };
-        }
-        const newChild: ChoiceTreeLeaf = { type: 'leaf', db: newDb };
-        tree.children = tree.children.set(value, newChild);
-        path.push([tree, value]);
-        return { tree: newChild, path };
-      }
+  while (tree !== null) {
+    [path, tree, solution] = step(prog, path, tree);
+    if (solution) {
+      yield solution;
+      tree = ascendToRoot(path, tree);
+      path = null;
     }
   }
-}
-
-/**** Debugging ****/
-
-interface Fact {
-  name: string;
-  args: Data[];
-  value: Data;
-}
-
-interface Solution {
-  facts: Fact[];
-}
-
-export function execute(program: IndexedProgram, db: Database, debug = false) {
-  let tree: null | ChoiceTree = { type: 'leaf', db };
-  let path: [ChoiceTreeNode, Data | 'defer'][] = [];
-  const stats: Stats = { cycles: 0, deadEnds: 0 };
-  const solutions: Solution[] = [];
-
-  for (;;) {
-    if (tree === null) return { solutions, steps: stats.cycles, deadEnds: stats.deadEnds };
-    if (debug) {
-      console.log(pathToString(tree, path));
-    }
-
-    const result = stepTreeRandomDFS(program, tree, path, stats);
-    tree = result.tree;
-    path = result.tree === null ? path : result.path;
-
-    if (result.solution) {
-      solutions.push({ facts: [...listFacts(result.solution)] });
-    }
-  }
-}
-
-export function pathToString(tree: ChoiceTree, path: [ChoiceTreeNode, Data | 'defer'][]) {
-  return `~~~~~~~~~~~~~~
-${path.map(([node, data]) => choiceTreeNodeToString(node, data)).join('\n\n')}
-${tree.type === 'leaf' ? dbToString(tree.db) : choiceTreeNodeToString(tree)}`;
-}
-
-function choiceTreeNodeToString(
-  { attribute, children, defer }: ChoiceTreeNode,
-  data?: Data | 'defer',
-) {
-  return `Tree node for attribute ${dataToString(
-    hide({ type: 'const', name: attribute[0], args: attribute[1] }),
-  )}${children
-    .entries()
-    .map(
-      ([dataOption, child]) =>
-        `${
-          data !== undefined && data !== 'defer' && equal(data, dataOption) ? '\n * ' : '\n   '
-        }${dataToString(dataOption)}:${child === null ? ' null' : ' ...'}`,
-    )
-    .join('')}${defer === 'exhaustive' ? '' : `\n${data === 'defer' ? ' * ' : '   '}<defer>: ...`}`;
-}
-
-export function factToString(fact: Fact): string {
-  const args = fact.args.map((arg) => ` ${dataToString(arg)}`).join('');
-  const value = equal(fact.value, TRIVIAL) ? '' : ` is ${dataToString(fact.value)}`;
-  return `${fact.name}${args}${value}`;
-}
-
-export function solutionsToStrings(solutions: Solution[]) {
-  return solutions.map((solution) => solution.facts.map(factToString).sort().join(', ')).sort();
 }

@@ -220,3 +220,21 @@ export function remove<K, V>(compare: Compare<K>, t: AVL<K, V>, key: K): [AVL<K,
   const [rootKey, rootValue, newRight] = removeMin(t.right);
   return [createAndFix(rootKey, rootValue, t.left, newRight), t.value];
 }
+
+export function* iterator<K, V>(t: AVL<K, V>): Generator<[K, V]> {
+  const stack: AVLNode<K, V>[] = [];
+  for (;;) {
+    if (t === null) {
+      if (stack.length === 0) return;
+      t = stack.pop()!;
+      yield [t.key, t.value];
+      t = t.right;
+    } else if (t.left === null) {
+      yield [t.key, t.value];
+      t = t.right;
+    } else {
+      stack.push(t);
+      t = t.left;
+    }
+  }
+}

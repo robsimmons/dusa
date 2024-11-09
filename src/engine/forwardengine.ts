@@ -1,14 +1,14 @@
-import { Conclusion, Pattern } from '../bytecode.js';
+import { Conclusion } from '../bytecode.js';
 import { AttributeMap } from '../datastructures/attributemap.js';
+import { cons, List } from '../datastructures/conslist.js';
 import { Data, DataSet, HashCons } from '../datastructures/data.js';
 import { Constraint, Database } from '../datastructures/database.js';
 import { apply, match } from './dataterm.js';
+import { Program } from './program.js';
 
 type Intermediate = { type: 'intermediate'; name: string; args: Data[] };
 type NewFact = { type: 'fact'; name: string; args: Data[] };
 type AgendaMember = Intermediate | NewFact;
-
-type Lst<T> = null | { data: T; next: Lst<T> };
 
 /**
  * The semi-naive, tuple-at-a-time forward-chaining algorithm for
@@ -36,51 +36,25 @@ type Lst<T> = null | { data: T; next: Lst<T> };
 export interface SearchState {
   explored: Database;
   frontier: AttributeMap<{ values: DataSet; open: boolean }>;
-  agenda: Lst<AgendaMember>;
+  agenda: List<AgendaMember>;
   deferred: AttributeMap<true>;
   demands: AttributeMap<true>;
 }
 
-export interface InternalProgram {
-  seeds: string[];
-  predUnary: {
-    [pred: string]: {
-      args: Pattern[];
-      conclusion: Conclusion;
-    }[];
-  };
-  predBinary: {
-    [pred: string]: {
-      inName: string;
-      inVars: { shared: number; passed: number };
-      conclusion: Conclusion;
-    }[];
-  };
-  intermediates: {
-    [inName: string]: {
-      premise: { name: string; shared: number; introduced: number };
-      conclusion: Conclusion;
-    }[];
-  };
-  demands: string[];
-  forbids: { [inName: string]: true };
-  data: HashCons;
-}
-
-const empty = DataSet.empty();
+export const empty = DataSet.empty();
 const noConstraint: Constraint = { type: 'noneOf', noneOf: empty };
 const noChoices = { values: empty, open: true };
 const datalogChoice = { values: DataSet.singleton(HashCons.TRIVIAL), open: false };
 
-export function createSearchState(prog: InternalProgram): SearchState {
+export function createSearchState(prog: Program): SearchState {
   return {
     explored: Database.empty(),
     frontier: prog.seeds.reduce<AttributeMap<{ values: DataSet; open: boolean }>>(
       (frontier, seed) => frontier.set(seed, [], datalogChoice)[0],
       AttributeMap.empty(),
     ),
-    agenda: prog.seeds.reduce<Lst<AgendaMember>>(
-      (agenda, seed) => ({ data: { type: 'fact', name: seed, args: [] }, next: agenda }),
+    agenda: prog.seeds.reduce<List<AgendaMember>>(
+      (agenda, seed) => cons(agenda, { type: 'fact', name: seed, args: [] }),
       null,
     ),
     deferred: AttributeMap.empty(),
@@ -91,7 +65,7 @@ export function createSearchState(prog: InternalProgram): SearchState {
   };
 }
 
-type Conflict =
+export type Conflict =
   | {
       type: 'incompatible';
       name: string;
@@ -99,11 +73,12 @@ type Conflict =
       old: Data;
       new: Data[];
     }
-  | { type: 'forbid'; name: string };
+  | { type: 'forbid'; name: string }
+  | { type: 'demand'; name: string };
 
 /** Return Conflict or imperatively update `state` */
 export function learnImmediateConsequences(
-  prog: InternalProgram,
+  prog: Program,
   state: SearchState,
   attribute: AgendaMember,
 ): null | Conflict {
@@ -114,7 +89,7 @@ export function learnImmediateConsequences(
   const [frontier, leaf] = state.frontier.remove(attribute.name, attribute.args)!;
   state.frontier = frontier;
   if (!leaf || leaf.open) throw new Error('learnImmediateConsequences invariant');
-  const value = leaf.values.getSingleton()!;
+  const [value] = leaf.values.getSingleton()!;
   const factArgs = [...attribute.args, value]; // The full fact is the args + the value
 
   // Step 2: add `a` to `state.explored`.
@@ -152,10 +127,10 @@ export function learnImmediateConsequences(
     }
   } else {
     if (prog.forbids[attribute.name]) return { type: 'forbid', name: attribute.name };
-    state.demands = state.demands.remove(attribute.name, [])![0];
-    for (const { premise, conclusion } of prog.intermediates[attribute.name] ?? []) {
-      const shared = factArgs.slice(0, premise.shared);
-      const passed = factArgs.slice(premise.shared);
+    state.demands = state.demands.remove(attribute.name, [])?.[0] ?? state.demands;
+    for (const { inVars, premise, conclusion } of prog.intermediates[attribute.name] ?? []) {
+      const shared = factArgs.slice(0, inVars.shared);
+      const passed = factArgs.slice(inVars.shared, inVars.total);
       for (const introduced of state.explored.visit(premise.name, shared, premise.introduced)) {
         const conflict = assertConclusion(
           prog,
@@ -173,7 +148,7 @@ export function learnImmediateConsequences(
 
 /** Return Conflict or imperatively update `state` to assert the conclusion */
 export function assertConclusion(
-  prog: InternalProgram,
+  prog: Program,
   state: SearchState,
   subst: Data[],
   conclusion: Conclusion,
@@ -264,28 +239,23 @@ export function assertConclusion(
         // Unless `a` was, and remains, on the deferred agenda, we have to fix the agenda
         if (!isAlreadyInFrontier) {
           if (choices.length === 1) {
-            state.agenda = {
-              data: { type: 'fact', name: conclusion.name, args },
-              next: state.agenda,
-            };
+            state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
           } else {
             state.deferred = state.deferred.set(conclusion.name, args, true)[0];
           }
         } else if (choices.length === 1) {
           state.deferred = state.deferred.remove(conclusion.name, args)![0];
-          state.agenda = {
-            data: { type: 'fact', name: conclusion.name, args },
-            next: state.agenda,
-          };
+          state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
         }
         return null;
       } else {
         // C[a] = { just v1, just v2, ..., just vn }
         // We will intersect these options with choices
-        let uniqueFrontierChoice = frontierChoices.values.getSingleton();
+        let maybeUniqueFrontierChoice = frontierChoices.values.getSingleton();
 
         // If `C[a] = { just v }`, signal failure if `v` is not among the choices in the conclusion
-        if (uniqueFrontierChoice) {
+        if (maybeUniqueFrontierChoice !== null) {
+          const [uniqueFrontierChoice] = maybeUniqueFrontierChoice;
           if (choices.some((choice) => choice === uniqueFrontierChoice)) return null;
           return {
             type: 'incompatible',
@@ -304,7 +274,7 @@ export function assertConclusion(
         );
 
         // If C[a] = {}, signal failure
-        if (intersection.isEmpty()) {
+        if (intersection.size === 0) {
           return {
             type: 'incompatible',
             name: conclusion.name,
@@ -321,14 +291,10 @@ export function assertConclusion(
         })[0];
 
         // If `a` can be moved from the deferred agenda to the active agenda, do so!
-        uniqueFrontierChoice = intersection.getSingleton();
-        if (uniqueFrontierChoice) {
+        if (intersection.size === 1) {
           // We can remove this from the deferred agenda!
           state.deferred = state.deferred.remove(conclusion.name, args)![0];
-          state.agenda = {
-            data: { type: 'fact', name: conclusion.name, args },
-            next: state.agenda,
-          };
+          state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
         }
 
         return null;
@@ -340,10 +306,7 @@ export function assertConclusion(
       if (exploredValue.type === 'just') return null;
       if (state.frontier.get(conclusion.name, args)) return null;
       state.frontier = state.frontier.set(conclusion.name, args, datalogChoice)[0];
-      state.agenda = {
-        data: { type: 'fact', name: conclusion.name, args },
-        next: state.agenda,
-      };
+      state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
       return null;
     }
 
@@ -352,10 +315,7 @@ export function assertConclusion(
       if (exploredValue.type === 'just') return null;
       if (state.frontier.get(conclusion.name, args)) return null;
       state.frontier = state.frontier.set(conclusion.name, args, datalogChoice)[0];
-      state.agenda = {
-        data: { type: 'intermediate', name: conclusion.name, args },
-        next: state.agenda,
-      };
+      state.agenda = cons(state.agenda, { type: 'intermediate', name: conclusion.name, args });
       return null;
     }
   }
