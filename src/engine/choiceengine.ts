@@ -101,6 +101,10 @@ function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, ChoiceTr
       break;
     }
     case 'noneOf': {
+      // XXX COVERAGE: currently we never explore a noneOfChild first, leaving these
+      // lines uncovered. But this is a change we eventually want to make to the engine,
+      // to stop deterministically preferring the positive branches always, so it's
+      // good to leave these lines untested for now.
       tree.noneOfChild = null;
       break;
     }
@@ -133,7 +137,7 @@ function stepState(prog: Program, state: SearchState): StepResult | Conflict {
   if (state.agenda === null) {
     if (state.deferred.size > 0) {
       return StepResult.DEFERRED;
-    } else if (state.demands.size > 1) {
+    } else if (state.demands.size > 0) {
       return { type: 'demand', name: state.demands.example()!.name };
     } else {
       return StepResult.SOLUTION;
@@ -141,13 +145,7 @@ function stepState(prog: Program, state: SearchState): StepResult | Conflict {
   } else {
     const [agenda, attribute] = uncons(state.agenda);
     state.agenda = agenda;
-    const conflict = learnImmediateConsequences(prog, state, attribute);
-    const demandFailure =
-      state.agenda === null && state.deferred.size === 0 && state.demands.size > 0;
-    return (
-      conflict ??
-      (demandFailure ? { type: 'demand', name: state.demands.example()!.name } : StepResult.STEPPED)
-    );
+    return learnImmediateConsequences(prog, state, attribute) ?? StepResult.STEPPED;
   }
 }
 

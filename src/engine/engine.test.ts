@@ -127,13 +127,13 @@ test('Absent/extant regression full', () => {
     
         reachable N N :- vertex N.
         reachable Start Y :- reachable Start X, edge X Y is extant.
-    `,
+      `,
       [['reachable', 2]],
     ),
   ).toStrictEqual(['reachable 0 0, reachable 1 1, reachable 1 2, reachable 2 1, reachable 2 2']);
 });
 
-test('Forbid and demand', () => {
+test('Forbid and demand: one solution', () => {
   expect(
     testExecution(
       `
@@ -145,6 +145,24 @@ test('Forbid and demand', () => {
       [['p', 2]],
     ),
   ).toStrictEqual(['p a tt, p b tt']);
+});
+
+test('Forbid and demand: several solutions', () => {
+  expect(
+    testExecution(
+      `
+        q a. q b. q c. q d.
+        p X is { tt, ff } :- q X.
+        #demand p a is tt, p b is tt.
+        #forbid p c is ff, p d is ff.
+      `,
+      [['p', 2]],
+    ),
+  ).toStrictEqual([
+    'p a tt, p b tt, p c ff, p d tt',
+    'p a tt, p b tt, p c tt, p d ff',
+    'p a tt, p b tt, p c tt, p d tt',
+  ]);
 });
 
 test('Three sets of choices', () => {
@@ -213,4 +231,60 @@ test('Generating edges', () => {
     'reach a a, reach b b, reach b c, reach c b, reach c c',
     'reach a a, reach b b, reach c c',
   ]);
+});
+
+test('Open ended and closed ended possibility', () => {
+  expect(
+    testExecution(
+      `
+        opt a. opt b. opt c. opt d. opt e. opt f. opt g. opt h. 
+
+        choice is? X :- opt X.
+        p X is? ff :- opt X.
+        p choice is tt.
+      `,
+      [
+        ['p', 2],
+        ['choice', 1],
+      ],
+    ),
+  ).toStrictEqual([
+    'choice a, p a tt, p b ff, p c ff, p d ff, p e ff, p f ff, p g ff, p h ff',
+    'choice b, p a ff, p b tt, p c ff, p d ff, p e ff, p f ff, p g ff, p h ff',
+    'choice c, p a ff, p b ff, p c tt, p d ff, p e ff, p f ff, p g ff, p h ff',
+    'choice d, p a ff, p b ff, p c ff, p d tt, p e ff, p f ff, p g ff, p h ff',
+    'choice e, p a ff, p b ff, p c ff, p d ff, p e tt, p f ff, p g ff, p h ff',
+    'choice f, p a ff, p b ff, p c ff, p d ff, p e ff, p f tt, p g ff, p h ff',
+    'choice g, p a ff, p b ff, p c ff, p d ff, p e ff, p f ff, p g tt, p h ff',
+    'choice h, p a ff, p b ff, p c ff, p d ff, p e ff, p f ff, p g ff, p h tt',
+  ]);
+});
+
+test('Value conflict', () => {
+  expect(
+    testExecution(
+      `
+        p is a.
+        p is b.
+      `,
+      [['p', 1]],
+    ),
+  ).toStrictEqual([]);
+});
+
+test('Forcing a value conflict in a noneOf branch', () => {
+  expect(
+    testExecution(
+      `
+        q is? a.
+        p is? a.
+        q is X :- p is X.
+        p is X :- q is X.
+      `,
+      [
+        ['p', 1],
+        ['q', 1],
+      ],
+    ),
+  ).toStrictEqual(['p a, q a']);
 });
