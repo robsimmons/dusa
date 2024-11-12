@@ -6,15 +6,29 @@ import {
   ParsedPremise,
   ParsedTopLevel,
   headToString,
-} from './syntax.js';import { freeVars, ParsedPattern, Pattern, termToString } from './terms.js';
+} from './syntax.js';
+import { freeVars, ParsedPattern, Pattern, termToString } from './terms.js';
 
-export type FlatPremise = {
-  args: Pattern[];
-  loc: SourceLocation;
-} & (
-  | { type: 'builtin'; name: BUILT_IN_PRED; value: Pattern }
-  | { type: 'fact'; name: string; value: Pattern | null }
-);
+export type FlatPremise =
+  | {
+      type: 'builtin';
+      name: BUILT_IN_PRED;
+      value: Pattern;
+      args: Pattern[];
+      loc: SourceLocation;
+    }
+  | {
+      type: 'builtin';
+      name: 'Equality' | 'Inequality' | 'Gt' | 'Geq' | 'Lt' | 'Leq';
+      args: [Pattern, Pattern];
+    }
+  | {
+      type: 'fact';
+      name: string;
+      value: Pattern | null;
+      args: Pattern[];
+      loc: SourceLocation;
+    };
 
 export type FlatDeclaration =
   | { type: 'Forbid'; premises: FlatPremise[]; loc?: SourceLocation }
@@ -27,10 +41,20 @@ export type FlatDeclaration =
     };
 
 export function freeVarsFlatPremise(premise: FlatPremise) {
-  if (premise.type === 'builtin' || premise.value !== null) {
+  if (premise.type === 'fact') {
     return freeVars(...premise.args, premise.value);
   }
-  return freeVars(...premise.args);
+  switch (premise.name) {
+    case 'Equality':
+    case 'Inequality':
+    case 'Gt':
+    case 'Geq':
+    case 'Lt':
+    case 'Leq':
+      return freeVars(...premise.args);
+    default:
+      return freeVars(...premise.args, premise.value);
+  }
 }
 
 function flattenPattern(
@@ -103,43 +127,14 @@ function flattenPremise(
       ];
     }
 
+    case 'Equality':
+    case 'Inequality':
     case 'Gt':
     case 'Geq':
     case 'Lt':
-    case 'Leq':
-    case 'Equality':
-    case 'Inequality': {
-      let builtin: BUILT_IN_PRED;
-      let value: Pattern;
-      switch (premise.type) {
-        case 'Equality':
-          builtin = 'EQUAL';
-          value = { type: 'trivial' };
-          break;
-        case 'Inequality':
-          builtin = 'NOT_EQUAL';
-          value = { type: 'trivial' };
-          break;
-        case 'Gt':
-          builtin = 'CHECK_GT';
-          value = { type: 'bool', value: true };
-          break;
-        case 'Geq':
-          builtin = 'CHECK_GEQ';
-          value = { type: 'bool', value: true };
-          break;
-        case 'Lt':
-          builtin = 'CHECK_LT';
-          value = { type: 'bool', value: true };
-          break;
-        case 'Leq':
-          builtin = 'CHECK_LEQ';
-          value = { type: 'bool', value: true };
-          break;
-      }
-
+    case 'Leq': {
       const { before, args } = flattenPatterns(preds, counter, [premise.a, premise.b]);
-      return [...before, { type: 'builtin', name: builtin, args, value, loc: premise.loc }];
+      return [...before, { type: 'builtin', name: premise.type, args: [args[0], args[1]] }];
     }
   }
 }
@@ -234,8 +229,26 @@ export function flattenDecls(
 
 export function flatPremiseToString(premise: FlatPremise) {
   const args = premise.args.map((arg) => termToString(arg));
+  if (premise.type === 'builtin') {
+    switch (premise.name) {
+      case 'Equality':
+        return `${termToString(premise.args[0])} == ${termToString(premise.args[1])}`;
+      case 'Inequality':
+        return `${termToString(premise.args[0])} != ${termToString(premise.args[1])}`;
+      case 'Gt':
+        return `${termToString(premise.args[0])} > ${termToString(premise.args[1])}`;
+      case 'Geq':
+        return `${termToString(premise.args[0])} >= ${termToString(premise.args[1])}`;
+      case 'Lt':
+        return `${termToString(premise.args[0])} < ${termToString(premise.args[1])}`;
+      case 'Leq':
+        return `${termToString(premise.args[0])} <= ${termToString(premise.args[1])}`;
+      default:
+        return `.${premise.name}${args.map((arg) => ` ${arg}`).join('')} is ${termToString(premise.value)}`;
+    }
+  }
   const value = premise.value === null ? '' : ` is ${termToString(premise.value)}`;
-  return `${premise.type === 'builtin' ? '.' : ''}${premise.name}${args.map((arg) => ` ${arg}`).join('')}${value}`;
+  return `${premise.name}${args.map((arg) => ` ${arg}`).join('')}${value}`;
 }
 
 export function flatDeclToString(decl: FlatDeclaration) {
@@ -256,4 +269,3 @@ export function flatDeclToString(decl: FlatDeclaration) {
 export function flatProgramToString(flatProgram: { name: string; decl: FlatDeclaration }[]) {
   return flatProgram.map(({ name, decl }) => `${name}: ${flatDeclToString(decl)}`).join('\n');
 }
-

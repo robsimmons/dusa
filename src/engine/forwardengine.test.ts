@@ -4,13 +4,12 @@ import { HashCons } from '../datastructures/data.js';
 import { parse } from '../language/dusa-parser.js';
 import { check } from '../language/check.js';
 import { compile } from '../language/compile.js';
-import { builtinModes } from '../language/dusa-builtins.js';
 import { ingestBytecodeProgram, Program } from './program.js';
 
 function build(source: string) {
   const parsed = parse(source);
   if (parsed.errors !== null) throw parsed.errors;
-  const { errors, arities, builtins } = check(builtinModes, parsed.document);
+  const { errors, arities, builtins } = check(parsed.document);
   if (errors.length !== 0) throw errors;
   const bytecode = compile(builtins, arities, parsed.document);
   return ingestBytecodeProgram(bytecode);
@@ -167,4 +166,3 @@ test('multiple premises (datalog, no arguments)', () => {
   expect(state.frontier.size).toBe(0);
   expect(state.explored.size).toStrictEqual({ pos: 7, neg: 0 });
 });
-

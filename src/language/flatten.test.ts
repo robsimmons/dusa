@@ -44,11 +44,9 @@ test('Program flattening', () => {
     '#forbid f X Y, plus X X is #1, plus X Y is #2, plus #1 #2 is #3, g #3.',
   ]);
   expect(flatten([['s']], 'a (s X) :- b X.')).toStrictEqual(['a #1 :- b X, s X is #1.']);
-  expect(flatten([], 'a :- 0 != s z, 1 == s z.')).toStrictEqual([
-    'a :- .NOT_EQUAL 0 (s z) is (), .EQUAL 1 (s z) is ().',
-  ]);
+  expect(flatten([], 'a :- 0 != s z, 1 == s z.')).toStrictEqual(['a :- 0 != (s z), 1 == (s z).']);
   expect(flatten([['s']], 'a :- 0 != s z, 1 == s z.')).toStrictEqual([
-    'a :- s z is #1, .NOT_EQUAL 0 #1 is (), s z is #2, .EQUAL 1 #2 is ().',
+    'a :- s z is #1, 0 != #1, s z is #2, 1 == #2.',
   ]);
   expect(
     flatten(
@@ -59,7 +57,7 @@ test('Program flattening', () => {
       'a :- 0 != s z, 1 == s z.',
     ),
   ).toStrictEqual([
-    'a :- .NAT_ZERO is #1, .NAT_SUCC #1 is #2, .NOT_EQUAL 0 #2 is (), .NAT_ZERO is #3, .NAT_SUCC #3 is #4, .EQUAL 1 #4 is ().',
+    'a :- .NAT_ZERO is #1, .NAT_SUCC #1 is #2, 0 != #2, .NAT_ZERO is #3, .NAT_SUCC #3 is #4, 1 == #4.',
   ]);
   expect(flatten([['s', 'NAT_SUCC']], 'a X :- b Y, s Y is X.')).toStrictEqual([
     'a X :- b Y, .NAT_SUCC Y is X.',
@@ -79,7 +77,7 @@ test('Program flattening', () => {
     ),
   ).toStrictEqual([
     'a is 4.',
-    'b is #2 :- a is #1, .EQUAL #1 X is (), .NAT_SUCC X is #2.',
-    'c :- a is #1, b is #2, .CHECK_GT #1 #2 is #tt.',
+    'b is #2 :- a is #1, #1 == X, .NAT_SUCC X is #2.',
+    'c :- a is #1, b is #2, #1 > #2.',
   ]);
 });

@@ -89,7 +89,7 @@ test('Test full parses', () => {
       {
         type: 'Issue',
         severity: 'error',
-        msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, CHECK_GEQ, CHECK_GT, CHECK_LEQ, CHECK_LT, EQUAL, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, NOT_EQUAL, STRING_CONCAT.',
+        msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, STRING_CONCAT.',
         loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 9, index: 8 } },
       },
     ],
@@ -100,7 +100,7 @@ test('Test full parses', () => {
       {
         type: 'Issue',
         severity: 'error',
-        msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, CHECK_GEQ, CHECK_GT, CHECK_LEQ, CHECK_LT, EQUAL, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, NOT_EQUAL, STRING_CONCAT.',
+        msg: '#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are BOOLEAN_FALSE, BOOLEAN_TRUE, INT_MINUS, INT_PLUS, INT_TIMES, NAT_SUCC, NAT_ZERO, STRING_CONCAT.',
         loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 13, index: 12 } },
       },
     ],

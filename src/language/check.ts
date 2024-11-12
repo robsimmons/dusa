@@ -1,6 +1,6 @@
 import { Issue } from '../parsing/parser.js';
 import { SourceLocation } from '../parsing/source-location.js';
-import { BUILT_IN_PRED, BuiltinMode } from './dusa-builtins.js';
+import { BUILT_IN_PRED, builtinModes } from './dusa-builtins.js';
 import {
   ParsedBuiltin,
   ParsedDeclaration,
@@ -82,7 +82,6 @@ function checkForUniqueWildcardsInDecl(decl: ParsedDeclaration): Issue[] {
 
 /** Descends into terms to find any incorrect uses of functional predicates in these patterns */
 function checkRelationsAndBuiltinsInPatterns(
-  builtinModes: (builtin: BUILT_IN_PRED) => (mode: BuiltinMode) => boolean,
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
   previouslyGroundVars: Map<string, SourceLocation>,
@@ -90,20 +89,13 @@ function checkRelationsAndBuiltinsInPatterns(
 ): Issue[] {
   return (<Issue[]>[]).concat(
     ...terms.map<Issue[]>((term) =>
-      checkRelationsAndBuiltinsInPattern(
-        builtinModes,
-        builtins,
-        arities,
-        previouslyGroundVars,
-        term,
-      ),
+      checkRelationsAndBuiltinsInPattern(builtins, arities, previouslyGroundVars, term),
     ),
   );
 }
 
 /** Descends into terms to find any incorrect uses of functional predicates in this pattern */
 function checkRelationsAndBuiltinsInPattern(
-  builtinModes: (builtin: BUILT_IN_PRED) => (mode: BuiltinMode) => boolean,
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
   previouslyGroundVars: Map<string, SourceLocation>,
@@ -122,7 +114,6 @@ function checkRelationsAndBuiltinsInPattern(
       const arity = arities.get(term.name);
       if (!builtin && !arity) {
         return checkRelationsAndBuiltinsInPatterns(
-          builtinModes,
           builtins,
           arities,
           previouslyGroundVars,
@@ -140,7 +131,15 @@ function checkRelationsAndBuiltinsInPattern(
           ];
         }
         if (builtin) {
-          return builtinModes(builtin)({ args: term.args.map(() => 'input'), value: 'output' })
+          const builtinMode = builtinModes[builtin];
+          const hasCorrectArity =
+            builtinMode === 'forward_only' ||
+            builtinMode === 'reversible' ||
+            builtinMode.some(
+              ({ args, value }) =>
+                args.length === term.args.length && args.every((a) => a === '+' && value === '-'),
+            );
+          return hasCorrectArity
             ? []
             : [
                 mkErr(
@@ -152,7 +151,7 @@ function checkRelationsAndBuiltinsInPattern(
         if (!arity?.value) {
           return [
             mkErr(
-              `The relation ${term.name} can't be used in a term position like this, as it does not have a value.`,
+              `The relation '${term.name}' can't be used in a term position like this, as it does not have a value.`,
               term.loc,
             ),
           ];
@@ -160,7 +159,7 @@ function checkRelationsAndBuiltinsInPattern(
         if (arity.args !== term.args.length) {
           return [
             mkErr(
-              `The relation ${term.name} has ${arity.args} argument${arity.args === 1 ? '' : 's'}, but only ${term.args.length} arguments were given here.`,
+              `The relation '${term.name}' takes ${arity.args} argument${arity.args === 1 ? '' : 's'}, but only ${term.args.length} arguments were given here.`,
               term.loc,
             ),
           ];
@@ -245,8 +244,71 @@ function getNewlyBoundVarsInPattern(
   }
 }
 
+function checkInequality(
+  builtins: Map<string, BUILT_IN_PRED>,
+  arities: Map<string, { args: number; value: boolean }>,
+  previouslyGroundVars: Map<string, SourceLocation>,
+  a: ParsedPattern,
+  b: ParsedPattern,
+  loc: SourceLocation,
+): Issue[] {
+  const wildA = getWildcardsInPattern(builtins, arities, a);
+  const wildB = getWildcardsInPattern(builtins, arities, b);
+  const ground = getNewlyBoundVarsInPatterns(builtins, arities, previouslyGroundVars, [a, b]);
+
+  if (ground.length > 0) {
+    return [
+      mkErr(
+        `An inequality cannot include a variable like ${ground[0][0]} that is not bound by a previous premise. (Suggestion: would it work to replace '${ground[0][0]}' with '_' or '_${ground[0][0]}'?)`,
+        ground[0][1],
+      ),
+    ];
+  }
+  if (wildA.length > 0 && wildB.length > 0) {
+    return [
+      mkErr(`Only one side of an inequality may contain wildcards. Here, both sides do.`, loc),
+    ];
+  }
+  return [];
+}
+
+function checkEquality(
+  builtins: Map<string, BUILT_IN_PRED>,
+  arities: Map<string, { args: number; value: boolean }>,
+  previouslyGroundVars: Map<string, SourceLocation>,
+  a: ParsedPattern,
+  b: ParsedPattern,
+  loc: SourceLocation,
+): Issue[] {
+  const wildA = getWildcardsInPattern(builtins, arities, a);
+  const groundA = getNewlyBoundVarsInPattern(builtins, arities, previouslyGroundVars, a);
+  const wildB = getWildcardsInPattern(builtins, arities, b);
+  const groundB = getNewlyBoundVarsInPattern(builtins, arities, previouslyGroundVars, b);
+
+  if (
+    (wildA.length === 0 && groundA.length === 0) ||
+    (wildB.length === 0 && groundB.length === 0)
+  ) {
+    return [];
+  }
+
+  return [
+    mkErr(
+      'Only one side of an equality may contain variables not bound by previous premises.',
+      loc,
+    ),
+  ];
+}
+
+function revBuiltinLookup(builtins: Map<string, BUILT_IN_PRED>, builtin: BUILT_IN_PRED): string {
+  for (const [name, b] of builtins.entries()) {
+    if (b === builtin) return name;
+  }
+  /* istanbul ignore next -- @preserve */
+  throw new Error(`revBuiltinLookup invariant: no mapping for ${builtin}`);
+}
+
 function checkBuiltin(
-  builtinModes: (builtin: BUILT_IN_PRED) => (mode: BuiltinMode) => boolean,
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
   previouslyGroundVars: Map<string, SourceLocation>,
@@ -254,41 +316,67 @@ function checkBuiltin(
   args: ParsedPattern[],
   value: null | ParsedPattern,
   loc: SourceLocation,
-) {
-  const argsMode = args.map<'input' | 'wildcards' | 'output'>((arg) => {
+): Issue[] {
+  const argsMode = args.map<'+' | '-'>((arg) => {
     const wildcards = getWildcardsInPattern(builtins, arities, arg);
     const newlyBound = getNewlyBoundVarsInPattern(builtins, arities, previouslyGroundVars, arg);
-    if (wildcards.length === 0 && newlyBound.length === 0) return 'input';
-    if (newlyBound.length === 0) return 'wildcards';
-    return 'output';
+    if (wildcards.length === 0 && newlyBound.length === 0) return '+';
+    return '-';
   });
-  const valueMode: 'input' | 'output' =
-    value === null
-      ? 'input'
-      : theseVarsGroundThisPattern(previouslyGroundVars, value)
-        ? 'input'
-        : 'output';
-  if (builtinModes(builtin)({ args: argsMode, value: valueMode })) return [];
 
-  const argsNotGround = argsMode
-    .map<number | null>((arg, index) => (arg === 'input' ? null : index + 1))
-    .filter((x): x is number => x !== null);
-  const generallyWhere =
-    argsNotGround.length === 0
-      ? 'the output contains'
-      : `the argument${argsNotGround.length === 1 ? '' : 's'} in position${argsNotGround.length === 1 ? '' : 's'} ${argsNotGround.length === 1 ? argsNotGround[0] : argsNotGround.length === 2 ? `${argsNotGround[0]} and ${argsNotGround[1]}` : `${argsNotGround.slice(0, argsNotGround.length - 1).join(', ')}, and ${argsNotGround[argsNotGround.length - 1]}`}${valueMode === 'input' ? '' : ', as well as the output,'} ${argsNotGround.length === 1 && valueMode === 'input' ? 'contains' : 'contain'}`;
-  return [
-    mkErr(
-      `The built-in relation ${builtin} was given ${argsMode.length} argument${argsMode.length === 1 ? '' : 's'}, and ${generallyWhere} variables not bound by previous premises. This builtin does not support that mode of operation.`,
-      loc,
-    ),
-  ];
+  const valueMode: '+' | '-' =
+    value === null ? '+' : theseVarsGroundThisPattern(previouslyGroundVars, value) ? '+' : '-';
+
+  const mode = builtinModes[builtin];
+  if (mode === 'forward_only') {
+    if (argsMode.filter((m) => m === '-').length === 0) return [];
+    return [
+      mkErr(
+        `All arguments to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) must be bound by previous premises.`,
+        loc,
+      ),
+    ];
+  } else if (mode === 'reversible') {
+    if (argsMode.filter((m) => m === '-').length === 0) return [];
+    if (argsMode.filter((m) => m === '-').length === 1 && valueMode === '+') return [];
+    if (valueMode !== '+') {
+      return [
+        mkErr(
+          `When arguments to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) are not all bound by previous premises, the conclusion must be bound by previous premises. That isn't the case here.`,
+          loc,
+        ),
+      ];
+    }
+    return [
+      mkErr(
+        `At most one argument to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) can contain variables not bound by previous premises.`,
+        loc,
+      ),
+    ];
+  } else {
+    for (const { args, value } of mode) {
+      if (
+        args.every((arg, i) => arg === '-' || arg === argsMode[i]) &&
+        (value === '-' || value === valueMode)
+      ) {
+        return [];
+      }
+    }
+    const argsGround = [...argsMode]
+      .map((m, i) => [m, `#${i + 1}`])
+      .filter(([m]) => m === '-')
+      .map(([_, x]) => x);
+    const valuesGround = valueMode === '-' ? ' and the value' : '';
+    return [
+      mkErr(
+        `This mode of operation for '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}), with argument${argsGround.length === 1 ? '' : 's'} ${argsGround.join(', ')}${valuesGround} not bound by previous premises, is not supported.`,
+        loc,
+      ),
+    ];
+  }
 }
 
-export function check(
-  builtinModes: (builtin: BUILT_IN_PRED) => (mode: BuiltinMode) => boolean,
-  program: ParsedTopLevel[],
-): {
+export function check(program: ParsedTopLevel[]): {
   errors: Issue[];
   builtins: Map<string, BUILT_IN_PRED>;
   arities: Map<string, { args: number; value: boolean }>;
@@ -325,16 +413,7 @@ export function check(
         value: null | ParsedPattern,
       ) {
         errors.push(
-          ...checkBuiltin(
-            builtinModes,
-            builtins,
-            arities.arities,
-            groundVars,
-            builtin,
-            args,
-            value,
-            premise.loc,
-          ),
+          ...checkBuiltin(builtins, arities.arities, groundVars, builtin, args, value, premise.loc),
         );
       }
 
@@ -356,22 +435,42 @@ export function check(
         }
 
         case 'Geq':
-          checkBuiltinHelper('CHECK_GEQ', [premise.a, premise.b], null);
-          break;
         case 'Gt':
-          checkBuiltinHelper('CHECK_GT', [premise.a, premise.b], null);
-          break;
         case 'Leq':
-          checkBuiltinHelper('CHECK_LEQ', [premise.a, premise.b], null);
+        case 'Lt': {
+          if (
+            !theseVarsGroundThisPattern(groundVars, premise.a) ||
+            !theseVarsGroundThisPattern(groundVars, premise.b)
+          ) {
+            errors.push(
+              mkErr('Both sides of a comparison must be bound by previous premises.', premise.loc),
+            );
+          }
           break;
-        case 'Lt':
-          checkBuiltinHelper('CHECK_LT', [premise.a, premise.b], null);
-          break;
+        }
         case 'Inequality':
-          checkBuiltinHelper('NOT_EQUAL', [premise.a, premise.b], null);
+          errors.push(
+            ...checkInequality(
+              builtins,
+              arities.arities,
+              groundVars,
+              premise.a,
+              premise.b,
+              premise.loc,
+            ),
+          );
           break;
         case 'Equality':
-          checkBuiltinHelper('EQUAL', [premise.a, premise.b], null);
+          errors.push(
+            ...checkEquality(
+              builtins,
+              arities.arities,
+              groundVars,
+              premise.a,
+              premise.b,
+              premise.loc,
+            ),
+          );
           break;
       }
 
@@ -393,13 +492,7 @@ export function check(
         }
       }
       errors.push(
-        ...checkRelationsAndBuiltinsInPatterns(
-          builtinModes,
-          builtins,
-          arities.arities,
-          groundVars,
-          patterns,
-        ),
+        ...checkRelationsAndBuiltinsInPatterns(builtins, arities.arities, groundVars, patterns),
       );
 
       /* Add newly bound variables */
@@ -440,13 +533,7 @@ export function check(
         }
 
         errors.push(
-          ...checkRelationsAndBuiltinsInPatterns(
-            builtinModes,
-            builtins,
-            arities.arities,
-            groundVars,
-            patterns,
-          ),
+          ...checkRelationsAndBuiltinsInPatterns(builtins, arities.arities, groundVars, patterns),
         );
 
         errors.push(

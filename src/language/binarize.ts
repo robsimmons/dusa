@@ -44,7 +44,9 @@ export interface BuiltinRule {
   type: 'Builtin';
   inName: string;
   inVars: string[];
-  premise: { name: BUILT_IN_PRED; args: Pattern[]; value: Pattern };
+  premise:
+    | { name: BUILT_IN_PRED; args: Pattern[]; value: Pattern }
+    | { name: 'Equality' | 'Inequality' | 'Geq' | 'Gt' | 'Leq' | 'Lt'; args: [Pattern, Pattern] };
   conclusion: Conclusion;
 }
 
@@ -89,11 +91,19 @@ function binarizedRuleToString(rule: BinarizedRule) {
         .join('')}.`;
     }
     case 'Builtin': {
-      return `${concToString(rule.conclusion)} :- @${rule.inName}${rule.inVars
+      const main = `${concToString(rule.conclusion)} :- @${rule.inName}${rule.inVars
         .map((x) => ` ${x}`)
-        .join('')}, .${rule.premise.name}${rule.premise.args
-        .map((arg) => ` ${termToString(arg)}`)
-        .join('')} is ${termToString(rule.premise.value)}.`;
+        .join('')}, `;
+      switch (rule.premise.name) {
+        case 'Equality':
+          return `${main}${termToString(rule.premise.args[0])} == ${termToString(rule.premise.args[1])}.`;
+        case 'Inequality':
+          return `${main}${termToString(rule.premise.args[0])} != ${termToString(rule.premise.args[1])}.`;
+        default:
+          return `${main}.${rule.premise.name}${rule.premise.args
+            .map((arg) => ` ${termToString(arg)}`)
+            .join('')} is ${termToString(rule.premise.value)}.`;
+      }
     }
   }
 }
@@ -121,11 +131,28 @@ export function binarizedProgramToString({ seeds, forbids, demands, rules }: Bin
  *  - Location information is no longer needed
  */
 type Premise =
+  | {
+      type: 'builtin';
+      name: 'Equality' | 'Inequality' | 'Geq' | 'Gt' | 'Leq' | 'Lt';
+      args: [Pattern, Pattern];
+    }
   | { type: 'builtin'; name: BUILT_IN_PRED; args: Pattern[]; value: Pattern }
   | { type: 'fact'; name: string; args: Pattern[] };
 
 function freeVarsPremise(premise: Premise) {
-  if (premise.type === 'builtin') return freeVars(...premise.args, premise.value);
+  if (premise.type === 'builtin') {
+    switch (premise.name) {
+      case 'Equality':
+      case 'Inequality':
+      case 'Geq':
+      case 'Gt':
+      case 'Leq':
+      case 'Lt':
+        return freeVars(...premise.args);
+      default:
+        return freeVars(...premise.args, premise.value);
+    }
+  }
   return freeVars(...premise.args);
 }
 
@@ -150,9 +177,19 @@ function premisesAnnotated(
   inVars: string[];
   joinVars: string[];
 }[] {
-  const premises = flatPremises.map<Premise>((premise) => {
+  const premises = flatPremises.map<Premise>((premise: FlatPremise): Premise => {
     if (premise.type === 'builtin') {
-      return { type: 'builtin', name: premise.name, args: premise.args, value: premise.value };
+      switch (premise.name) {
+        case 'Equality':
+        case 'Inequality':
+        case 'Geq':
+        case 'Gt':
+        case 'Leq':
+        case 'Lt':
+          return { type: 'builtin', name: premise.name, args: premise.args };
+        default:
+          return { type: 'builtin', name: premise.name, args: premise.args, value: premise.value };
+      }
     }
     return {
       type: 'fact',
@@ -263,13 +300,32 @@ export function binarize(decls: { name: string; decl: FlatDeclaration }[]): Bina
       const { premise, inVars } = premises[i];
       const inName = `${name}-${i}`;
       if (premise.type === 'builtin') {
-        newRules.push({
-          type: 'Builtin',
-          inName,
-          inVars,
-          premise: { name: premise.name, args: premise.args, value: premise.value },
-          conclusion,
-        });
+        switch (premise.name) {
+          case 'Equality':
+          case 'Inequality':
+          case 'Geq':
+          case 'Gt':
+          case 'Leq':
+          case 'Lt':
+            newRules.push({
+              type: 'Builtin',
+              inName,
+              inVars,
+              premise: { name: premise.name, args: premise.args },
+              conclusion,
+            });
+            break;
+
+          default:
+            newRules.push({
+              type: 'Builtin',
+              inName,
+              inVars,
+              premise: { name: premise.name, args: premise.args, value: premise.value },
+              conclusion,
+            });
+            break;
+        }
       } else {
         newRules.push({
           type: 'Join',
@@ -300,13 +356,31 @@ export function binarize(decls: { name: string; decl: FlatDeclaration }[]): Bina
         premise: { name: `$seed`, args: [] },
         conclusion: { type: 'intermediate', name: inName, vars: [] },
       });
-      rules.push({
-        type: 'Builtin',
-        inName,
-        inVars: [],
-        premise: { name: premise.name, args: premise.args, value: premise.value },
-        conclusion,
-      });
+      switch (premise.name) {
+        case 'Equality':
+        case 'Inequality':
+        case 'Geq':
+        case 'Gt':
+        case 'Leq':
+        case 'Lt':
+          rules.push({
+            type: 'Builtin',
+            inName,
+            inVars: [],
+            premise: { name: premise.name, args: premise.args },
+            conclusion,
+          });
+          break;
+        default:
+          rules.push({
+            type: 'Builtin',
+            inName,
+            inVars: [],
+            premise: { name: premise.name, args: premise.args, value: premise.value },
+            conclusion,
+          });
+          break;
+      }
     }
 
     // Cosmetic: puts the rules in the program in a clearer order

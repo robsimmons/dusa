@@ -8,7 +8,7 @@ import {
 } from './binarize.js';
 import { flattenDecls } from './flatten.js';
 import { parse } from './dusa-parser.js';
-import { BUILT_IN_PRED, builtinModes } from './dusa-builtins.js';
+import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { check } from './check.js';
 import { ParsedDeclaration } from './syntax.js';
 import { Pattern } from './terms.js';
@@ -16,7 +16,7 @@ import { Pattern } from './terms.js';
 export function srcToBinarized(source: string) {
   const parsed = parse(source);
   if (parsed.errors !== null) throw parsed.errors;
-  const { errors, arities, builtins } = check(builtinModes, parsed.document);
+  const { errors, arities, builtins } = check(parsed.document);
   if (errors.length !== 0) throw errors;
   const decls = parsed.document.filter((x): x is ParsedDeclaration => x.type !== 'Builtin');
   const flattened = flattenDecls(
@@ -58,7 +58,7 @@ d 4 is? "goodbye" :- $seed.
 a X Y :- b X Y.
 @c-1-1 X Y :- a X Y.
 @c-1-2 X Y Z :- @c-1-1 X Y, b Y Z.
-c X Y :- @c-1-2 X Y Z, .EQUAL X Z is ().`);
+c X Y :- @c-1-2 X Y Z, X == Z.`);
 
   expect(
     hasWellOrderedIntermediatePredicateArguments(makeIntermediatePredicatesMatchJoinOrder(program)),
@@ -94,7 +94,7 @@ b :- c (s 3).`);
   expect(binarizedProgramToString(program)).toStrictEqual(`seeds: $seed
 rules:
 @a-1-0 :- $seed.
-a :- @a-1-0, .EQUAL 4 3 is ().
+a :- @a-1-0, 4 == 3.
 @b-1-0 :- $seed.
 @b-1-1 #1 :- @b-1-0, .NAT_SUCC 3 is #1.
 b :- @b-1-1 #1, c #1.`);
@@ -237,7 +237,7 @@ test(`makeIntermediatePredicatesMatchJoinOrder precondition violations`, () => {
         type: 'Join',
         inName: 'p',
         inVars: ['X'],
-        premise: {  name: 'good', args: [x] },
+        premise: { name: 'good', args: [x] },
         conclusion: { type: 'intermediate', name: 'de', vars: [] },
       },
       {
