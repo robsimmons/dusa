@@ -1,60 +1,146 @@
-export type PatternN<N> =
-  | { type: 'trivial' }
-  | { type: 'int'; value: N }
-  | { type: 'bool'; value: boolean }
-  | { type: 'string'; value: string }
-  | { type: 'const'; name: string; args: PatternN<N>[] }
-  | { type: 'var'; ref: number };
-
-export type ConclusionN<N> =
-  | { type: 'intermediate'; name: string; vars: number[] }
-  | { type: 'datalog'; name: string; args: PatternN<N>[] }
-  | { type: 'open'; name: string; args: PatternN<N>[]; choices: PatternN<N>[] }
-  | { type: 'closed'; name: string; args: PatternN<N>[]; choices: PatternN<N>[] };
-
-export type RuleN<N> =
-  | {
-      type: 'unary';
-      premise: { name: string; args: PatternN<N>[] };
-      conclusion: ConclusionN<N>;
-    }
-  | {
-      type: 'join';
-      inName: string;
-      inVars: number;
-      premise: { name: string; args: number };
-      shared: number;
-      conclusion: ConclusionN<N>;
-    }
-  | {
-      type: 'run';
-      inName: string;
-      inVars: number;
-      instructions: InstructionN<N>[];
-      conclusion: ConclusionN<N>;
-    }
-  | {
-      type: 'run_for_failure';
-      inName: string;
-      inVars: number;
-      instructions: InstructionN<N>[];
-      conclusion: ConclusionN<N>;
-    };
-
-export interface ProgramN<N> {
+/**
+ * Predicates in a bytecode program have two namespaces: the namespace of
+ * intermediates, which correspond to partially applied premises, is separate from
+ * the namespace of 'standard' facts. The Dusa bytecode compiler creates new
+ * 'standard' predicates; these are marked with a `$` to indicate that an
+ * implementation may want to hide these from the user. Intermediates predicates
+ * should almost always be hidden from the user.
+ *
+ * A program is made of `seeds` (unequivocally true premise-free normal facts),
+ * `forbids` (intermediate predicates that cannot hold in a valid solution),
+ * `demands` (intermediate predicates that must hold in a valid solution), and
+ * rules.
+ *
+ * The Dusa implementation uses JavaScript BigInt values to represent integers,
+ * but these are not particularly well supported: the default JSON encoders and
+ * decoders, in particular, do not support them. Therefore, all our definitions
+ * are parameterized over the type of integer representation; we can define
+ * functions that map between `Program = ProgramN<bigint>`, which the implementation
+ * uses internally, and various serialization-friendly options, like ProgramN<string> or
+ * ProgramN<number> or ProgramN<number | string>
+ */
+export interface ProgramN<Int> {
   seeds: string[];
   forbids: string[];
   demands: string[];
-  rules: RuleN<N>[];
+  rules: RuleN<Int>[];
 }
 
 /**
- * Computed premises are expanded out into a little stack-based, non-branching
- * "bytecode" programs. The virtual machine has a operational stack, and instead
- * of registers or memory the there is a memory initialized to `inVars` that can be
+ * When scanning a rule or pattern left to right, the first occurrence of
+ * variables must occur numeric order without gaps: the first variable seen
+ * is 0, the second is 1, and so on. In these comments we'll write this as `X0`,
+ * `X1`, `X2`, etc.
+ */
+export type PatternN<Int> =
+  | { type: 'trivial' }
+  | { type: 'int'; value: Int }
+  | { type: 'bool'; value: boolean }
+  | { type: 'string'; value: string }
+  | { type: 'const'; name: string; args: PatternN<Int>[] }
+  | { type: 'var'; ref: number };
+
+/** A conclusion can come in several forms:
+ *
+ * - intermediate: `a-3-2 X1 X9 X0 X0 :- ...`
+ * - datalog: `p (f X0 X3) (X3 X1) :- ...`
+ * - open: `q 3 (f X0) is? { 9, X2, "c" } :- ...`
+ * - closed: `q X2 X2 is { tt, ff, X1 } :- ...`
+ *
+ * Note that the variables above can occur in any order: all variables in
+ * a conclusion must have had their first occurrence in a premise.
+ */
+export type ConclusionN<Int> =
+  | { type: 'intermediate'; name: string; vars: number[] }
+  | { type: 'datalog'; name: string; args: PatternN<Int>[] }
+  | { type: 'open'; name: string; args: PatternN<Int>[]; choices: PatternN<Int>[] }
+  | { type: 'closed'; name: string; args: PatternN<Int>[]; choices: PatternN<Int>[] };
+
+/**
+ * A unary rule has the form
+ *
+ * ```
+ * H :- p X0 (f X1 X0) X2.
+ * ```
+ *
+ * with the first occurrence of a variable always taking the smallest possible
+ * integer value.
+ */
+export interface UnaryRuleN<Int> {
+  type: 'unary';
+  premise: { name: string; args: PatternN<Int>[] };
+  conclusion: ConclusionN<Int>;
+}
+
+/**
+ * A join rule has two premises. The variables for the
+ * first, intermediate, premise are numbered `0...inVars`,
+ * and the variables for the second premise share the first
+ * `shared` arguments in common with the first premise and then
+ * are sequentially numbered with the lowest possible numbers.
+ *
+ * That means that the variable pattern for a rule like this:
+ *
+ * ```
+ * H :- inter X0 X1 X2 X3, p X0 X1 X4
+ * ```
+ *
+ * Can be captured just by saying `shared === 2`, `inVars === 4`,
+ * and `premise.args === 3`.
+ *
+ * In a join rule, we may not list all the arguments of the normal
+ * premise. If a normal premise has facts of the form `foo 3 1 is "hi"`,
+ * then it may appear in a join rule as
+ *
+ * ```
+ * H :- inter X0 X1 X2 X3, foo (shared: 0, inVars: 4, premise.args: 0)
+ * H :- inter X0 X1 X2 X3, foo X0 (shared: 1, inVars: 4, premise.args: 1)
+ * H :- inter X0 X1 X2 X3, foo X4 X5 (shared: 0, inVars: 4, premise.args: 2)
+ * H :- inter X0 X1 X2 X3, foo X0 X4 X5 (shared: 1, inVars: 4, premise.args: 3)
+ * ```
+ */
+export interface JoinRuleN<Int> {
+  type: 'join';
+  inName: string;
+  inVars: number;
+  premise: { name: string; args: number };
+  shared: number;
+  conclusion: ConclusionN<Int>;
+}
+
+/**
+ * The allowable value(s) for the second premise of a RunRule are determined
+ * by running a little stack-machine program (see the definition of InstructionN)
+ */
+export interface RunRuleN<Int> {
+  type: 'run';
+  inName: string;
+  inVars: number;
+  instructions: InstructionN<Int>[];
+  conclusion: ConclusionN<Int>;
+}
+
+/**
+ * To implement premises like `X !== a _`, we need to be able to have a run-rule
+ * that works via negation-as-failure.
+ */
+export interface RunForFailureRuleN<Int> {
+  type: 'run_for_failure';
+  inName: string;
+  inVars: number;
+  instructions: InstructionN<Int>[];
+  conclusion: ConclusionN<Int>;
+}
+
+export type RuleN<Int> = UnaryRuleN<Int> | JoinRuleN<Int> | RunRuleN<Int> | RunForFailureRuleN<Int>;
+
+/**
+ * Built-in premises are expanded out into a little stack-based, non-branching
+ * programs. The virtual machine has a operational stack, and instead
+ * of registers or memory the there is a memory initialized to `inVars` that can
  * have new values written once (`store`) and accessed randomly (`var`).
  *
- * Many instructions are run primarily because they might fail, which means the rule
+ * Many instructions are run primarily because they might fail; failure means the rule
  * won't fire if it's a `run` rule, and means that the rule **will** fire if it's a
  * 'run_for_failure' rule.
  */
