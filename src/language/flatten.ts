@@ -7,7 +7,7 @@ import {
   ParsedTopLevel,
   headToString,
 } from './syntax.js';
-import { freeVars, ParsedPattern, Pattern, termToString } from './terms.js';
+import { ParsedPattern, Pattern, termToString } from './terms.js';
 
 export type FlatPremise =
   | {
@@ -39,23 +39,6 @@ export type FlatDeclaration =
       conclusion: Conclusion;
       loc?: SourceLocation;
     };
-
-export function freeVarsFlatPremise(premise: FlatPremise) {
-  if (premise.type === 'fact') {
-    return freeVars(...premise.args, premise.value);
-  }
-  switch (premise.name) {
-    case 'Equality':
-    case 'Inequality':
-    case 'Gt':
-    case 'Geq':
-    case 'Lt':
-    case 'Leq':
-      return freeVars(...premise.args);
-    default:
-      return freeVars(...premise.args, premise.value);
-  }
-}
 
 function flattenPattern(
   preds: Map<string, undefined | BUILT_IN_PRED>,
