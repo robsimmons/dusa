@@ -77,6 +77,23 @@ export function usedPremiseVars(rule: JoinRule) {
   return joinVars(rule).union(premiseVars.intersection(conclusionVars));
 }
 
+function binopToString(binOp: 'Equality' | 'Inequality' | 'Gt' | 'Geq' | 'Lt' | 'Leq') {
+  switch (binOp) {
+    case 'Equality':
+      return '==';
+    case 'Inequality':
+      return '!=';
+    case 'Geq':
+      return '>=';
+    case 'Gt':
+      return '>';
+    case 'Leq':
+      return '<=';
+    case 'Lt':
+      return '<';
+  }
+}
+
 function binarizedRuleToString(rule: BinarizedRule) {
   switch (rule.type) {
     case 'Unary': {
@@ -96,9 +113,12 @@ function binarizedRuleToString(rule: BinarizedRule) {
         .join('')}, `;
       switch (rule.premise.name) {
         case 'Equality':
-          return `${main}${termToString(rule.premise.args[0])} == ${termToString(rule.premise.args[1])}.`;
         case 'Inequality':
-          return `${main}${termToString(rule.premise.args[0])} != ${termToString(rule.premise.args[1])}.`;
+        case 'Geq':
+        case 'Gt':
+        case 'Leq':
+        case 'Lt':
+          return `${main}${termToString(rule.premise.args[0])} ${binopToString(rule.premise.name)} ${termToString(rule.premise.args[1])}.`;
         default:
           return `${main}.${rule.premise.name}${rule.premise.args
             .map((arg) => ` ${termToString(arg)}`)

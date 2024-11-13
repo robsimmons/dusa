@@ -1,9 +1,18 @@
-import { Conclusion, Pattern, ConclusionN, ProgramN, PatternN } from '../bytecode.js';
+import {
+  Conclusion,
+  Pattern,
+  ConclusionN,
+  ProgramN,
+  PatternN,
+  Instruction,
+  InstructionN,
+} from '../bytecode.js';
 import { HashCons } from '../datastructures/data.js';
 
 type ConclusionInput = ConclusionN<bigint | string | number>;
 type PatternInput = PatternN<bigint | string | number>;
 type ProgramInput = ProgramN<bigint | string | number>;
+type InstructionInput = InstructionN<bigint | string | number>;
 
 type PredUnary = {
   [pred: string]: {
@@ -28,11 +37,21 @@ type Intermediates = {
   }[];
 };
 
+type Subprograms = {
+  [inName: string]: {
+    inVars: number;
+    instructions: Instruction[];
+    runForFailure: boolean;
+    conclusion: Conclusion;
+  }[];
+};
+
 export interface Program {
   seeds: string[];
   predUnary: PredUnary;
   predBinary: PredBinary;
   intermediates: Intermediates;
+  subprograms: Subprograms;
   demands: string[];
   forbids: { [inName: string]: true };
   data: HashCons;
@@ -70,10 +89,27 @@ function ingestConclusion(conclusion: ConclusionInput): Conclusion {
   }
 }
 
+function ingestInstruction(instruction: InstructionInput): Instruction {
+  switch (instruction.type) {
+    case 'const': {
+      switch (instruction.const.type) {
+        case 'int':
+          return { type: 'const', const: { type: 'int', value: BigInt(instruction.const.value) } };
+        default:
+          return { type: 'const', const: instruction.const };
+      }
+    }
+    default: {
+      return instruction;
+    }
+  }
+}
+
 export function ingestBytecodeProgram(prog: ProgramInput): Program {
   const predUnary: PredUnary = {};
   const predBinary: PredBinary = {};
   const intermediates: Intermediates = {};
+  const subprograms: Subprograms = {};
   for (const rule of prog.rules) {
     switch (rule.type) {
       case 'unary': {
@@ -89,7 +125,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
         const passed = rule.inVars - rule.shared;
         const introduced = rule.premise.args - rule.shared;
 
-        const intermediateMatches = intermediates[rule.inName] ?? [];
+        const intermediateMatches = intermediates[`@${rule.inName}`] ?? [];
         intermediates[`@${rule.inName}`] = intermediateMatches;
         intermediateMatches.push({
           inVars: { shared: rule.shared, total: rule.inVars },
@@ -104,6 +140,19 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
           inVars: { shared: rule.shared, passed },
           conclusion: ingestConclusion(rule.conclusion),
         });
+        continue;
+      }
+      case 'run':
+      case 'run_for_failure': {
+        const subprogramMatches = subprograms[`@${rule.inName}`] ?? [];
+        subprograms[`@${rule.inName}`] = subprogramMatches;
+        subprogramMatches.push({
+          inVars: rule.inVars,
+          runForFailure: rule.type === 'run_for_failure',
+          instructions: rule.instructions.map(ingestInstruction),
+          conclusion: ingestConclusion(rule.conclusion),
+        });
+        continue;
       }
     }
   }
@@ -114,6 +163,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
     predUnary,
     predBinary,
     intermediates,
+    subprograms,
     forbids: prog.forbids.reduce<{ [inName: string]: true }>(
       (forbids, intermediate) => ((forbids[`@${intermediate}`] = true), forbids),
       {},

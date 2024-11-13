@@ -3,6 +3,7 @@ import {
   Program as BytecodeProgram,
   Rule as BytecodeRule,
   Conclusion as BytecodeConclusion,
+  Instruction,
 } from '../bytecode.js';
 import {
   BinarizedProgram,
@@ -10,7 +11,8 @@ import {
   Conclusion as BinarizedConclusion,
   BuiltinRule,
 } from './binarize.js';
-import { patternsToShapes } from './shape.js';
+import { BUILT_IN_PRED } from './dusa-builtins.js';
+import { patternsToShapes, patternToShape } from './shape.js';
 
 function generateConclusion(
   varsKnown: string[],
@@ -74,7 +76,14 @@ function generateRule(rule: BinarizedRule): BytecodeRule {
       };
     }
     case 'Builtin': {
-      throw new Error('TODO');
+      const { type, instrs, varsKnown } = generateBuiltinRule(rule);
+      return {
+        type,
+        inName: rule.inName,
+        inVars: rule.inVars.length,
+        instructions: instrs,
+        conclusion: generateConclusion(varsKnown, rule.conclusion),
+      };
     }
   }
 }
@@ -87,20 +96,6 @@ export function generateBytecode(program: BinarizedProgram): BytecodeProgram {
     rules: program.rules.map(generateRule),
   };
 }
-
-type Instruction =
-  | { type: 'var'; ref: number }
-  | { type: 'build'; const: string; arity: number }
-  | {
-      type: 'const';
-      const:
-        | { type: 'trivial' }
-        | { type: 'int'; value: bigint }
-        | { type: 'bool'; value: boolean }
-        | { type: 'string'; value: string };
-    }
-  | { type: 'store'; ref: number }
-  | { type: 'fail' };
 
 function pushShape(a: Shape): Instruction[] {
   switch (a.type) {
@@ -117,22 +112,187 @@ function pushShape(a: Shape): Instruction[] {
       ];
     }
     case 'var':
-      return [{ type: 'var', ref: a.ref }];
+      return [{ type: 'load', ref: a.ref }];
+  }
+}
+
+/**
+ * Succeeds if t can be matched with s, stores any refs >= next
+ *
+ * Stack action: S, s |-> S
+ */
+function matchShape(t: Shape, next: number): { instrs: Instruction[]; next: number } {
+  switch (t.type) {
+    case 'var': {
+      if (t.ref < next) {
+        return { instrs: [{ type: 'load', ref: t.ref }, { type: 'equal' }], next };
+      } else {
+        // t.ref === next
+        return { instrs: [{ type: 'store' }], next: next + 1 };
+      }
+    }
+    case 'const': {
+      const instrs: Instruction[] = [{ type: 'explode', const: t.name, arity: t.args.length }];
+      for (const arg of t.args) {
+        const result = matchShape(arg, next);
+        instrs.push(...result.instrs);
+        next = result.next;
+      }
+      return { instrs, next };
+    }
+    default: {
+      return { instrs: [{ type: 'const', const: t }, { type: 'equal' }], next };
+    }
+  }
+}
+
+function maxRef(a: Shape): number {
+  switch (a.type) {
+    case 'var':
+      return a.ref;
+    case 'const':
+      return a.args.reduce((prev, arg) => Math.max(prev, maxRef(arg)), -1);
+    default:
+      return -1;
   }
 }
 
 function match(a: Shape, b: Shape, next: number): { instrs: Instruction[]; next: number } {
-  if (a.type === 'var' && a.ref == next) {
-    return { instrs: [...pushShape(b), { type: 'store', ref: a.ref }], next: next + 1 };
+  const matchA = matchShape(a, next);
+  const matchB = matchShape(b, next);
+
+  if (matchA.next === next) {
+    return { instrs: [...pushShape(a), ...matchB.instrs], next: matchB.next };
+  } else {
+    return { instrs: [...pushShape(b), ...matchA.instrs], next: matchA.next };
   }
-  if (b.type === 'var' && b.ref == next) {
-    return { instrs: [...pushShape(a), { type: 'store', ref: b.ref }], next: next + 1 };
-  }
-  if ()
 }
 
-function generateBuiltin(rule: BuiltinRule) {
-  switch (rule.premise.name) {
-    case 'Inequality':
+function generateBuiltinRuleWithValue(
+  name: BUILT_IN_PRED,
+  args: Shape[],
+  value: Shape,
+  next: number,
+): Instruction[] {
+  switch (name) {
+    case 'BOOLEAN_FALSE': {
+      return [
+        { type: 'const', const: { type: 'bool', value: false } },
+        ...matchShape(value, next).instrs,
+      ];
+    }
+    case 'BOOLEAN_TRUE': {
+      return [
+        { type: 'const', const: { type: 'bool', value: true } },
+        ...matchShape(value, next).instrs,
+      ];
+    }
+    case 'NAT_ZERO': {
+      return [
+        { type: 'const', const: { type: 'int', value: 0n } },
+        ...matchShape(value, next).instrs,
+      ];
+    }
+    case 'NAT_SUCC': {
+      const a = matchShape(args[0], next);
+      const v = matchShape(value, next);
+      if (a.next === next) {
+        return [
+          ...pushShape(args[0]),
+          { type: 'const', const: { type: 'int', value: 1n } },
+          ...v.instrs,
+        ];
+      } else {
+        return [
+          ...pushShape(value),
+          { type: 'dup' },
+          { type: 'const', const: { type: 'int', value: 1n } },
+          { type: 'gt' },
+          { type: 'const', const: { type: 'int', value: -1n } },
+          { type: 'iplus' },
+          ...v.instrs,
+        ];
+      }
+    }
+    case 'INT_PLUS': {
+      const a = args.map((arg) => matchShape(arg, next));
+      const unknownIndex = a.findIndex((a) => a.next !== next);
+      const v = matchShape(value, next);
+      if (unknownIndex === -1) {
+        return [
+          { type: 'const', const: { type: 'int', value: 0n } },
+          ...args.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 'iplus' }]),
+          ...v.instrs,
+        ];
+      } else {
+        const argsToSubtract = [...args.slice(0, unknownIndex), ...args.slice(unknownIndex + 1)];
+        return [
+          ...pushShape(value),
+          ...argsToSubtract.flatMap<Instruction>((arg) => [
+            ...pushShape(arg),
+            { type: 'ineg' },
+            { type: 'iplus' },
+          ]),
+          ...a[unknownIndex].instrs,
+        ];
+      }
+    }
+    default: {
+      throw new Error(`builtin ${name} not handled`);
+    }
   }
+}
+
+function generateBuiltinRule(rule: BuiltinRule): {
+  type: 'run' | 'run_for_failure';
+  instrs: Instruction[];
+  varsKnown: string[];
+} {
+  let type: 'run' | 'run_for_failure';
+  let instrs: Instruction[];
+  let { shapes, varsKnown } = patternsToShapes(rule.premise.args, rule.inVars);
+
+  switch (rule.premise.name) {
+    case 'Gt': {
+      type = 'run';
+      instrs = [...pushShape(shapes[0]), ...pushShape(shapes[1]), { type: 'gt' }];
+      break;
+    }
+    case 'Lt': {
+      type = 'run';
+      instrs = [...pushShape(shapes[1]), ...pushShape(shapes[0]), { type: 'gt' }];
+      break;
+    }
+    case 'Geq': {
+      type = 'run_for_failure';
+      instrs = [...pushShape(shapes[1]), ...pushShape(shapes[0]), { type: 'gt' }];
+      break;
+    }
+    case 'Leq': {
+      type = 'run_for_failure';
+      instrs = [...pushShape(shapes[0]), ...pushShape(shapes[1]), { type: 'gt' }];
+      break;
+    }
+    case 'Equality': {
+      type = 'run';
+      instrs = match(shapes[0], shapes[1], rule.inVars.length).instrs;
+      break;
+    }
+    case 'Inequality': {
+      type = 'run_for_failure';
+      instrs = match(shapes[0], shapes[1], rule.inVars.length).instrs;
+      break;
+    }
+    default: {
+      const v = patternToShape(rule.premise.value, varsKnown);
+      const instrs = generateBuiltinRuleWithValue(
+        rule.premise.name,
+        shapes,
+        v.shape,
+        rule.inVars.length,
+      );
+      return { type: 'run', instrs, varsKnown: v.varsKnown };
+    }
+  }
+  return { type, instrs, varsKnown };
 }

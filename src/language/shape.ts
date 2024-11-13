@@ -1,7 +1,6 @@
 import { Pattern } from './terms.js';
 import { Pattern as Shape } from '../bytecode.js';
 
-
 export function patternsToShapes(
   patterns: Pattern[],
   varsKnown: string[] = [],
@@ -37,6 +36,14 @@ export function patternsToShapes(
   }
 
   return { shapes: patterns.map(traverse), varsKnown };
+}
+
+export function patternToShape(
+  pattern: Pattern,
+  varsKnown: string[],
+): { shape: Shape; varsKnown: string[] } {
+  const call = patternsToShapes([pattern], varsKnown);
+  return { shape: call.shapes[0], varsKnown: call.varsKnown };
 }
 
 export function shapesToPatterns(args: Shape[]) {

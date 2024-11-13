@@ -133,12 +133,13 @@ function checkRelationsAndBuiltinsInPattern(
         if (builtin) {
           const builtinMode = builtinModes[builtin];
           const hasCorrectArity =
-            builtinMode === 'forward_only' ||
-            builtinMode === 'reversible' ||
-            builtinMode.some(
-              ({ args, value }) =>
-                args.length === term.args.length && args.every((a) => a === '+' && value === '-'),
-            );
+            builtinMode === 'forward_only' || builtinMode === 'reversible'
+              ? term.args.length > 0
+              : builtinMode.some(
+                  ({ args, value }) =>
+                    args.length === term.args.length &&
+                    args.every((a) => a === '+' && value === '-'),
+                );
           return hasCorrectArity
             ? []
             : [
@@ -329,6 +330,14 @@ function checkBuiltin(
 
   const mode = builtinModes[builtin];
   if (mode === 'forward_only') {
+    if (args.length === 0) {
+      return [
+        mkErr(
+          `There must be at least one argument for '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}).`,
+          loc,
+        ),
+      ];
+    }
     if (argsMode.filter((m) => m === '-').length === 0) return [];
     return [
       mkErr(
@@ -337,7 +346,17 @@ function checkBuiltin(
       ),
     ];
   } else if (mode === 'reversible') {
-    if (argsMode.filter((m) => m === '-').length === 0) return [];
+    if (args.length === 0) {
+      return [
+        mkErr(
+          `There must be at least one argument for '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}).`,
+          loc,
+        ),
+      ];
+    }
+    if (argsMode.filter((m) => m === '-').length === 0) {
+      return [];
+    }
     if (argsMode.filter((m) => m === '-').length === 1 && valueMode === '+') return [];
     if (valueMode !== '+') {
       return [

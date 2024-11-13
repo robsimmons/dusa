@@ -25,6 +25,20 @@ export type RuleN<N> =
       premise: { name: string; args: number };
       shared: number;
       conclusion: ConclusionN<N>;
+    }
+  | {
+      type: 'run';
+      inName: string;
+      inVars: number;
+      instructions: InstructionN<N>[];
+      conclusion: ConclusionN<N>;
+    }
+  | {
+      type: 'run_for_failure';
+      inName: string;
+      inVars: number;
+      instructions: InstructionN<N>[];
+      conclusion: ConclusionN<N>;
     };
 
 export interface ProgramN<N> {
@@ -34,7 +48,38 @@ export interface ProgramN<N> {
   rules: RuleN<N>[];
 }
 
+/**
+ * Computed premises are expanded out into a little stack-based, non-branching
+ * "bytecode" programs. The virtual machine has a operational stack, and instead
+ * of registers or memory the there is a memory initialized to `inVars` that can be
+ * have new values written once (`store`) and accessed randomly (`var`).
+ *
+ * Many instructions are run primarily because they might fail, which means the rule
+ * won't fire if it's a `run` rule, and means that the rule **will** fire if it's a
+ * 'run_for_failure' rule.
+ */
+export type InstructionN<N> =
+  | { type: 'store' } // S,[t] |-> S -- stores [t] in the next memory location
+  | { type: 'load'; ref: number } // S |-> S,[t] -- reads [t] from memory location `ref`
+  | { type: 'build'; const: string; arity: number } // S,[t1],[t2],...,[tk] |-> S,[c t1...tk]
+  | { type: 'explode'; const: string; arity: number } // S,[c t1...tk)] |-> S,[tk],...,[t1] -- fails if the top of the stack is not a constructed term with constructor `const` and arity `arity`
+  | {
+      type: 'const';
+      const:
+        | { type: 'trivial' }
+        | { type: 'int'; value: N }
+        | { type: 'bool'; value: boolean }
+        | { type: 'string'; value: string };
+    } // S |-> S,[t]
+  | { type: 'fail' } // always fails
+  | { type: 'equal' } // S,[s],[t] |-> S -- fails if `t != s`
+  | { type: 'gt' } // S,[n],[m] |-> S -- fails if if n <= m
+  | { type: 'dup' } // S,[t] |-> S,[t],[t]
+  | { type: 'iplus' } // S,[n],[m] |-> S,[n+m] -- fails if n and m are not both integers
+  | { type: 'ineg' }; // S,[n] |-> S,[-n] -- fails if n not an integer integers
+
 export type Pattern = PatternN<bigint>;
+export type Instruction = InstructionN<bigint>;
 export type Conclusion = ConclusionN<bigint>;
 export type Rule = RuleN<bigint>;
 export type Program = ProgramN<bigint>;

@@ -287,3 +287,28 @@ test('Forcing a value conflict in a noneOf branch', () => {
     ),
   ).toStrictEqual(['p a, q a']);
 });
+
+test('Binary operation builtins', () => {
+  expect(
+    testExecution(
+      `
+        q X :- 4 == X.
+        r a :- q X, X != 4.
+        r b :- q X, 4 == X.
+        r c :- q X, X < 5. 
+        r d :- q X, X < 4. 
+        r e :- q X, X < 3. 
+        r f :- q X, X <= 5. 
+        r g :- q X, X <= 4. 
+        r h :- q X, X <= 3.
+        r i :- q X, X >= 5. 
+        r j :- q X, X >= 4. 
+        r k :- q X, X >= 3. 
+        r l :- q X, X > 5. 
+        r m :- q X, X > 4. 
+        r n :- q X, X > 3. 
+      `,
+      [['r', 1]],
+    ),
+  ).toStrictEqual(['r b, r c, r f, r g, r j, r k, r n']);
+});
