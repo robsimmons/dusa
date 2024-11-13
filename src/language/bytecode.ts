@@ -53,13 +53,12 @@ function generateRule(rule: BinarizedRule): BytecodeRule {
       };
     }
     case 'Join': {
-      const varsKnown = [...rule.inVars];
-      const { shapes } = patternsToShapes(rule.premise.args, varsKnown);
+      const { shapes, varsKnown } = patternsToShapes(rule.premise.args, [...rule.inVars]);
 
       let shared = 0;
       for (const [i, shape] of shapes.entries()) {
         if (shape.type !== 'var') throw new Error('generateRule invariant');
-        if (shape.ref === i) {
+        if (i < rule.inVars.length && shape.ref === i) {
           shared += 1;
         } else {
           break;
@@ -146,17 +145,6 @@ function matchShape(t: Shape, next: number): { instrs: Instruction[]; next: numb
   }
 }
 
-function maxRef(a: Shape): number {
-  switch (a.type) {
-    case 'var':
-      return a.ref;
-    case 'const':
-      return a.args.reduce((prev, arg) => Math.max(prev, maxRef(arg)), -1);
-    default:
-      return -1;
-  }
-}
-
 function match(a: Shape, b: Shape, next: number): { instrs: Instruction[]; next: number } {
   const matchA = matchShape(a, next);
   const matchB = matchShape(b, next);
@@ -198,19 +186,23 @@ function generateBuiltinRuleWithValue(
       const v = matchShape(value, next);
       if (a.next === next) {
         return [
-          ...pushShape(args[0]),
-          { type: 'const', const: { type: 'int', value: 1n } },
-          ...v.instrs,
+          ...pushShape(args[0]), // S |-> S,[v]
+          { type: 'dup' }, // |-> S,[v],[v]
+          { type: 'const', const: { type: 'int', value: -1n } }, // |-> S,[v],[v],[-1]
+          { type: 'gt' }, // |-> S,[v]
+          { type: 'const', const: { type: 'int', value: 1n } }, // |-> S,[v],[1]
+          { type: 'i_add' }, // |-> S,[v-1]
+          ...v.instrs, // |-> S
         ];
       } else {
         return [
-          ...pushShape(value),
-          { type: 'dup' },
-          { type: 'const', const: { type: 'int', value: 1n } },
-          { type: 'gt' },
-          { type: 'const', const: { type: 'int', value: -1n } },
-          { type: 'iplus' },
-          ...v.instrs,
+          ...pushShape(value), // S |-> S,[v]
+          { type: 'dup' }, // |-> S,[v],[v]
+          { type: 'const', const: { type: 'int', value: 0n } }, // |-> S,[v],[v],[0]
+          { type: 'gt' }, // |-> S,[v]
+          { type: 'const', const: { type: 'int', value: -1n } }, // |-> S,[v],[-1]
+          { type: 'i_add' }, // |-> S,[v-1]
+          ...a.instrs, // |-> S
         ];
       }
     }
@@ -221,20 +213,28 @@ function generateBuiltinRuleWithValue(
       if (unknownIndex === -1) {
         return [
           { type: 'const', const: { type: 'int', value: 0n } },
-          ...args.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 'iplus' }]),
+          ...args.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 'i_add' }]),
           ...v.instrs,
         ];
       } else {
         const argsToSubtract = [...args.slice(0, unknownIndex), ...args.slice(unknownIndex + 1)];
         return [
           ...pushShape(value),
-          ...argsToSubtract.flatMap<Instruction>((arg) => [
-            ...pushShape(arg),
-            { type: 'ineg' },
-            { type: 'iplus' },
-          ]),
+          ...argsToSubtract.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 'i_sub' }]),
           ...a[unknownIndex].instrs,
         ];
+      }
+    }
+    case 'INT_MINUS': {
+      const a = matchShape(args[0], next);
+      const b = matchShape(args[1], next);
+      const v = matchShape(value, next);
+      if (a.next !== next) {
+        return [...pushShape(args[1]), ...pushShape(value), { type: 'i_add' }, ...a.instrs];
+      } else if (b.next !== next) {
+        return [...pushShape(args[0]), ...pushShape(value), { type: 'i_sub' }, ...b.instrs];
+      } else {
+        return [...pushShape(args[0]), ...pushShape(args[1]), { type: 'i_sub' }, ...v.instrs];
       }
     }
     default: {

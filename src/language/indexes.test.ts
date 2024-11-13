@@ -177,4 +177,14 @@ r5 X Y W V :- @r5-1-1 Y X W, $a-1 Y X W V.
 s4 V Q is X :- @s4-1-1 V Q, $a-2 V X.
 @t2-1-1 X :- t1 X.
 t2 X is? Y :- @t2-1-1 X, a X Y.`);
+
+  program = srcToIndexed(`s 2 is 3. p 3 :- N == 3, 3 == s 2.`);
+  expect(binarizedProgramToString(program)).toStrictEqual(`seeds: $seed
+rules:
+$s-1 #0 :- s 2 #0.
+s 2 is 3 :- $seed.
+@p-1-0 :- $seed.
+@p-1-1 :- @p-1-0, N == 3.
+@p-1-2 #1 :- @p-1-1, $s-1 #1.
+p 3 :- @p-1-2 #1, 3 == #1.`);
 });

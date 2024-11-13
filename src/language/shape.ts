@@ -11,28 +11,31 @@ export function patternsToShapes(
   varsKnown = [...varsKnown];
 
   function traverse(term: Pattern): Shape {
-    if (
-      term.type === 'bool' ||
-      term.type === 'int' ||
-      term.type === 'string' ||
-      term.type === 'trivial'
-    )
-      return term;
-    if (term.type === 'const') {
-      return { type: 'const', name: term.name, args: term.args.map((arg) => traverse(arg)) };
+    switch (term.type) {
+      case 'trivial':
+        return { type: 'trivial' };
+      case 'bool':
+        return { type: term.type, value: term.value };
+      case 'int':
+        return { type: term.type, value: term.value };
+      case 'string':
+        return { type: term.type, value: term.value };
+      case 'const':
+        return { type: 'const', name: term.name, args: term.args.map((arg) => traverse(arg)) };
+      case 'wildcard': {
+        const index = varsKnown.length;
+        varsKnown.push(`#anon#${index}`);
+        return { type: 'var', ref: index };
+      }
+      case 'var': {
+        let index = varsKnown.indexOf(term.name);
+        if (index === -1) {
+          index = varsKnown.length;
+          varsKnown.push(term.name);
+        }
+        return { type: 'var', ref: index };
+      }
     }
-    if (term.type === 'wildcard') {
-      const index = varsKnown.length;
-      varsKnown.push(`#anon#${index}`);
-      return { type: 'var', ref: index };
-    }
-
-    let index = varsKnown.indexOf(term.name);
-    if (index === -1) {
-      index = varsKnown.length;
-      varsKnown.push(term.name);
-    }
-    return { type: 'var', ref: index };
   }
 
   return { shapes: patterns.map(traverse), varsKnown };

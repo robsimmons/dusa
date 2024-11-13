@@ -182,13 +182,6 @@ export function runInstructions(prog: Program, memory: Data[], instructions: Ins
         if (a <= b) return false;
         break;
       }
-
-      case 'ineg': {
-        const a = stack.pop()!;
-        if (typeof a !== 'bigint') return false;
-        stack.push(-a);
-        break;
-      }
       case 'load': {
         stack.push(memory[instr.ref]);
         break;
@@ -197,11 +190,18 @@ export function runInstructions(prog: Program, memory: Data[], instructions: Ins
         memory.push(stack.pop()!);
         break;
       }
-      case 'iplus': {
+      case 'i_add': {
         const b = stack.pop()!;
         const a = stack.pop()!;
         if (typeof a !== 'bigint' || typeof b !== 'bigint') return false;
         stack.push(a + b);
+        break;
+      }
+      case 'i_sub': {
+        const b = stack.pop()!;
+        const a = stack.pop()!;
+        if (typeof a !== 'bigint' || typeof b !== 'bigint') return false;
+        stack.push(a - b);
         break;
       }
       case 'explode': {
@@ -221,9 +221,6 @@ export function runInstructions(prog: Program, memory: Data[], instructions: Ins
         }
         stack.push(prog.data.hide({ type: 'const', name: instr.const, args: args.toReversed() }));
         break;
-      }
-      case 'fail': {
-        return false;
       }
     }
   }

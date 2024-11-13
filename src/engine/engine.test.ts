@@ -19,7 +19,7 @@ function simplify(prog: Program, db: Database, keys: [string, number][]) {
   const facts: string[] = [];
   for (const [key, depth] of keys) {
     for (const args of db.visit(key, [], depth)) {
-      facts.push(`${key}${args.map((arg) => ` ${prog.data.toString(arg)}`).join('')}`);
+      facts.push(`${key}${args.map((arg) => ` ${prog.data.toString(arg, true)}`).join('')}`);
     }
   }
   return facts.toSorted().join(', ');
@@ -311,4 +311,73 @@ test('Binary operation builtins', () => {
       [['r', 1]],
     ),
   ).toStrictEqual(['r b, r c, r f, r g, r j, r k, r n']);
+
+  expect(
+    testExecution(
+      `
+        p a.
+        q (f a b a c).
+        r (m Y Z W Q) :- q X, f Y Z W Q == X.
+        r (n Y Z W) :- q X, X == f Y Z Y W.
+        r (o Y Z W) :- q X, X == f Y Z W Z.
+        r X :- f 3 X == f 3 9.
+        r z1 :- q X, X != f _ _ _. 
+        r z2 :- q X, X != f _ _ _ _. 
+        r z3 :- q X, X != f _ _ _ _ _. 
+      `,
+      [['r', 1]],
+    ),
+  ).toStrictEqual(['r (m a b a c), r (n a b c), r 9, r z1, r z3']);
+});
+
+test('Builtins BOOLEAN_FALSE and BOOLEAN_TRUE', () => {
+  expect(
+    testExecution('#builtin BOOLEAN_TRUE tt\n#builtin BOOLEAN_FALSE ff\nb a :- tt == tt.', [
+      ['b', 1],
+    ]),
+  ).toStrictEqual(['b a']);
+  expect(
+    testExecution('#builtin BOOLEAN_TRUE tt\n#builtin BOOLEAN_FALSE ff\nb a :- tt == ff.', [
+      ['b', 1],
+    ]),
+  ).toStrictEqual(['']);
+  expect(
+    testExecution('#builtin BOOLEAN_TRUE tt\n#builtin BOOLEAN_FALSE ff\nb a :- tt != ff.', [
+      ['b', 1],
+    ]),
+  ).toStrictEqual(['b a']);
+});
+
+test('Builtins NAT_ZERO and NAT_SUCC', () => {
+  expect(testExecution('#builtin NAT_ZERO z\nb X :- z is X.', [['b', 1]])).toStrictEqual(['b 0']);
+  expect(testExecution('#builtin NAT_ZERO z\nb a :- z is 0.', [['b', 1]])).toStrictEqual(['b a']);
+  expect(testExecution('#builtin NAT_ZERO z\nb a :- z is 1.', [['b', 1]])).toStrictEqual(['']);
+  expect(testExecution('#builtin NAT_SUCC s\nb X :- s 4 is X.', [['b', 1]])).toStrictEqual(['b 5']);
+  expect(testExecution('#builtin NAT_SUCC s\nb X :- s X is 4.', [['b', 1]])).toStrictEqual(['b 3']);
+  expect(testExecution('#builtin NAT_SUCC s\nb X :- s 0 is X.', [['b', 1]])).toStrictEqual(['b 1']);
+  expect(testExecution('#builtin NAT_SUCC s\nb X :- s X is 0.', [['b', 1]])).toStrictEqual(['']);
+  expect(testExecution('#builtin NAT_SUCC s\nb X :- s -1 is X.', [['b', 1]])).toStrictEqual(['']);
+  expect(testExecution('#builtin NAT_SUCC s\nb X :- s X is -1.', [['b', 1]])).toStrictEqual(['']);
+  expect(
+    testExecution('#builtin NAT_ZERO z\n#builtin NAT_SUCC s\nb (s (s (s z))).', [['b', 1]]),
+  ).toStrictEqual(['b 3']);
+});
+
+test('Builtin INT_PLUS', () => {
+  expect(testExecution('#builtin INT_PLUS plus\nb (plus 1 4).', [['b', 1]])).toStrictEqual(['b 5']);
+  expect(testExecution('#builtin INT_PLUS plus\nb (plus 1 2 3 4).', [['b', 1]])).toStrictEqual([
+    'b 10',
+  ]);
+  expect(
+    testExecution('#builtin INT_PLUS plus\nb X :- plus -1 -11 is X.', [['b', 1]]),
+  ).toStrictEqual(['b -12']);
+  expect(
+    testExecution('#builtin INT_PLUS plus\nb X :- plus -1 X -20 -40 is 11.', [['b', 1]]),
+  ).toStrictEqual(['b 72']);
+});
+
+test('Functional predicates in ground position', () => {
+  console.log(build(`s 2 is 3. p N :- N == 3, 3 == s 2.`));
+  expect(testExecution(`s 2 is 3. p 3 :- N == 3, 3 == s 2.`, [['p', 1]])).toStrictEqual(['p 3']);
+  // expect(testExecution(`s 2 is 3. p N :- N == 3, 3 == s 2.`, [['p', 1]])).toStrictEqual(['p 3']);
 });

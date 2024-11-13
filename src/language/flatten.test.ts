@@ -80,4 +80,8 @@ test('Program flattening', () => {
     'b is #2 :- a is #1, #1 == X, .NAT_SUCC X is #2.',
     'c :- a is #1, b is #2, #1 > #2.',
   ]);
+  expect(flatten([['s'], ['p']], 's 2 is 3. p 3 :- N == 3, 3 == s 2.')).toStrictEqual([
+    's 2 is 3.',
+    'p 3 :- N == 3, s 2 is #1, 3 == #1.',
+  ]);
 });

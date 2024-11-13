@@ -71,12 +71,11 @@ export type InstructionN<N> =
         | { type: 'bool'; value: boolean }
         | { type: 'string'; value: string };
     } // S |-> S,[t]
-  | { type: 'fail' } // always fails
   | { type: 'equal' } // S,[s],[t] |-> S -- fails if `t != s`
-  | { type: 'gt' } // S,[n],[m] |-> S -- fails if if n <= m
   | { type: 'dup' } // S,[t] |-> S,[t],[t]
-  | { type: 'iplus' } // S,[n],[m] |-> S,[n+m] -- fails if n and m are not both integers
-  | { type: 'ineg' }; // S,[n] |-> S,[-n] -- fails if n not an integer integers
+  | { type: 'gt' } // S,[n],[m] |-> S -- fails if n or m are not both integers or both strings, or if n <= m
+  | { type: 'i_add' } // S,[n],[m] |-> S,[n+m] -- fails if n and m are not both integers
+  | { type: 'i_sub' } // S,[n],[m] |-> S,[n-m] -- fails if n and m are not both integers
 
 export type Pattern = PatternN<bigint>;
 export type Instruction = InstructionN<bigint>;
