@@ -147,9 +147,9 @@ test('insert random', () => {
     for (let j = i; j < LIMIT; j++) {
       expect(lookup(t, A[j])).toBeNull();
     }
-    expect([...iterator(t)].toSorted(([_kA, a], [_kB, b]) => a - b).map(([_, x]) => x)).toStrictEqual(
-      Array.from({ length: i }).map((_, n) => n),
-    );
+    expect(
+      [...iterator(t)].toSorted(([_kA, a], [_kB, b]) => a - b).map(([_, x]) => x),
+    ).toStrictEqual(Array.from({ length: i }).map((_, n) => n));
     [t] = insert(t, key, i);
   }
 

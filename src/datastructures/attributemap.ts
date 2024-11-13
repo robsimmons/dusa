@@ -6,12 +6,7 @@ import {
   remove as removeTree,
   choose as chooseTree,
 } from './avl.js';
-import {
-  Trie,
-  lookup as lookupTrie,
-  insert as insertTrie,
-  remove as removeTrie,
-} from './trie.js';
+import { Trie, lookup as lookupTrie, insert as insertTrie, remove as removeTrie } from './trie.js';
 
 export class AttributeMap<T> {
   private tree: Tree<string, Trie<Data, T>>;
