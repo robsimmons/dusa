@@ -287,13 +287,13 @@ function generateBuiltinRule(rule: BuiltinRule): {
       break;
     }
     case 'Geq': {
-      type = 'run_for_failure';
-      instrs = [...pushShape(shapes[1]), ...pushShape(shapes[0]), { type: 'gt' }];
+      type = 'run';
+      instrs = [...pushShape(shapes[0]), ...pushShape(shapes[1]), { type: 'geq' }];
       break;
     }
     case 'Leq': {
-      type = 'run_for_failure';
-      instrs = [...pushShape(shapes[0]), ...pushShape(shapes[1]), { type: 'gt' }];
+      type = 'run';
+      instrs = [...pushShape(shapes[1]), ...pushShape(shapes[0]), { type: 'geq' }];
       break;
     }
     case 'Equality': {

@@ -24,8 +24,19 @@ export function runInstructions(prog: Program, memory: Data[], instructions: Ins
       case 'gt': {
         const b = stack.pop()!;
         const a = stack.pop()!;
-        if (a.type !== 'int' || b.type !== 'int') return false;
+        if (a.type !== 'int' && a.type !== 'string') return false;
+        if (b.type !== 'int' && b.type !== 'string') return false;
+        if (a.type !== b.type) return false;
         if (a.value <= b.value) return false;
+        break;
+      }
+      case 'geq': {
+        const b = stack.pop()!;
+        const a = stack.pop()!;
+        if (a.type !== 'int' && a.type !== 'string') return false;
+        if (b.type !== 'int' && b.type !== 'string') return false;
+        if (a.type !== b.type) return false;
+        if (a.value < b.value) return false;
         break;
       }
       case 'load': {

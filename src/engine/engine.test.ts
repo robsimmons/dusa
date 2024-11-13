@@ -306,11 +306,18 @@ test('Binary operation builtins', () => {
         r k :- q X, X >= 3. 
         r l :- q X, X > 5. 
         r m :- q X, X > 4. 
-        r n :- q X, X > 3. 
+        r n :- q X, X > 3.
+        r o1 :- q X, X > "A".
+        r o2 :- q X, "A" > X.
+        r o3 :- q X, X >= "A".
+        r o4 :- q X, "A" >= X.
+        r o5 :- q X, X < "A".
+        r o6 :- q X, "A" < "B".
+        r o7 :- q X, "A" >= "B".
       `,
       [['r', 1]],
     ),
-  ).toStrictEqual(['r b, r c, r f, r g, r j, r k, r n']);
+  ).toStrictEqual(['r b, r c, r f, r g, r j, r k, r n, r o6']);
 
   expect(
     testExecution(

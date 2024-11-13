@@ -74,6 +74,7 @@ export type InstructionN<N> =
   | { type: 'equal' } // S,[s],[t] |-> S -- fails if `t != s`
   | { type: 'dup' } // S,[t] |-> S,[t],[t]
   | { type: 'gt' } // S,[n],[m] |-> S -- fails if n or m are not both integers or both strings, or if n <= m
+  | { type: 'geq' } // S,[n],[m] |-> S -- fails if n or m are not both integers or both strings, or if n < m
   | { type: 'i_add' } // S,[n],[m] |-> S,[n+m] -- fails if n and m are not both integers
   | { type: 'i_sub' } // S,[n],[m] |-> S,[n-m] -- fails if n and m are not both integers
   | { type: 'i_mul' } // S,[n],[m] |-> S,[n*m] -- fails if n and m are not both integers
