@@ -249,7 +249,7 @@ export function generateIndices(program: BinarizedProgram): BinarizedProgram {
   const finalizedIndexMap: IndexMap = new Map();
   const rules: BinarizedRule[] = [];
   for (const [pred, specs] of feasibleIndexMap.entries()) {
-    const { newPreds, finalizedSpecs, newRules } = finalizeIndices(pred, specs);
+    const { finalizedSpecs, newRules } = finalizeIndices(pred, specs);
     rules.push(...newRules);
     finalizedIndexMap.set(pred, finalizedSpecs);
   }

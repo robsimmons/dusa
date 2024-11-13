@@ -143,7 +143,6 @@ b :- @b-1-3 Z A B, e Z Z Z A B.`);
   ).toStrictEqual(true);
 });
 
-const loc = { start: { line: 1, column: 1, index: 1 }, end: { line: 1, column: 2, index: 2 } };
 const x: Pattern = { type: 'var', name: 'X' };
 const y: Pattern = { type: 'var', name: 'Y' };
 const z: Pattern = { type: 'var', name: 'Z' };
