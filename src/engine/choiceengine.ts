@@ -10,16 +10,31 @@ import {
 } from './forwardengine.js';
 import { Program } from './program.js';
 
+/**
+ * Executing a finite choice logic program is the process of gradually expanding
+ * out and exploring a tree of possible choices. We modify the choice tree as
+ * we go in order to ensure that any fully-explored parts of the tree are removed.
+ *
+ * We keep track not only of an imperatively updated tree but also a particular
+ * location within that tree, in the form of a relatively standard zipper data
+ * structure. The search state therefore consists of both a subtree
+ * representing the subtree that we're currently focused on and a zipper that
+ * contains the location of this subtree within the full tree.
+ *
+ * Zippers for imperatively-modified trees can get a little bit hairy! But it
+ * seems to work okay, and is certainly preferable to trying to keep track of
+ * parent pointers.
+ */
 export type ChoiceTree = ChoiceTreeLeaf | ChoiceTreeNode;
 export type ChoiceZipper = List<[ChoiceTreeNode, ChoiceIndex]>;
 
-interface ChoiceTreeLeaf {
+export interface ChoiceTreeLeaf {
   type: 'leaf';
   state: SearchState; // state.agenda !== null
 }
 
-/** A valid ChoiceTreeNode must have at least one LazyChoiceTree child */
-interface ChoiceTreeNode {
+/** A valid ChoiceTreeNode must have at least *TWO* LazyChoiceTree children */
+export interface ChoiceTreeNode {
   type: 'choice';
   state: SearchState; // state.agenda === null
   attribute: [string, Data[]];
@@ -83,7 +98,7 @@ function forceChoice(parent: ChoiceTreeNode, choice: ChoiceIndex): ForcedChoiceT
 }
 
 enum StepResult {
-  SOLUTION = 0,
+  IS_MODEL = 0,
   DEFERRED = 2,
   STEPPED = 3,
 }
@@ -140,7 +155,7 @@ function stepState(prog: Program, state: SearchState): StepResult | Conflict {
     } else if (state.demands.size > 0) {
       return { type: 'demand', name: state.demands.example()!.name };
     } else {
-      return StepResult.SOLUTION;
+      return StepResult.IS_MODEL;
     }
   } else {
     const [agenda, attribute] = uncons(state.agenda);
@@ -158,9 +173,9 @@ function stepLeaf(
     case StepResult.STEPPED: {
       return [path, tree, null];
     }
-    case StepResult.SOLUTION: {
-      const solution = tree.state.explored;
-      return [...collapseTreeUp(path), solution];
+    case StepResult.IS_MODEL: {
+      const model = tree.state.explored;
+      return [...collapseTreeUp(path), model];
     }
     case StepResult.DEFERRED: {
       const { name, args } = tree.state.deferred.choose()!;
@@ -189,7 +204,7 @@ function stepLeaf(
   }
 }
 
-function ascendToRoot(path: ChoiceZipper, tree: ChoiceTree | null): ChoiceTree | null {
+function ascendToRoot(path: ChoiceZipper, tree: ChoiceTree): ChoiceTree | null {
   while (path !== null) {
     tree = path.data[0];
     path = path.next;
@@ -208,27 +223,107 @@ function descendToLeaf(path: ChoiceZipper, tree: ChoiceTree): [ChoiceZipper, Cho
   return [path, tree];
 }
 
+/**
+ * Advances the state of the choice tree imperatively.
+ *
+ *  - Either the path must be non-empty or the tree must be non-null.
+ *
+ *  - If the tree is not a leaf, pick a random child (creating new leaf nodes for
+ *    unexplored children as needed) and descend to the child repeatedly until a
+ *    leaf is reached.
+ *
+ *  - If the tree is a leaf, and the leaf has a non-empty agenda, imperatively
+ *    update the leaf with the forward engine. If a conflict is discovered, signal
+ *    that the subtree should be discarded by returning `null` for the tree.
+ *
+ *  - If the tree is a non-empty leaf with an empty agenda:
+ *    - If there are deferred choices, select a random attribute and turn the leaf
+ *      into a choice node branching on that attribute.
+ *    - If there are no deferred choices and there are unsatisfied `require`
+ *      constraints, return `null` for the tree.
+ *    - Otherwise, we have a model. Return `null` for the tree and return the
+ *      leaf's database as a model. (Note: this model may contain non-positive
+ *      constraints! You can check the number of non-positive mappings in a
+ *      model by querying `model.size.neg`.)
+ *
+ *  - If the tree is null, that means that in the last step we discarded a leaf
+ *    (possibly returning its contents as a model), but if the path isn't empty,
+ *    the top of the path is a parent node that still contains that leaf! First,
+ *    ascend in the tree to the parent. Second, delete the former leaf. Third,
+ *    check whether the parent now has only one child. If so, that parent choice
+ *    node is no longer needed, and we can replace it with its (now unique) child,
+ *    which may be a choice node or a leaf node.
+ */
 export function step(
   prog: Program,
   path: ChoiceZipper,
-  tree: ChoiceTree,
+  tree: ChoiceTree | null,
 ): [ChoiceZipper, ChoiceTree | null, Database | null] {
-  let leaf: ChoiceTreeLeaf;
-  [path, leaf] = descendToLeaf(path, tree);
-  return stepLeaf(prog, path, leaf);
+  if (path === null && tree === null) throw new Error('step precondition failed');
+
+  if (tree === null) {
+    return [...collapseTreeUp(path), null];
+  }
+
+  if (tree.type === 'choice') {
+    return [...descendToLeaf(path, tree), null];
+  }
+
+  switch (stepState(prog, tree.state)) {
+    case StepResult.STEPPED: {
+      return [path, tree, null];
+    }
+
+    case StepResult.IS_MODEL: {
+      return [path, null, tree.state.explored];
+    }
+
+    case StepResult.DEFERRED: {
+      const { name, args } = tree.state.deferred.choose()!;
+      const { values: choices, open } = tree.state.frontier.get(name, args)!;
+      let justChild: DataMap<LazyChoiceTree> = DataMap.empty();
+      for (const choice of choices) {
+        justChild = justChild.set(choice, { ref: null });
+      }
+      const noneOfChild: null | LazyChoiceTree = open ? { ref: null } : null;
+
+      const replacementTree: ChoiceTreeNode = {
+        type: 'choice',
+        state: tree.state,
+        attribute: [name, args],
+        justChild,
+        noneOfChild,
+      };
+      if (path !== null) {
+        followChoice(path.data[0], path.data[1]).ref = replacementTree;
+      }
+      return [path, replacementTree, null];
+    }
+
+    default: {
+      // Conflict, UNSAT
+      return [path, null, null];
+    }
+  }
 }
 
 export function* execute(prog: Program) {
   let tree: null | ChoiceTree = { type: 'leaf', state: createSearchState(prog) };
   let path: ChoiceZipper = null;
-  let solution: Database | null;
+  let model: Database | null;
+  let needToAscend = false;
 
-  while (tree !== null) {
-    [path, tree, solution] = step(prog, path, tree);
-    if (solution) {
-      yield solution;
+  while (path !== null || tree !== null) {
+    if (needToAscend && tree !== null) {
       tree = ascendToRoot(path, tree);
+      needToAscend = false;
       path = null;
+    }
+
+    [path, tree, model] = step(prog, path, tree);
+    if (model) {
+      yield model;
+      needToAscend = true;
     }
   }
 }
