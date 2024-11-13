@@ -23,7 +23,11 @@ export const builtinModes: { [key in BUILT_IN_PRED]: Mode } = {
     { args: ['-'], value: '+' },
   ],
   INT_PLUS: 'reversible',
-  INT_MINUS: [{ args: ['+', '+'], value: '-' }],
+  INT_MINUS: [
+    { args: ['+', '+'], value: '-' },
+    { args: ['+', '-'], value: '+' },
+    { args: ['-', '+'], value: '+' },
+  ],
   INT_TIMES: 'forward_only',
   STRING_CONCAT: 'reversible',
 };

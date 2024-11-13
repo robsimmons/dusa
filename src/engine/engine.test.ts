@@ -314,6 +314,10 @@ test('Binary operation builtins', () => {
         r o5 :- q X, X < "A".
         r o6 :- q X, "A" < "B".
         r o7 :- q X, "A" >= "B".
+        r o8 :- q X, a < X.
+        r o9 :- q X, X <= a.
+        r oA :- q X, a > X.
+        r oB :- q X, X >= zz a g.
       `,
       [['r', 1]],
     ),
@@ -392,7 +396,7 @@ test('Builtins NAT_ZERO and NAT_SUCC', () => {
   ).toStrictEqual(['b 3']);
 });
 
-test('Builtins INT_PLUS, INT_TIMES', () => {
+test('Builtins INT_PLUS, INT_MINUS, INT_TIMES', () => {
   expect(testExecution('#builtin INT_PLUS plus\nb (plus 1 4).', [['b', 1]])).toStrictEqual(['b 5']);
   expect(testExecution('#builtin INT_PLUS plus\nb (plus 1 2 3 4).', [['b', 1]])).toStrictEqual([
     'b 10',
@@ -403,6 +407,21 @@ test('Builtins INT_PLUS, INT_TIMES', () => {
   expect(
     testExecution('#builtin INT_PLUS plus\nb X :- plus -1 X -20 -40 is 11.', [['b', 1]]),
   ).toStrictEqual(['b 72']);
+  expect(testExecution('#builtin INT_PLUS plus\nb (plus "Five" 4).', [['b', 1]])).toStrictEqual([
+    '',
+  ]);
+  expect(testExecution('#builtin INT_MINUS minus\nb (minus "Five" 4).', [['b', 1]])).toStrictEqual([
+    '',
+  ]);
+  expect(testExecution('#builtin INT_MINUS minus\nb (minus 99 2).', [['b', 1]])).toStrictEqual([
+    'b 97',
+  ]);
+  expect(
+    testExecution('#builtin INT_MINUS minus\nb X :- minus 12 X is 3.', [['b', 1]]),
+  ).toStrictEqual(['b 9']);
+  expect(
+    testExecution('#builtin INT_MINUS minus\nb X :- minus X 12 is 3.', [['b', 1]]),
+  ).toStrictEqual(['b 15']);
   expect(
     testExecution(
       `
@@ -461,11 +480,20 @@ test('Builtin STRING_CONCAT', () => {
     testExecution('#builtin STRING_CONCAT concat\nb X :- concat "A" "B" is X.', [['b', 1]]),
   ).toStrictEqual(['b "AB"']);
   expect(
+    testExecution('#builtin STRING_CONCAT concat\nb (concat "Hello" 4).', [['b', 1]]),
+  ).toStrictEqual(['']);
+  expect(
     testExecution('#builtin STRING_CONCAT concat\nb X :- concat "A" X is "ABBC".', [['b', 1]]),
   ).toStrictEqual(['b "BBC"']);
   expect(
     testExecution('#builtin STRING_CONCAT concat\nb X :- concat X "C" is "ABBC".', [['b', 1]]),
   ).toStrictEqual(['b "ABB"']);
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb X :- concat a X is "ABBC".', [['b', 1]]),
+  ).toStrictEqual(['']);
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb X :- concat X 3 is "ABBC".', [['b', 1]]),
+  ).toStrictEqual(['']);
   expect(
     testExecution('#builtin STRING_CONCAT concat\nb X :- concat "AB" X "BA" is "ABBA".', [
       ['b', 1],
