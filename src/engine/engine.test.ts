@@ -328,6 +328,28 @@ test('Binary operation builtins', () => {
       [['r', 1]],
     ),
   ).toStrictEqual(['r (m a b a c), r (n a b c), r 9, r z1, r z3']);
+
+  expect(
+    testExecution(
+      `
+        a (pair 10 2).
+        b Y :- a X, X == pair Y _.
+        c Y :- a X, pair _ Y == X.
+        d (pair X Y) :- b Y, c X.
+        e X :- d A, c Y, A == pair Y X.
+        f X :- d A, c Y, A == pair X Y.
+    
+    `,
+      [
+        ['a', 1],
+        ['b', 1],
+        ['c', 1],
+        ['d', 1],
+        ['e', 1],
+        ['f', 1],
+      ],
+    ),
+  ).toStrictEqual(['a (pair 10 2), b 10, c 2, d (pair 2 10), e 10']);
 });
 
 test('Builtins BOOLEAN_FALSE and BOOLEAN_TRUE', () => {
@@ -374,10 +396,73 @@ test('Builtin INT_PLUS', () => {
   expect(
     testExecution('#builtin INT_PLUS plus\nb X :- plus -1 X -20 -40 is 11.', [['b', 1]]),
   ).toStrictEqual(['b 72']);
+  expect(
+    testExecution(
+      `
+        #builtin INT_PLUS plus
+        a 2.
+        a 7.
+        a 12.
+        d 9.
+        d 19.
+        d 6.
+        e X Y :- a X, a Y, d (plus X Y).
+      `,
+      [['e', 2]],
+    ),
+  ).toStrictEqual(['e 12 7, e 2 7, e 7 12, e 7 2']);
+  expect(
+    testExecution(
+      `
+        #builtin INT_PLUS plus
+      
+        a 2.
+        a 7.
+        a 12.
+        d 9.
+        d 19.
+        d 6.
+        e X Y :- a X, a Y, plus X Y == Z, d Z.
+      `,
+      [['e', 2]],
+    ),
+  ).toStrictEqual(['e 12 7, e 2 7, e 7 12, e 7 2']);
 });
 
 test('Functional predicates in ground position', () => {
-  console.log(build(`s 2 is 3. p N :- N == 3, 3 == s 2.`));
-  expect(testExecution(`s 2 is 3. p 3 :- N == 3, 3 == s 2.`, [['p', 1]])).toStrictEqual(['p 3']);
-  // expect(testExecution(`s 2 is 3. p N :- N == 3, 3 == s 2.`, [['p', 1]])).toStrictEqual(['p 3']);
+  expect(
+    testExecution(
+      `
+        s 0 is 1.
+        s 1 is 2.
+        s 2 is 3.
+        s 3 is 4.
+        
+        p a N :- N == 4, N == 4.
+        p b N :- N == 3, N == s 2.
+        p c N :- N == 0, s N == 1.
+        p d N :- N == 0, s N == s 0.
+        p e N :- N == 3, 3 == N.
+        p f N :- N == 2, s 1 == N.
+        p g N :- N == 3, 4 == s N.
+        p h N :- N == 3, s 3 == s N.
+        p i N :- N == 0, s 0 == N.
+        p i N :- N == 0, N == s 0.
+      `,
+      [['p', 2]],
+    ),
+  ).toStrictEqual(['p a 4, p b 3, p c 0, p d 0, p e 3, p f 2, p g 3, p h 3']);
+});
+
+test('Long chain of inferences', () => {
+  const program =
+    Array.from({ length: 30 })
+      .map((_, i) => `a ${i} :- a ${i + 1}.`)
+      .join('\n') + '\na 30.';
+  const solution = Array.from({ length: 31 })
+    .map((_, i) => `a ${i}`)
+    .sort()
+    .join(', ');
+
+  expect(testExecution(program, [['a', 1]])).toStrictEqual([solution]);
 });
