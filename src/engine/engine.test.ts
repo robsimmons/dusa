@@ -385,7 +385,7 @@ test('Builtins NAT_ZERO and NAT_SUCC', () => {
   ).toStrictEqual(['b 3']);
 });
 
-test('Builtin INT_PLUS', () => {
+test('Builtins INT_PLUS, INT_TIMES', () => {
   expect(testExecution('#builtin INT_PLUS plus\nb (plus 1 4).', [['b', 1]])).toStrictEqual(['b 5']);
   expect(testExecution('#builtin INT_PLUS plus\nb (plus 1 2 3 4).', [['b', 1]])).toStrictEqual([
     'b 10',
@@ -427,6 +427,61 @@ test('Builtin INT_PLUS', () => {
       [['e', 2]],
     ),
   ).toStrictEqual(['e 12 7, e 2 7, e 7 12, e 7 2']);
+  expect(
+    testExecution(
+      `
+        #builtin INT_TIMES times
+      
+        a 2.
+        a 7.
+        a 12.
+        e Z :- a X, a Y, times X Y == Z.
+        e Z :- a X, times X "A" == Z.
+      `,
+      [['e', 1]],
+    ),
+  ).toStrictEqual(['e 14, e 144, e 24, e 4, e 49, e 84']);
+});
+
+test('Builtin STRING_CONCAT', () => {
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb (concat "Hello" "World").', [['b', 1]]),
+  ).toStrictEqual(['b "HelloWorld"']);
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb (concat "Hello" " " "World" "!").', [['b', 1]]),
+  ).toStrictEqual(['b "Hello World!"']);
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb X :- concat "A" "B" is X.', [['b', 1]]),
+  ).toStrictEqual(['b "AB"']);
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb X :- concat "A" X is "ABBC".', [['b', 1]]),
+  ).toStrictEqual(['b "BBC"']);
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb X :- concat X "C" is "ABBC".', [['b', 1]]),
+  ).toStrictEqual(['b "ABB"']);
+  expect(
+    testExecution('#builtin STRING_CONCAT concat\nb X :- concat "AB" X "BA" is "ABBA".', [
+      ['b', 1],
+    ]),
+  ).toStrictEqual(['b ""']);
+  expect(
+    testExecution(
+      '#builtin STRING_CONCAT concat\nb X :- concat "A--" "Z--" X "-B" "-C" is "A--Z--and-B-C".',
+      [['b', 1]],
+    ),
+  ).toStrictEqual(['b "and"']);
+  expect(
+    testExecution(
+      '#builtin STRING_CONCAT concat\nb X :- concat "A-" "Z--" X "-B" "-C" is "A--Z--and-B-C".',
+      [['b', 1]],
+    ),
+  ).toStrictEqual(['']);
+  expect(
+    testExecution(
+      '#builtin STRING_CONCAT concat\nb X :- concat "A--" "Z--" X "-C" "-C" is "A--Z--and-B-C".',
+      [['b', 1]],
+    ),
+  ).toStrictEqual(['']);
 });
 
 test('Functional predicates in ground position', () => {

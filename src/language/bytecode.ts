@@ -209,12 +209,11 @@ function generateBuiltinRuleWithValue(
     case 'INT_PLUS': {
       const a = args.map((arg) => matchShape(arg, next));
       const unknownIndex = a.findIndex((a) => a.next !== next);
-      const v = matchShape(value, next);
       if (unknownIndex === -1) {
         return [
-          { type: 'const', const: { type: 'int', value: 0n } },
-          ...args.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 'i_add' }]),
-          ...v.instrs,
+          ...pushShape(args[0]),
+          ...args.slice(1).flatMap<Instruction>((arg) => [...pushShape(arg), { type: 'i_add' }]),
+          ...matchShape(value, next).instrs,
         ];
       } else {
         const argsToSubtract = [...args.slice(0, unknownIndex), ...args.slice(unknownIndex + 1)];
@@ -237,8 +236,32 @@ function generateBuiltinRuleWithValue(
         return [...pushShape(args[0]), ...pushShape(args[1]), { type: 'i_sub' }, ...v.instrs];
       }
     }
-    default: {
-      throw new Error(`builtin ${name} not handled`);
+    case 'INT_TIMES': {
+      return [
+        ...pushShape(args[0]),
+        ...args.slice(1).flatMap<Instruction>((arg) => [...pushShape(arg), { type: 'i_mul' }]),
+        ...matchShape(value, next).instrs,
+      ];
+    }
+    case 'STRING_CONCAT': {
+      const a = args.map((arg) => matchShape(arg, next));
+      const unknownIndex = a.findIndex((a) => a.next !== next);
+      if (unknownIndex === -1) {
+        return [
+          ...pushShape(args[0]),
+          ...args.slice(1).flatMap<Instruction>((arg) => [...pushShape(arg), { type: 's_concat' }]),
+          ...matchShape(value, next).instrs,
+        ];
+      } else {
+        const prefix = args.slice(0, unknownIndex);
+        const postfix = args.slice(unknownIndex + 1).toReversed();
+        return [
+          ...pushShape(value),
+          ...prefix.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 's_starts' }]),
+          ...postfix.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 's_ends' }]),
+          ...a[unknownIndex].instrs,
+        ];
+      }
     }
   }
 }

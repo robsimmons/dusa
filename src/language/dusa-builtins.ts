@@ -25,7 +25,7 @@ export const builtinModes: { [key in BUILT_IN_PRED]: Mode } = {
   INT_PLUS: 'reversible',
   INT_MINUS: [{ args: ['+', '+'], value: '-' }],
   INT_TIMES: 'forward_only',
-  STRING_CONCAT: 'forward_only',
+  STRING_CONCAT: 'reversible',
 };
 
 export function isBuiltIn(s: string): s is BUILT_IN_PRED {

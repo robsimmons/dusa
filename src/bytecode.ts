@@ -76,6 +76,10 @@ export type InstructionN<N> =
   | { type: 'gt' } // S,[n],[m] |-> S -- fails if n or m are not both integers or both strings, or if n <= m
   | { type: 'i_add' } // S,[n],[m] |-> S,[n+m] -- fails if n and m are not both integers
   | { type: 'i_sub' } // S,[n],[m] |-> S,[n-m] -- fails if n and m are not both integers
+  | { type: 'i_mul' } // S,[n],[m] |-> S,[n*m] -- fails if n and m are not both integers
+  | { type: 's_concat' } // S,[s],[t] |-> S,[s++t] -- fails if s and t are not both strings
+  | { type: 's_starts' } // S,[t++s],[t] |-> S,[s] -- fails if the first string does not have t as a prefix
+  | { type: 's_ends' }; // S,[s++t],[t] |-> S,[s] -- fails if the first string does not have t as a postfix
 
 export type Pattern = PatternN<bigint>;
 export type Instruction = InstructionN<bigint>;
