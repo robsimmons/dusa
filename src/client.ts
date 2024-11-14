@@ -320,9 +320,6 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
       if (path === null && tree === null) return true;
       [path, tree, model] = step(this.prog, path, tree);
       this.nSteps += 1;
-      if (tree === null) {
-        this.nBacktracks += 1;
-      }
       if (model !== null) {
         if (model.size.neg === 0) {
           this.state.path = path;
@@ -332,12 +329,17 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
         } else {
           this.nNonPos += 1;
         }
-      }
-      // With small probability, return to the root
-      // (intended to bump out of bad solution spaces)
-      if (tree !== null && Math.random() < 0.001) {
-        this.state.tree = ascendToRoot(path, tree);
-        this.state.path = null;
+      } else if (tree === null) {
+        this.nBacktracks += 1;
+        // With some probability, go ahead and return to the root
+        // (intended to bump out of bad solution spaces)
+        if (Math.random() < 0.05) {
+          const [path, tree] = collapseTreeUp(this.state.path);
+          if (path !== null && tree !== null) {
+            this.state.path = null;
+            this.state.tree = ascendToRoot(path, tree);
+          }
+        }
       }
     }
     this.state.path = path;
