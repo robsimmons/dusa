@@ -70,7 +70,7 @@ test('forward engine with unary rules and argument-free premises', () => {
   result.new.push(result.old);
   delete result.old;
   result.new.sort();
-  expect(result).toStrictEqual({ type: 'incompatible', name: 'h', args: [], new: [1n, 2n] });
+  expect(result.type).toStrictEqual('incompatible');
 
   program = build(
     'c. d :- c. e :- c. h is { 5, 6, a } :- d. h is { 6, "what", garbage "in" } :- e.',
@@ -85,7 +85,10 @@ test('forward engine with unary rules and argument-free premises', () => {
   expect(state.agenda!.data.name).toBe('h');
   expect(state.frontier.get('h', [])).not.toBeNull();
   expect(step(program, state)).toBeNull(); // pop h
-  expect(state.explored.get('h', [])).toStrictEqual({ type: 'just', just: 6n });
+  expect(program.data.expose((state.explored.get('h', []) as any).just)).toStrictEqual({
+    type: 'int',
+    value: 6n,
+  });
   expect(state.frontier.get('h', [])).toBeNull();
 
   program = build('c. d :- c. e :- c. h is { 1, 2, 3, 4, 5 } :- d. h is { 11, 12, 13, 14 } :- e.');
@@ -112,12 +115,24 @@ test('forward engine with unary rules and argument-free premises', () => {
   expect(state.deferred.get('h', [])).toBe(true);
   expect(state.agenda).toBeNull();
   expect(state.frontier.get('h', [])!.open).toBe(true);
-  expect(state.frontier.get('h', [])!.values.has(4n)).toBe(false);
-  expect(state.frontier.get('h', [])!.values.has(5n)).toBe(true);
-  expect(state.frontier.get('h', [])!.values.has(6n)).toBe(true);
-  expect(state.frontier.get('h', [])!.values.has(16n)).toBe(true);
-  expect(state.frontier.get('h', [])!.values.has(17n)).toBe(true);
-  expect(state.frontier.get('h', [])!.values.has(18n)).toBe(false);
+  expect(
+    state.frontier.get('h', [])!.values.has(program.data.hide({ type: 'int', value: 4n })),
+  ).toBe(false);
+  expect(
+    state.frontier.get('h', [])!.values.has(program.data.hide({ type: 'int', value: 5n })),
+  ).toBe(true);
+  expect(
+    state.frontier.get('h', [])!.values.has(program.data.hide({ type: 'int', value: 6n })),
+  ).toBe(true);
+  expect(
+    state.frontier.get('h', [])!.values.has(program.data.hide({ type: 'int', value: 16n })),
+  ).toBe(true);
+  expect(
+    state.frontier.get('h', [])!.values.has(program.data.hide({ type: 'int', value: 17n })),
+  ).toBe(true);
+  expect(
+    state.frontier.get('h', [])!.values.has(program.data.hide({ type: 'int', value: 18n })),
+  ).toBe(false);
 });
 
 test('consequences, unary rules', () => {

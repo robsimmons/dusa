@@ -11,10 +11,9 @@ import {
 
 // Adapted from https://www.cs.cmu.edu/~rjsimmon/15122-m15/lec/16-avl/bst-test.c0
 
-const compare = (x: string, y: string) => (x < y ? 1 : x > y ? -1 : 0);
-const lookup = <T>(t: AVL<string, T>, x: string) => lookupAVL(compare, t, x);
-const insert = <T>(t: AVL<string, T>, x: string, y: T) => insertAVL(compare, t, x, y);
-const remove = <T>(t: AVL<string, T>, x: string) => removeAVL(compare, t, x);
+const lookup = <T>(t: AVL<string, T>, x: string) => lookupAVL(t, x);
+const insert = <T>(t: AVL<string, T>, x: string, y: T) => insertAVL(t, x, y);
+const remove = <T>(t: AVL<string, T>, x: string) => removeAVL(t, x);
 
 test('black-box 1', () => {
   let t: AVL<string, string> = null;

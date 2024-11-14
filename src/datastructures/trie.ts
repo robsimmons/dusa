@@ -1,5 +1,4 @@
 import {
-  Compare,
   AVLNode as TreeNode,
   insert as insertTree,
   lookup as lookupTree,
@@ -19,10 +18,10 @@ export type TrieNode<K, V> =
 
 export type Trie<K, V> = TrieNode<K, V> | null;
 
-export function lookup<K, V>(compare: Compare<K>, t: Trie<K, V>, keys: K[]): TrieNode<K, V> | null {
+export function lookup<K, V>(t: Trie<K, V>, keys: K[]): TrieNode<K, V> | null {
   for (const key of keys) {
     if (t === null) return null;
-    t = lookupTree(compare, t.children, key);
+    t = lookupTree(t.children, key);
   }
   return t;
 }
@@ -36,7 +35,6 @@ export function singleton<K, V>(index: number, keys: K[], value: V): TrieNode<K,
 }
 
 export function insert<K, V>(
-  compare: Compare<K>,
   t: Trie<K, V>,
   keys: K[],
   index: number,
@@ -50,9 +48,9 @@ export function insert<K, V>(
     return [{ children: null, value }, t];
   }
 
-  const subTrie = lookupTree(compare, t.children, keys[index]);
-  const [child, removed] = insert(compare, subTrie, keys, index + 1, value);
-  const [children] = insertTree(compare, t.children, keys[index], child);
+  const subTrie = lookupTree(t.children, keys[index]);
+  const [child, removed] = insert(subTrie, keys, index + 1, value);
+  const [children] = insertTree(t.children, keys[index], child);
   return [{ children }, removed];
 }
 
@@ -94,7 +92,6 @@ export function* visit<K, V>(tr: Trie<K, V>, depth: number) {
 }
 
 export function remove<K, V>(
-  compare: Compare<K>,
   t: Trie<K, V>,
   keys: K[],
   index: number,
@@ -103,22 +100,22 @@ export function remove<K, V>(
   if (index === keys.length) return [null, t];
   if (!t.children) throw new Error('Empty trie child');
 
-  const child = lookupTree(compare, t.children, keys[index]);
+  const child = lookupTree(t.children, keys[index]);
   if (child === null) return null;
 
-  const removeChildResult = remove(compare, child, keys, index + 1);
+  const removeChildResult = remove(child, keys, index + 1);
   if (removeChildResult === null) return null;
 
   const [newChild, removed] = removeChildResult;
   if (newChild === null) {
-    const [newChildren] = removeTree(compare, t.children, keys[index])!;
+    const [newChildren] = removeTree(t.children, keys[index])!;
     if (newChildren === null) {
       return [null, removed];
     } else {
       return [{ children: newChildren }, removed];
     }
   } else {
-    const [newChildren] = insertTree(compare, t.children, keys[index], newChild);
+    const [newChildren] = insertTree(t.children, keys[index], newChild);
     return [{ children: newChildren }, removed];
   }
 }

@@ -1,4 +1,4 @@
-import { Data, compareData, compareString } from './data.js';
+import { Data } from './data.js';
 import {
   AVL as Tree,
   lookup as lookupTree,
@@ -26,17 +26,17 @@ export class AttributeMap<T> {
   }
 
   get(name: string, args: Data[]) {
-    const trie = lookupTree(compareString, this.tree, name);
-    const leaf = lookupTrie(compareData, trie, args);
+    const trie = lookupTree(this.tree, name);
+    const leaf = lookupTrie(trie, args);
     if (leaf === null || leaf.children !== null) return null;
     return leaf.value;
   }
 
   set(name: string, args: Data[], value: T): [AttributeMap<T>, T | null] {
-    const trie = lookupTree(compareString, this.tree, name);
-    const [newTrie, removed] = insertTrie(compareData, trie, args, 0, value);
+    const trie = lookupTree(this.tree, name);
+    const [newTrie, removed] = insertTrie(trie, args, 0, value);
     if (removed && removed.children) throw new Error('Attribute.set invariant');
-    const [newTree] = insertTree(compareString, this.tree, name, newTrie);
+    const [newTree] = insertTree(this.tree, name, newTrie);
     return [
       new AttributeMap(newTree, removed === null ? this._size + 1 : this._size),
       removed?.value ?? null,
@@ -44,16 +44,16 @@ export class AttributeMap<T> {
   }
 
   remove(name: string, args: Data[]): null | [AttributeMap<T>, T] {
-    const trie = lookupTree(compareString, this.tree, name);
-    const removeResult = removeTrie(compareData, trie, args, 0);
+    const trie = lookupTree(this.tree, name);
+    const removeResult = removeTrie(trie, args, 0);
     if (removeResult === null) return null;
     const [newTrie, removed] = removeResult;
     if (removed && removed.children) throw new Error('Attribute.remove invariant');
     let newTree: Tree<string, Trie<Data, T>>;
     if (newTrie === null) {
-      [newTree] = removeTree(compareString, this.tree, name)!;
+      [newTree] = removeTree(this.tree, name)!;
     } else {
-      [newTree] = insertTree(compareString, this.tree, name, newTrie);
+      [newTree] = insertTree(this.tree, name, newTrie);
     }
     return [
       new AttributeMap(newTree, removed === null ? this._size : this._size - 1),

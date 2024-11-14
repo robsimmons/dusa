@@ -1,4 +1,4 @@
-import { Data, DataSet, compareData, compareString } from './data.js';
+import { Data, DataSet } from './data.js';
 import {
   AVL as Tree,
   lookup as lookupTree,
@@ -41,15 +41,15 @@ export class Database {
   }
 
   get(name: string, args: Data[]) {
-    const trie = lookupTree(compareString, this.tree, name);
-    const leaf = lookupTrie(compareData, trie?.trie ?? null, args);
+    const trie = lookupTree(this.tree, name);
+    const leaf = lookupTrie(trie?.trie ?? null, args);
     if (leaf === null || leaf.children !== null) return null;
     return leaf.value;
   }
 
   set(name: string, args: Data[], value: Constraint): [Database, Constraint | null] {
-    const { trie, pos, neg } = lookupTree(compareString, this.tree, name) ?? emptyRelation;
-    const [result, removed] = insertTrie(compareData, trie, args, 0, value);
+    const { trie, pos, neg } = lookupTree(this.tree, name) ?? emptyRelation;
+    const [result, removed] = insertTrie(trie, args, 0, value);
 
     if (removed && removed.children) throw new Error('Database.set invariant');
     const [posInc, negInc] = value.type === 'just' ? [1, 0] : [0, 1];
@@ -60,7 +60,7 @@ export class Database {
       neg: neg + negInc - negDec,
       trie: result,
     };
-    const [newTree] = insertTree(compareString, this.tree, name, newRel);
+    const [newTree] = insertTree(this.tree, name, newRel);
 
     return [
       new Database(newTree, this.pos + posInc - posDec, this.neg + negInc - negDec),
@@ -69,7 +69,7 @@ export class Database {
   }
 
   visit(name: string, args: Data[], depth: number): Generator<Data[]> {
-    const relation = lookupTree(compareString, this.tree, name);
+    const relation = lookupTree(this.tree, name);
     if (relation === null) return nullIterator();
     return visitor(relation.trie, args, depth);
   }
@@ -90,7 +90,7 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
     }
 
     // perform all lookups but the last one
-    const parent = lookupTrie(compareData, t, args.slice(0, args.length - 1));
+    const parent = lookupTrie(t, args.slice(0, args.length - 1));
     if (parent === null) {
       return;
     }
@@ -104,14 +104,14 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
     }
 
     // handle access pattern like `a [+]+ [_]* is _`
-    const child = lookupTree(compareData, parent.children, args[args.length - 1]);
+    const child = lookupTree(parent.children, args[args.length - 1]);
     if (child !== null) {
       yield [];
     }
     return;
   }
 
-  const base = lookupTrie(compareData, t, args);
+  const base = lookupTrie(t, args);
   for (const { keys, value } of visitTrie(base, depth - 1)) {
     if (value.children === null) {
       if (value.value.type === 'just') {

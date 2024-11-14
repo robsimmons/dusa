@@ -8,17 +8,17 @@ export interface AVLNode<K, V> {
 
 export type AVL<K, V> = AVLNode<K, V> | null;
 
-export type Compare<K> = (a: K, b: K) => number;
-
 function height<K, V>(t: AVL<K, V>) {
   return t === null ? 0 : t.height;
 }
 
-export function lookup<K, V>(compare: Compare<K>, t: AVL<K, V>, key: K) {
+export function lookup<K, V>(t: AVL<K, V>, key: K) {
   while (t !== null) {
-    const comp = compare(t.key, key);
-    if (comp === 0) return t.value;
-    if (comp < 0) {
+    // const comp = compare(t.key, key);
+    // if (comp === 0) return t.value;
+    if (t.key === key) return t.value;
+    // if (comp < 0) {
+    if (t.key > key) {
       t = t.left;
     } else {
       t = t.right;
@@ -135,24 +135,18 @@ function createAndFix<K, V>(key: K, value: V, left: AVL<K, V>, right: AVL<K, V>)
   return create(key, value, left, right);
 }
 
-export function insert<K, V>(
-  compare: Compare<K>,
-  t: AVL<K, V>,
-  key: K,
-  value: V,
-): [AVLNode<K, V>, null | V] {
+export function insert<K, V>(t: AVL<K, V>, key: K, value: V): [AVLNode<K, V>, null | V] {
   if (t === null) {
     return [create(key, value, null, null), null];
   }
 
-  const comp = compare(t.key, key);
-  if (comp === 0) {
+  if (t.key === key) {
     return [create(t.key, value, t.left, t.right), t.value];
-  } else if (comp < 0) {
-    const [newLeft, removedValue] = insert(compare, t.left, key, value);
+  } else if (t.key > key) {
+    const [newLeft, removedValue] = insert(t.left, key, value);
     return [createAndFix(t.key, t.value, newLeft, t.right), removedValue];
   } else {
-    const [newRight, removedValue] = insert(compare, t.right, key, value);
+    const [newRight, removedValue] = insert(t.right, key, value);
     return [createAndFix(t.key, t.value, t.left, newRight), removedValue];
   }
 }
@@ -204,16 +198,15 @@ function removeMin<K, V>(t: AVLNode<K, V>): [K, V, AVLNode<K, V> | null] {
   return [key, value, createAndFix(t.key, t.value, left, t.right)];
 }
 
-export function remove<K, V>(compare: Compare<K>, t: AVL<K, V>, key: K): [AVL<K, V>, V] | null {
+export function remove<K, V>(t: AVL<K, V>, key: K): [AVL<K, V>, V] | null {
   if (t === null) return null;
 
-  const comp = compare(t.key, key);
-  if (comp < 0) {
-    const result = remove(compare, t.left, key);
+  if (t.key > key) {
+    const result = remove(t.left, key);
     return result === null ? null : [createAndFix(t.key, t.value, result[0], t.right), result[1]];
   }
-  if (comp > 0) {
-    const result = remove(compare, t.right, key);
+  if (t.key < key) {
+    const result = remove(t.right, key);
     return result === null ? null : [createAndFix(t.key, t.value, t.left, result[0]), result[1]];
   }
   if (t.right === null) return [t.left, t.value];
