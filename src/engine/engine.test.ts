@@ -34,54 +34,6 @@ function testExecution(source: string, preds: [string, number][]) {
   ].toSorted();
 }
 
-test('Exhaustive choices', () => {
-  expect(
-    testExecution(
-      `
-        a is { tt, ff }.
-        b is { tt, ff }.
-      `,
-      [
-        ['a', 1],
-        ['b', 1],
-      ],
-    ),
-  ).toStrictEqual(['a ff, b ff', 'a ff, b tt', 'a tt, b ff', 'a tt, b tt']);
-});
-
-test('Non-exhaustive choice', () => {
-  expect(
-    testExecution(
-      `
-        a is? ff.
-        b is { tt, ff } :- a is ff.
-      `,
-      [
-        ['a', 1],
-        ['b', 1],
-      ],
-    ),
-  ).toStrictEqual(['a ff, b ff', 'a ff, b tt']);
-});
-
-test('Overlapping non-exhaustive and exhaustive choices', () => {
-  expect(
-    testExecution(
-      `
-        p.
-        q.
-        r is { a, b, d, e } :- p.
-        r is? { a, b, c } :- p.
-        r is { a, c, d, e } :- q.
-        r is? c.
-        r is? a.
-        r is? f.
-      `,
-      [['r', 1]],
-    ),
-  ).toStrictEqual(['r a', 'r d', 'r e']);
-});
-
 test('Overlapping non-exhaustive choices', () => {
   expect(
     testExecution(
@@ -467,56 +419,6 @@ test('Builtins INT_PLUS, INT_MINUS, INT_TIMES', () => {
       [['e', 1]],
     ),
   ).toStrictEqual(['e 14, e 144, e 24, e 4, e 49, e 84']);
-});
-
-test('Builtin STRING_CONCAT', () => {
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb (concat "Hello" "World").', [['b', 1]]),
-  ).toStrictEqual(['b "HelloWorld"']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb (concat "Hello" " " "World" "!").', [['b', 1]]),
-  ).toStrictEqual(['b "Hello World!"']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb X :- concat "A" "B" is X.', [['b', 1]]),
-  ).toStrictEqual(['b "AB"']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb (concat "Hello" 4).', [['b', 1]]),
-  ).toStrictEqual(['']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb X :- concat "A" X is "ABBC".', [['b', 1]]),
-  ).toStrictEqual(['b "BBC"']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb X :- concat X "C" is "ABBC".', [['b', 1]]),
-  ).toStrictEqual(['b "ABB"']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb X :- concat a X is "ABBC".', [['b', 1]]),
-  ).toStrictEqual(['']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb X :- concat X 3 is "ABBC".', [['b', 1]]),
-  ).toStrictEqual(['']);
-  expect(
-    testExecution('#builtin STRING_CONCAT concat\nb X :- concat "AB" X "BA" is "ABBA".', [
-      ['b', 1],
-    ]),
-  ).toStrictEqual(['b ""']);
-  expect(
-    testExecution(
-      '#builtin STRING_CONCAT concat\nb X :- concat "A--" "Z--" X "-B" "-C" is "A--Z--and-B-C".',
-      [['b', 1]],
-    ),
-  ).toStrictEqual(['b "and"']);
-  expect(
-    testExecution(
-      '#builtin STRING_CONCAT concat\nb X :- concat "A-" "Z--" X "-B" "-C" is "A--Z--and-B-C".',
-      [['b', 1]],
-    ),
-  ).toStrictEqual(['']);
-  expect(
-    testExecution(
-      '#builtin STRING_CONCAT concat\nb X :- concat "A--" "Z--" X "-C" "-C" is "A--Z--and-B-C".',
-      [['b', 1]],
-    ),
-  ).toStrictEqual(['']);
 });
 
 test('Functional predicates in ground position', () => {

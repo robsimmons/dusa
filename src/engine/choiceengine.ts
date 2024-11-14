@@ -101,7 +101,7 @@ function forceChoice(parent: ChoiceTreeNode, choice: ChoiceIndex): ForcedChoiceT
   return child as ForcedChoiceTree;
 }
 
-enum StepResult {
+export enum StepResult {
   IS_MODEL = 0,
   DEFERRED = 2,
   STEPPED = 3,
@@ -115,7 +115,7 @@ enum StepResult {
  * that case, the parent is also deleted and replaced with its singleton
  * child, the node that was previously the now-deleted subtree's sibling. 
  */
-function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, ChoiceTree | null] {
+export function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, ChoiceTree | null] {
   if (pathToCollapseUp === null) return [null, null];
   const [path, [tree, fullyExploredChoiceToCollapse]] = uncons(pathToCollapseUp);
 
@@ -159,7 +159,7 @@ function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, ChoiceTr
   }
 }
 
-function stepState(prog: Program, state: SearchState): StepResult | Conflict {
+export function stepState(prog: Program, state: SearchState): StepResult | Conflict {
   if (state.agenda === null) {
     if (state.deferred.size > 0) {
       return StepResult.DEFERRED;
@@ -175,7 +175,7 @@ function stepState(prog: Program, state: SearchState): StepResult | Conflict {
   }
 }
 
-function ascendToRoot(path: ChoiceZipper, tree: ChoiceTree): ChoiceTree | null {
+export function ascendToRoot(path: ChoiceZipper, tree: ChoiceTree): ChoiceTree | null {
   while (path !== null) {
     tree = path.data[0];
     path = path.next;

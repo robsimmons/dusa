@@ -26,8 +26,6 @@ export interface InputFact {
   value?: InputTerm;
 }
 
-export type JsonData = null | number | bigint | string | JsonData[] | { [field: string]: JsonData };
-
 export function dataToTerm(data: HashCons, t: Data): Term {
   const view = data.expose(t);
   if (view.type === 'trivial') return null;
@@ -66,4 +64,37 @@ export function termToString(tm: Term, parens = false): string {
   const tmStr = `${tm.name} ${tm.args.map((arg) => termToString(arg, true)).join('')}`;
   if (!parens) return tmStr;
   return `(${tmStr})`;
+}
+
+export function compareTerms(t: Term[], s: Term[]): number {
+  for (let i = 0; i < Math.min(t.length, s.length); i++) {
+    const c = compareTerm(t[i], s[i]);
+    if (c !== 0) return c;
+  }
+  return s.length - t.length;
+}
+
+export function compareTerm(t: Term, s: Term): number {
+  if (t === null) return s === null ? 0 : -1;
+  if (s === null) return 1;
+  if (typeof t === 'boolean') {
+    return typeof s === 'boolean' ? (t ? 1 : 0) - (s ? 1 : 0) : -1;
+  }
+  if (typeof s === 'boolean') return 1;
+  if (typeof t === 'string') {
+    return typeof s === 'string' ? new Intl.Collator('en').compare(t, s) : -1;
+  }
+  if (typeof s === 'string') return 1;
+  if (typeof t === 'bigint') {
+    return typeof s === 'bigint' ? Number(t - s) : -1;
+  }
+  if (typeof s === 'bigint') return 1;
+  if (t.name !== null) {
+    if (s.name === null) return -1;
+    const c = new Intl.Collator('en').compare(t.name, s.name);
+    if (c !== 0) return c;
+    return compareTerms(t.args ?? [], s.args ?? []);
+  }
+  if (s.name !== null) return 1;
+  return t.value - s.value;
 }
