@@ -7,15 +7,14 @@ import {
   visit,
 } from './trie.js';
 
-const compare = (x: string, y: string) => (x < y ? 1 : x > y ? -1 : 0);
 const lookup = <T>(t: Trie<string, T>, x: string[]) => {
-  const res = lookupTrie(compare, t, x);
+  const res = lookupTrie(t, x);
   if (res === null || res.children !== null) return null;
   return res.value;
 };
-const insert = <T>(t: Trie<string, T>, x: string[], y: T) => insertTrie(compare, t, x, 0, y);
+const insert = <T>(t: Trie<string, T>, x: string[], y: T) => insertTrie(t, x, 0, y);
 const remove = <T>(t: Trie<string, T>, x: string[]): null | [Trie<string, T>, T] => {
-  const res = removeTrie(compare, t, x, 0);
+  const res = removeTrie(t, x, 0);
   if (res === null || res[1].children !== null) return null;
   return [res[0], res[1].value];
 };
