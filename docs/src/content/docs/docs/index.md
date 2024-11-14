@@ -3,8 +3,8 @@ title: Dusa Docs
 description: The Dusa logic programming language.
 ---
 
-Dusa is a logic programming language designed by 
-[Rob Simmons](https://typesafety.net/rob/) and 
+Dusa is a logic programming language designed by
+[Rob Simmons](https://typesafety.net/rob/) and
 [Chris Martens](https://www.khoury.northeastern.edu/home/cmartens/),
 the first implementation of finite-choice logic programming.
 
