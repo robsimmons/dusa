@@ -384,7 +384,7 @@ function checkBuiltin(
     const argsGround = [...argsMode]
       .map((m, i) => [m, `#${i + 1}`])
       .filter(([m]) => m === '-')
-      .map(([_, x]) => x);
+      .map((entry) => entry[1]);
     const valuesGround = valueMode === '-' ? ' and the value' : '';
     return [
       mkErr(
@@ -425,7 +425,6 @@ export function check(program: ParsedTopLevel[]): {
     for (const premise of decl.premises) {
       // There are many different configurations where we need to check the properties
       // of builtins: consolidating the arguments to checkBuiltin makes this much simpler
-      // eslint-disable-next-line no-inner-declarations
       function checkBuiltinHelper(
         builtin: BUILT_IN_PRED,
         args: ParsedPattern[],

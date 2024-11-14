@@ -216,7 +216,7 @@ class DusaSolutionImpl implements DusaSolution {
       solution: Database,
     ) {
       if (!arity) return;
-      let depth = (arity.value ? arity.args + 1 : arity.args) - args.length;
+      const depth = (arity.value ? arity.args + 1 : arity.args) - args.length;
       for (const result of solution.visit(
         name,
         args.map((arg) => termToData(data, arg)),

@@ -119,7 +119,7 @@ export class HashCons {
     return BigInt(this.nextRef--) * 3n - 2n;
   }
 
-  toString(d: Data, needsParens = false): String {
+  toString(d: Data, needsParens = false): string {
     const view = this.expose(d);
     switch (view.type) {
       case 'trivial':

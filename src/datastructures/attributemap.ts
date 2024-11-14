@@ -64,7 +64,8 @@ export class AttributeMap<T> {
   /** Quickly return a single element, or null if one exists */
   example(): null | { name: string; args: Data[]; value: T } {
     if (this.tree === null) return null;
-    let { key: name, value: trie } = this.tree;
+    const name = this.tree.key;
+    let trie = this.tree.value;
     const args: Data[] = [];
     while (trie !== null && trie.children !== null) {
       const { key: arg, value: subTrie } = trie.children;
@@ -77,7 +78,8 @@ export class AttributeMap<T> {
   /** Return an element if one exists, with some chance that any element will be selected */
   choose(): null | { name: string; args: Data[]; value: T } {
     if (this.tree === null) return null;
-    let [name, trie] = chooseTree(this.tree)!;
+    const [name, trie_] = chooseTree(this.tree)!;
+    let trie = trie_;
     const args: Data[] = [];
     while (trie !== null && trie.children !== null) {
       const [arg, subTrie] = chooseTree(trie.children)!;

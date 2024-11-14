@@ -4,7 +4,7 @@ import { compile } from '../language/compile.js';
 import { parse } from '../language/dusa-parser.js';
 import { check } from '../language/check.js';
 import { ChoiceTree, ChoiceZipper, step } from './choiceengine.js';
-import { createSearchState } from './forwardengine.js';
+import { AgendaMember, createSearchState } from './forwardengine.js';
 import { Database } from '../datastructures/database.js';
 import { List } from '../datastructures/conslist.js';
 import { Data } from '../datastructures/data.js';
@@ -43,7 +43,7 @@ function simplify(
     const [name, args] = tree.attribute;
     simpleTree = `branch on ${name}${args.map((arg) => ' ' + prog.data.toString(arg)).join('')}`;
   } else if (tree.state.agenda !== null) {
-    let agenda: List<any> = tree.state.agenda;
+    let agenda: List<AgendaMember> = tree.state.agenda;
     const agendaItems: string[] = [];
     while (agenda !== null) {
       agendaItems.push(
@@ -67,11 +67,15 @@ function simplify(
   return { path: simplePath.toReversed(), tree: simpleTree, model: simpleSolution };
 }
 
+let path: ChoiceZipper;
+let tree: ChoiceTree | null;
+let model: Database | null;
+
 test('choice engine runs datalog programs', () => {
   const prog = build(`c. d :- c. e :- c. g :- f.`);
-  let path: ChoiceZipper = null;
-  let tree: ChoiceTree | null = { type: 'leaf', state: createSearchState(prog) };
-  let model: Database | null = null;
+  path = null;
+  tree = { type: 'leaf', state: createSearchState(prog) };
+  model = null;
 
   expect(simplify(prog, path, tree, model)).toStrictEqual({
     path: [],
@@ -100,10 +104,9 @@ test('choice engine runs datalog programs', () => {
 
 test('choice engine runs closed choices', () => {
   const prog = build(`c is { 1, 2, 3 }.`);
-  let path: ChoiceZipper = null;
-  let tree: ChoiceTree | null = { type: 'leaf', state: createSearchState(prog) };
-  let model: Database | null = null;
-  let result: any;
+  path = null;
+  tree = { type: 'leaf', state: createSearchState(prog) };
+  model = null;
 
   expect(simplify(prog, path, tree, model)).toStrictEqual({
     path: [],
@@ -198,9 +201,9 @@ test('choice engine runs closed choices', () => {
 
 test('choice engine runs open choices', () => {
   const prog = build(`c is? 1.`);
-  let path: ChoiceZipper = null;
-  let tree: ChoiceTree | null = { type: 'leaf', state: createSearchState(prog) };
-  let model: Database | null = null;
+  path = null;
+  tree = { type: 'leaf', state: createSearchState(prog) };
+  model = null;
 
   expect(simplify(prog, path, tree, model)).toStrictEqual({
     path: [],
@@ -260,9 +263,9 @@ test('choice engine runs open choices', () => {
 
 test('mutual exclusion', () => {
   const prog = build(`p is? ff. q is? ff. p is tt :- q is ff. q is tt :- p is ff.`);
-  let path: ChoiceZipper = null;
-  let tree: ChoiceTree | null = { type: 'leaf', state: createSearchState(prog) };
-  let model: Database | null = null;
+  path = null;
+  tree = { type: 'leaf', state: createSearchState(prog) };
+  model = null;
 
   expect(simplify(prog, path, tree, model)).toStrictEqual({
     path: [],
@@ -373,9 +376,9 @@ test('mutual exclusion', () => {
 
 test('Multiple choice', () => {
   const prog = build(`p is { tt, ff }. q is { tt, ff }.`);
-  let path: ChoiceZipper = null;
-  let tree: ChoiceTree | null = { type: 'leaf', state: createSearchState(prog) };
-  let model: Database | null = null;
+  path = null;
+  tree = { type: 'leaf', state: createSearchState(prog) };
+  model = null;
 
   [path, tree, model] = step(prog, path, tree!); // pop $seed
   expect(simplify(prog, path, tree, model)).toStrictEqual({
@@ -526,9 +529,9 @@ test('Multiple choice', () => {
 
 test('three levels', () => {
   const prog = build(`q a. q b. q c. p X is { tt, ff } :- q X.`);
-  let path: ChoiceZipper = null;
-  let tree: ChoiceTree | null = { type: 'leaf', state: createSearchState(prog) };
-  let model: Database | null = null;
+  path = null;
+  tree = { type: 'leaf', state: createSearchState(prog) };
+  model = null;
 
   const last = (ab: string[]) => {
     switch (ab.toSorted().join('')) {

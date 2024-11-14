@@ -22,11 +22,12 @@ function step(prog: Program, state: SearchState) {
   return learnImmediateConsequences(prog, state, data);
 }
 
-test('forward engine with unary rules and argument-free premises', () => {
-  let program: Program;
-  let state: SearchState;
-  let result: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let result: any;
+let program: Program;
+let state: SearchState;
 
+test('forward engine with unary rules and argument-free premises', () => {
   program = build(`c. d :- c. e :- c. g :- f.`);
   state = createSearchState(program);
   expect(step(program, state)).toBeNull(); // pop $seed
@@ -85,7 +86,8 @@ test('forward engine with unary rules and argument-free premises', () => {
   expect(state.agenda!.data.name).toBe('h');
   expect(state.frontier.get('h', [])).not.toBeNull();
   expect(step(program, state)).toBeNull(); // pop h
-  expect(program.data.expose((state.explored.get('h', []) as any).just)).toStrictEqual({
+  result = state.explored.get('h', []);
+  expect(program.data.expose(result.just)).toStrictEqual({
     type: 'int',
     value: 6n,
   });
@@ -136,9 +138,6 @@ test('forward engine with unary rules and argument-free premises', () => {
 });
 
 test('consequences, unary rules', () => {
-  let program: Program;
-  let state: SearchState;
-
   program = build('p is ff. q is tt :- p is ff.');
   const tt = program.data.hide({ type: 'const', name: 'tt', args: [] });
   const ff = program.data.hide({ type: 'const', name: 'ff', args: [] });
@@ -164,9 +163,6 @@ test('consequences, unary rules', () => {
 });
 
 test('multiple premises (datalog, no arguments)', () => {
-  let program: Program;
-  let state: SearchState;
-
   program = build('a. b. c. d :- a, b, c.');
   state = createSearchState(program);
   expect(step(program, state)).toBeNull(); // pop $seed. agenda now possibly: [a,b,c]

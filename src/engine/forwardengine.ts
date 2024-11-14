@@ -9,7 +9,7 @@ import { runInstructions } from './stackmachine.js';
 
 type Intermediate = { type: 'intermediate'; name: string; args: Data[] };
 type NewFact = { type: 'fact'; name: string; args: Data[] };
-type AgendaMember = Intermediate | NewFact;
+export type AgendaMember = Intermediate | NewFact;
 
 /**
  * The semi-naive, tuple-at-a-time forward-chaining algorithm for
@@ -263,7 +263,7 @@ export function assertConclusion(
       } else {
         // C[a] = { just v1, just v2, ..., just vn }
         // We will intersect these options with choices
-        let maybeUniqueFrontierChoice = frontierChoices.values.getSingleton();
+        const maybeUniqueFrontierChoice = frontierChoices.values.getSingleton();
 
         // If `C[a] = { just v }`, signal failure if `v` is not among the choices in the conclusion
         if (maybeUniqueFrontierChoice !== null) {
@@ -279,7 +279,7 @@ export function assertConclusion(
         }
 
         // At this point, we know that `a` is on the deferred agenda
-        let intersection = choices.reduce<DataSet>(
+        const intersection = choices.reduce<DataSet>(
           (intersection, choice) =>
             frontierChoices.values.has(choice) ? intersection.add(choice) : intersection,
           empty,

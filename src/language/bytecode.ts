@@ -281,7 +281,7 @@ function generateBuiltinRule(rule: BuiltinRule): {
 } {
   let type: 'run' | 'run_for_failure';
   let instrs: Instruction[];
-  let { shapes, varsKnown } = patternsToShapes(rule.premise.args, rule.inVars);
+  const { shapes, varsKnown } = patternsToShapes(rule.premise.args, rule.inVars);
 
   switch (rule.premise.name) {
     case 'Gt': {

@@ -12,9 +12,8 @@ function srcToIndexed(source: string) {
   return makeIntermediatePredicatesMatchJoinOrder(generateIndices(binarized));
 }
 
+let program: BinarizedProgram;
 test('test reuse of indexes', () => {
-  let program: BinarizedProgram;
-
   program = srcToIndexed(`
 q1 :- a, p X Y Z.
 q2 :- b X, p X Y Z.
@@ -32,8 +31,6 @@ q4 :- @q4-1-1 X Y Z, p X Y Z.`);
 });
 
 test('test creation of indexes', () => {
-  let program: BinarizedProgram;
-
   program = srcToIndexed(`
 q1 X :- a, p X Y Z.
 q2 Y :- b Y, p X Y Z.
@@ -126,8 +123,6 @@ q :- @q-3-1, $c-0.`);
 });
 
 test('example from src/language/README.md', () => {
-  let program: BinarizedProgram;
-
   program = srcToIndexed(`
 p4 X Y Z W :- p3 X Y Z, a X Y "hi" (h X W) _.`);
   expect(binarizedProgramToString(program)).toStrictEqual(`rules:

@@ -1,12 +1,12 @@
 export const BUILT_IN_MAP = {
-  BOOLEAN_TRUE: true as true,
-  BOOLEAN_FALSE: true as true,
-  NAT_ZERO: true as true,
-  NAT_SUCC: true as true,
-  INT_PLUS: true as true,
-  INT_MINUS: true as true,
-  INT_TIMES: true as true,
-  STRING_CONCAT: true as true,
+  BOOLEAN_TRUE: true as const,
+  BOOLEAN_FALSE: true as const,
+  NAT_ZERO: true as const,
+  NAT_SUCC: true as const,
+  INT_PLUS: true as const,
+  INT_MINUS: true as const,
+  INT_TIMES: true as const,
+  STRING_CONCAT: true as const,
 } as const;
 
 export type BUILT_IN_PRED = keyof typeof BUILT_IN_MAP;

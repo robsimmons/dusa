@@ -129,6 +129,7 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
   }
 }
 
+// eslint-disable-next-line require-yield
 function* nullIterator<T>(): Generator<T> {
   return;
 }
