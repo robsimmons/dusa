@@ -6,6 +6,7 @@ test('Internalizing basic types', () => {
   const testData: DataView[] = [
     { type: 'trivial' },
     { type: 'int', value: 123n },
+    { type: 'int', value: 123456789012345678901234567890123456762354n },
     { type: 'int', value: 0n },
     { type: 'string', value: 'abc' },
     { type: 'string', value: '"🦊"' },
@@ -30,9 +31,10 @@ test('Internalizing basic types', () => {
   }
 
   expect(data.hide({ type: 'trivial' })).toEqual(data.hide({ type: 'trivial' }));
-  expect(testData.slice(0, 14).map((d) => data.toString(data.hide(d)))).toStrictEqual([
+  expect(testData.slice(0, 15).map((d) => data.toString(data.hide(d)))).toStrictEqual([
     '()',
     '123',
+    '123456789012345678901234567890123456762354',
     '0',
     '"abc"',
     '"\\"\\u{1f98a}\\""',

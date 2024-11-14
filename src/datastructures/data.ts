@@ -15,7 +15,7 @@ type ViewsIndex = number;
  * A piece of Data belongs to a specific HashCons object, and Data returned from
  * one HashCons.hide() cannot be given to another HashCons object.
  */
-export type Data = bigint;
+export type Data = number;
 
 export type DataView =
   | { type: 'trivial' }
@@ -30,6 +30,8 @@ type DataTrie = {
   children: { [value: string | ViewsIndex]: DataTrie };
 };
 
+const MAX = BigInt(Math.floor(Number.MAX_SAFE_INTEGER / 3) - 3);
+const MIN = -MAX;
 export class HashCons {
   private nextRef: number = -1;
   private views: DataView[] = [
@@ -37,12 +39,13 @@ export class HashCons {
     { type: 'bool', value: true },
     { type: 'bool', value: false },
   ];
-  private strings: { [s: string]: bigint } = {};
+  private strings: { [s: string]: number } = {};
+  private bignums: { [s: string]: number } = {};
   private structures: { [name: string]: DataTrie } = {};
 
-  static readonly TRIVIAL = 0n;
-  static readonly BOOL_TRUE = 1n;
-  static readonly BOOL_FALSE = 2n;
+  static readonly TRIVIAL = 0;
+  static readonly BOOL_TRUE = 1;
+  static readonly BOOL_FALSE = 2;
 
   expose(d: Data): DataView {
     if (d >= 0n) {
@@ -50,13 +53,13 @@ export class HashCons {
       if (viewIndex >= this.views.length) throw new Error(`Internalized value ${d} is invalid.`);
       return this.views[viewIndex];
     } else {
-      switch (-d % 3n) {
-        case 0n:
-          return { type: 'int', value: (d + 3n) / 3n };
-        case 1n:
-          return { type: 'int', value: -(d + 1n) / 3n };
+      switch (-d % 3) {
+        case 0:
+          return { type: 'int', value: BigInt(-Math.floor(-(d + 3) / 3)) };
+        case 1:
+          return { type: 'int', value: BigInt(Math.floor(-(d + 1) / 3)) };
         default:
-          return { type: 'ref', value: Number(-(d + 2n) / 3n) };
+          return { type: 'ref', value: Math.floor(-(d + 2) / 3) };
       }
     }
   }
@@ -87,36 +90,44 @@ export class HashCons {
       case 'trivial':
         return HashCons.TRIVIAL;
       case 'int':
+        if (d.value > MAX || d.value < MIN) {
+          const candidate = this.bignums[`${d.value}`];
+          if (candidate !== undefined) return candidate;
+          const result = this.views.length;
+          this.views.push({ type: 'int', value: d.value });
+          this.bignums[`${d.value}`] = result;
+          return result;
+        }
         if (d.value > 0n) {
-          return -3n * d.value - 1n;
+          return -3 * Number(d.value) - 1;
         } else {
-          return 3n * d.value - 3n;
+          return 3 * Number(d.value) - 3;
         }
       case 'bool':
         return d.value ? HashCons.BOOL_TRUE : HashCons.BOOL_FALSE;
       case 'ref':
-        return -3n * BigInt(d.value) - 2n;
+        return -3 * d.value - 2;
       case 'string': {
         const candidate = this.strings[d.value];
         if (candidate !== undefined) return candidate;
-        const result = BigInt(this.views.length);
+        const result = this.views.length;
         this.views.push({ type: 'string', value: d.value });
         this.strings[d.value] = result;
         return result;
       }
       case 'const': {
         const candidate = this.getStructureIndex(d.name, d.args);
-        if (candidate !== null) return BigInt(candidate);
+        if (candidate !== null) return candidate;
         const result = this.views.length;
         this.views.push({ type: 'const', name: d.name, args: d.args });
         this.setStructureIndex(d.name, d.args, result);
-        return BigInt(result);
+        return result;
       }
     }
   }
 
   genRef(): Data {
-    return BigInt(this.nextRef--) * 3n - 2n;
+    return this.nextRef-- * 3 - 2;
   }
 
   toString(d: Data, needsParens = false): string {
