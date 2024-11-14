@@ -48,6 +48,7 @@ type Subprograms = {
 
 export interface Program {
   seeds: string[];
+  arities: { [pred: string]: { args: number; value: boolean } };
   predUnary: PredUnary;
   predBinary: PredBinary;
   intermediates: Intermediates;
@@ -158,6 +159,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
   }
 
   return {
+    arities: prog.arities,
     seeds: prog.seeds,
     demands: prog.demands.map((intermediate) => `@${intermediate}`),
     predUnary,

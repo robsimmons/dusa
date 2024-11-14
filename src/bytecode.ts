@@ -1,36 +1,38 @@
 /**
  * Predicates in a bytecode program have two namespaces: the namespace of
- * intermediates, which correspond to partially applied premises, is separate from
- * the namespace of 'standard' facts. The Dusa bytecode compiler creates new
- * 'standard' predicates; these are marked with a `$` to indicate that an
- * implementation may want to hide these from the user. Intermediates predicates
- * should almost always be hidden from the user.
+ * intermediates, which correspond to partially applied premises, is separate
+ * from the namespace of 'standard' facts. The Dusa bytecode compiler creates
+ * new 'standard' predicates; these are marked with a `$` to indicate that an
+ * implementation may want to hide these from the user. Intermediates
+ * predicates should almost always be hidden from the user.
  *
- * A program is made of `seeds` (unequivocally true premise-free normal facts),
- * `forbids` (intermediate predicates that cannot hold in a valid solution),
- * `demands` (intermediate predicates that must hold in a valid solution), and
- * rules.
+ * A program is made of `seeds` (unequivocally true premise-free normal
+ * facts), `forbids` (intermediate predicates that cannot hold in a valid
+ * solution), `demands` (intermediate predicates that must hold in a valid
+ * solution), and rules.
  *
- * The Dusa implementation uses JavaScript BigInt values to represent integers,
- * but these are not particularly well supported: the default JSON encoders and
- * decoders, in particular, do not support them. Therefore, all our definitions
- * are parameterized over the type of integer representation; we can define
- * functions that map between `Program = ProgramN<bigint>`, which the implementation
- * uses internally, and various serialization-friendly options, like ProgramN<string> or
- * ProgramN<number> or ProgramN<number | string>
+ * The Dusa implementation uses JavaScript BigInt values to represent
+ * integers, but these are not particularly well supported: the default JSON
+ * encoders and decoders, in particular, do not support them. Therefore, all
+ * our definitions are parameterized over the type of integer representation;
+ * we can define functions that map between `Program = ProgramN<bigint>`,
+ * which the implementation uses internally, and various
+ * serialization-friendly options, like ProgramN<string> or ProgramN<number>
+ * or ProgramN<number | string>
  */
 export interface ProgramN<Int> {
   seeds: string[];
   forbids: string[];
   demands: string[];
   rules: RuleN<Int>[];
+  arities: { [pred: string]: { args: number; value: boolean } };
 }
 
 /**
  * When scanning a rule or pattern left to right, the first occurrence of
  * variables must occur numeric order without gaps: the first variable seen
- * is 0, the second is 1, and so on. In these comments we'll write this as `X0`,
- * `X1`, `X2`, etc.
+ * is 0, the second is 1, and so on. In these comments we'll write this as
+ * `X0`, `X1`, `X2`, etc.
  */
 export type PatternN<Int> =
   | { type: 'trivial' }
@@ -47,8 +49,8 @@ export type PatternN<Int> =
  * - open: `q 3 (f X0) is? { 9, X2, "c" } :- ...`
  * - closed: `q X2 X2 is { tt, ff, X1 } :- ...`
  *
- * Note that the variables above can occur in any order: all variables in
- * a conclusion must have had their first occurrence in a premise.
+ * Note that the variables above can occur in any order: all variables in a
+ * conclusion must have had their first occurrence in a premise.
  */
 export type ConclusionN<Int> =
   | { type: 'intermediate'; name: string; vars: number[] }
@@ -93,10 +95,10 @@ export interface UnaryRuleN<Int> {
  * then it may appear in a join rule as
  *
  * ```
- * H :- inter X0 X1 X2 X3, foo (shared: 0, inVars: 4, premise.args: 0)
- * H :- inter X0 X1 X2 X3, foo X0 (shared: 1, inVars: 4, premise.args: 1)
- * H :- inter X0 X1 X2 X3, foo X4 X5 (shared: 0, inVars: 4, premise.args: 2)
- * H :- inter X0 X1 X2 X3, foo X0 X4 X5 (shared: 1, inVars: 4, premise.args: 3)
+ * H :- inter X0 X1 X2 X3, foo (shared:0, inVars:4, premise.args:0)
+ * H :- inter X0 X1 X2 X3, foo X0 (shared:1, inVars:4, premise.args:1)
+ * H :- inter X0 X1 X2 X3, foo X4 X5 (shared:0, inVars:4, premise.args:2)
+ * H :- inter X0 X1 X2 X3, foo X0 X4 X5 (shared:1, inVars:4, premise.args:3)
  * ```
  */
 export interface JoinRuleN<Int> {
@@ -110,7 +112,8 @@ export interface JoinRuleN<Int> {
 
 /**
  * The allowable value(s) for the second premise of a RunRule are determined
- * by running a little stack-machine program (see the definition of InstructionN)
+ * by running a little stack-machine program (see the definition of
+ * InstructionN)
  */
 export interface RunRuleN<Int> {
   type: 'run';
@@ -121,8 +124,8 @@ export interface RunRuleN<Int> {
 }
 
 /**
- * To implement premises like `X !== a _`, we need to be able to have a run-rule
- * that works via negation-as-failure.
+ * To implement premises like `X !== a _`, we need to be able to have a
+ * run-rule that works via negation-as-failure.
  */
 export interface RunForFailureRuleN<Int> {
   type: 'run_for_failure';
@@ -136,19 +139,51 @@ export type RuleN<Int> = UnaryRuleN<Int> | JoinRuleN<Int> | RunRuleN<Int> | RunF
 
 /**
  * Built-in premises are expanded out into a little stack-based, non-branching
- * programs. The virtual machine has a operational stack, and instead
- * of registers or memory the there is a memory initialized to `inVars` that can
- * have new values written once (`store`) and accessed randomly (`var`).
+ * programs. The virtual machine has a operational stack, and instead of
+ * registers or memory the there is a memory initialized to `inVars` that can
+ * have new values written once (`store`) and accessed randomly (`load`).
  *
- * Many instructions are run primarily because they might fail; failure means the rule
- * won't fire if it's a `run` rule, and means that the rule **will** fire if it's a
- * 'run_for_failure' rule.
+ * Many instructions are run primarily because they might fail; failure means
+ * the rule won't fire if it's a `run` rule, and means that the rule **will**
+ * fire if it's a 'run_for_failure' rule.
+ *
+ * - `store: S,[t] |-> S` -- stores [t] in the next memory location
+ * - `load: S |-> S,[t]` -- reads [t] from memory location `ref` (the VM can
+ *   assume this reference will be valid, and it's undefined what happens if
+ *   that's not the case)
+ * - `build c k: `S,[t1],[t2],...,[tk] |-> S,[c t1...tk]`
+ * - `explode c k: S,[c t1...tk)] |-> S,[tk],...,[t1]` -- fails if the top of
+ *   the stack is not a constructed term with constructor `const` and arity
+ *   `arity`
+ * - `const t: S |-> S,[t]`
+ * - `equal: S,[s],[t] |-> S` -- fails unless `t == s`
+ * - `dup: S,[t] |-> S,[t],[t]`
+ * - `gt: S,[n],[m] |-> S` -- fails unless `n` and `m` are both integers or
+ *   are both strings, and unless `n > m` (for strings, this depends on
+ *   internationalization and may be implementation-dependent)
+ * - `geq: S,[n],[m] |-> S` -- same as `gt`, but also succeeds if `n` and `m`
+ *   are the same integer or the same string
+ * - `i_add: S,[n],[m] |-> S,[n+m]` -- fails if `n` and `m` are not both
+ *   integers
+ * - `i_sub: S,[n],[m] |-> S,[n-m]` -- fails if `n` and `m` are not both
+ *   integers
+ * - `i_mul: S,[n],[m] |-> S,[n*m]` -- fails if `n` and `m` are not both
+ *   integers
+ * - `s_concat: S,[s],[t] |-> S,[s++t]` -- fails if `s` and `t` are not both
+ *   strings
+ * - `s_starts: S,[s],[t] |-> S,[r]` where `s == t++r` -- fails if `s` and `t`
+ *   are not both strings, or if `t` is not a prefix of `s`
+ * - `s_ends: S,[s],[t] |-> S,[r]` where `s == r++t` -- fails if `s` and `t`
+ *   are not both strings, or if `t` is not a postfix of `s`
+ *
+ * The VM can always assume the stack will contain the required number of
+ * elements, and it's undefined what happens if that's not the case.
  */
 export type InstructionN<N> =
-  | { type: 'store' } // S,[t] |-> S -- stores [t] in the next memory location
-  | { type: 'load'; ref: number } // S |-> S,[t] -- reads [t] from memory location `ref`
-  | { type: 'build'; const: string; arity: number } // S,[t1],[t2],...,[tk] |-> S,[c t1...tk]
-  | { type: 'explode'; const: string; arity: number } // S,[c t1...tk)] |-> S,[tk],...,[t1] -- fails if the top of the stack is not a constructed term with constructor `const` and arity `arity`
+  | { type: 'store' }
+  | { type: 'load'; ref: number }
+  | { type: 'build'; const: string; arity: number }
+  | { type: 'explode'; const: string; arity: number }
   | {
       type: 'const';
       const:
@@ -156,17 +191,17 @@ export type InstructionN<N> =
         | { type: 'int'; value: N }
         | { type: 'bool'; value: boolean }
         | { type: 'string'; value: string };
-    } // S |-> S,[t]
-  | { type: 'equal' } // S,[s],[t] |-> S -- fails if `t != s`
-  | { type: 'dup' } // S,[t] |-> S,[t],[t]
-  | { type: 'gt' } // S,[n],[m] |-> S -- fails if n or m are not both integers or both strings, or if n <= m
-  | { type: 'geq' } // S,[n],[m] |-> S -- fails if n or m are not both integers or both strings, or if n < m
-  | { type: 'i_add' } // S,[n],[m] |-> S,[n+m] -- fails if n and m are not both integers
-  | { type: 'i_sub' } // S,[n],[m] |-> S,[n-m] -- fails if n and m are not both integers
-  | { type: 'i_mul' } // S,[n],[m] |-> S,[n*m] -- fails if n and m are not both integers
-  | { type: 's_concat' } // S,[s],[t] |-> S,[s++t] -- fails if s and t are not both strings
-  | { type: 's_starts' } // S,[t++s],[t] |-> S,[s] -- fails if the first string does not have t as a prefix
-  | { type: 's_ends' }; // S,[s++t],[t] |-> S,[s] -- fails if the first string does not have t as a postfix
+    }
+  | { type: 'equal' }
+  | { type: 'dup' }
+  | { type: 'gt' }
+  | { type: 'geq' }
+  | { type: 'i_add' }
+  | { type: 'i_sub' }
+  | { type: 'i_mul' }
+  | { type: 's_concat' }
+  | { type: 's_starts' }
+  | { type: 's_ends' };
 
 export type Pattern = PatternN<bigint>;
 export type Instruction = InstructionN<bigint>;

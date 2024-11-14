@@ -1,4 +1,4 @@
-import { Data, TRIVIAL, escapeString, expose, hide } from './datastructures/data.js';
+import { Data, escapeString, HashCons } from './datastructures/data.js';
 
 export type Term =
   | null // Trivial type ()
@@ -28,28 +28,32 @@ export interface InputFact {
 
 export type JsonData = null | number | bigint | string | JsonData[] | { [field: string]: JsonData };
 
-export function dataToTerm(d: Data): Term {
-  const view = expose(d);
+export function dataToTerm(data: HashCons, t: Data): Term {
+  const view = data.expose(t);
   if (view.type === 'trivial') return null;
   if (view.type === 'int') return view.value;
   if (view.type === 'bool') return view.value;
   if (view.type === 'string') return view.value;
   if (view.type === 'ref') return { name: null, value: view.value };
   if (view.args.length === 0) return { name: view.name };
-  const args = view.args.map(dataToTerm) as [Term, ...Term[]];
+  const args = view.args.map((arg) => dataToTerm(data, arg)) as [Term, ...Term[]];
   return { name: view.name, args };
 }
 
-export function termToData(tm: InputTerm): Data {
-  if (tm === null) return TRIVIAL;
-  if (typeof tm === 'boolean') return hide({ type: 'bool', value: tm });
-  if (typeof tm === 'string') return hide({ type: 'string', value: tm });
-  if (typeof tm === 'bigint') return hide({ type: 'int', value: tm });
-  if (typeof tm === 'object') {
-    if (tm.name === null) return hide({ type: 'ref', value: tm.value });
-    return hide({ type: 'const', name: tm.name, args: tm.args?.map(termToData) ?? [] });
+export function termToData(data: HashCons, t: InputTerm): Data {
+  if (t === null) return HashCons.TRIVIAL;
+  if (typeof t === 'boolean') return data.hide({ type: 'bool', value: t });
+  if (typeof t === 'string') return data.hide({ type: 'string', value: t });
+  if (typeof t === 'bigint') return data.hide({ type: 'int', value: t });
+  if (typeof t === 'object') {
+    if (t.name === null) return data.hide({ type: 'ref', value: t.value });
+    return data.hide({
+      type: 'const',
+      name: t.name,
+      args: t.args?.map((arg) => termToData(data, arg)) ?? [],
+    });
   }
-  return hide({ type: 'int', value: BigInt(tm) });
+  return data.hide({ type: 'int', value: BigInt(t) });
 }
 
 export function termToString(tm: Term, parens = false): string {

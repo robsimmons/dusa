@@ -87,12 +87,20 @@ function generateRule(rule: BinarizedRule): BytecodeRule {
   }
 }
 
-export function generateBytecode(program: BinarizedProgram): BytecodeProgram {
+export function generateBytecode(
+  program: BinarizedProgram,
+  aritiesMap: Map<string, { args: number; value: boolean }>,
+): BytecodeProgram {
+  const arities: { [pred: string]: { args: number; value: boolean } } = {};
+  for (const [pred, arity] of aritiesMap.entries()) {
+    arities[pred] = arity;
+  }
   return {
     seeds: program.seeds,
     forbids: program.forbids,
     demands: program.demands,
     rules: program.rules.map(generateRule),
+    arities,
   };
 }
 

@@ -67,5 +67,5 @@ ${binarizedProgramToString(binarized)}`);
 ${binarizedProgramToString(indexed)}`);
   }
 
-  return generateBytecode(indexed);
+  return generateBytecode(indexed, arities);
 }

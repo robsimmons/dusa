@@ -6,7 +6,10 @@ import { generateBytecode } from './bytecode.js';
 
 function srcToBytecode(source: string) {
   const binarized = srcToBinarized(source);
-  return generateBytecode(makeIntermediatePredicatesMatchJoinOrder(generateIndices(binarized)));
+  return generateBytecode(
+    makeIntermediatePredicatesMatchJoinOrder(generateIndices(binarized)),
+    new Map(),
+  );
 }
 
 const int_ = (value: bigint) => ({ type: 'int', value });
@@ -17,6 +20,7 @@ test('builtins and functional predicates', () => {
   expect(srcToBytecode('s 2 is 3. p 3 :- N == 3, 3 == s 2.')).toStrictEqual({
     demands: [],
     forbids: [],
+    arities: {},
     seeds: ['$seed'],
     rules: [
       {
@@ -68,6 +72,7 @@ test('builtins and functional predicates', () => {
   ).toStrictEqual({
     demands: [],
     forbids: [],
+    arities: {},
     seeds: ['$seed'],
     rules: [
       {

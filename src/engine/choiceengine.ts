@@ -11,15 +11,16 @@ import {
 import { Program } from './program.js';
 
 /**
- * Executing a finite choice logic program is the process of gradually expanding
- * out and exploring a tree of possible choices. We modify the choice tree as
- * we go in order to ensure that any fully-explored parts of the tree are removed.
+ * Executing a finite choice logic program is the process of gradually
+ * expanding out and exploring a tree of possible choices. We modify the
+ * choice tree as we go in order to ensure that any fully-explored parts of
+ * the tree are removed.
  *
- * We keep track not only of an imperatively updated tree but also a particular
- * location within that tree, in the form of a relatively standard zipper data
- * structure. The search state therefore consists of both a subtree
- * representing the subtree that we're currently focused on and a zipper that
- * contains the location of this subtree within the full tree.
+ * We keep track not only of an imperatively updated tree but also a
+ * particular location within that tree, in the form of a relatively standard
+ * zipper data structure. The search state therefore consists of both a
+ * subtree representing the subtree that we're currently focused on and a
+ * zipper that contains the stack of parent trees up to the root.
  *
  * Zippers for imperatively-modified trees can get a little bit hairy! But it
  * seems to work okay, and is certainly preferable to trying to keep track of
@@ -65,21 +66,24 @@ function forceChoice(parent: ChoiceTreeNode, choice: ChoiceIndex): ForcedChoiceT
 
   switch (choice.type) {
     case 'just': {
-      // Collapse the frontier down to a single value and add the attribute to the agenda
+      // Collapse the frontier for an attribute down to a single value
       const values = DataSet.singleton(choice.just);
       const [frontier] = state.frontier.set(name, args, { values, open: false });
-      const [deferred] = state.deferred.remove(name, args)!;
       state.frontier = frontier;
+
+      // Move that attribute from the deferred agenda to the active agenda
+      const [deferred] = state.deferred.remove(name, args)!;
       state.deferred = deferred;
       state.agenda = cons(null, { type: 'fact', name, args });
       break;
     }
     case 'noneOf': {
-      // Get existing noneOf constraint, extend it with the choices not taken at the frontier
+      // Get existing noneOf constraint
       const alreadyExplored = state.explored.get(name, args) ?? { type: 'noneOf', noneOf: empty };
       if (alreadyExplored.type !== 'noneOf') throw new Error('forceNoneOf invariant');
       let noneOf: DataSet = alreadyExplored.noneOf;
 
+      // Extend existing noneOf with the choices not taken at the frontier
       const [frontier, removed] = state.frontier.remove(name, args)!;
       if (!removed.open) throw new Error('forceChoice invariant');
       for (const choice of removed.values) {
@@ -103,7 +107,14 @@ enum StepResult {
   STEPPED = 3,
 }
 
-/** When a node has been fully explored, this function will remove it from the tree. */
+/** 
+ * A zipper always points to a particular subtree. This function deletes that
+ * pointed-to tree from the tree.
+ * 
+ * This may mean that the deleted tree's parent now only has one child. In
+ * that case, the parent is also deleted and replaced with its singleton
+ * child, the node that was previously the now-deleted subtree's sibling. 
+ */
 function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, ChoiceTree | null] {
   if (pathToCollapseUp === null) return [null, null];
   const [path, [tree, fullyExploredChoiceToCollapse]] = uncons(pathToCollapseUp);
@@ -164,46 +175,6 @@ function stepState(prog: Program, state: SearchState): StepResult | Conflict {
   }
 }
 
-function stepLeaf(
-  prog: Program,
-  path: ChoiceZipper,
-  tree: ChoiceTreeLeaf,
-): [ChoiceZipper, null | ChoiceTree, Database | null] {
-  switch (stepState(prog, tree.state)) {
-    case StepResult.STEPPED: {
-      return [path, tree, null];
-    }
-    case StepResult.IS_MODEL: {
-      const model = tree.state.explored;
-      return [...collapseTreeUp(path), model];
-    }
-    case StepResult.DEFERRED: {
-      const { name, args } = tree.state.deferred.choose()!;
-      const { values: choices, open } = tree.state.frontier.get(name, args)!;
-      const noneOfChild: null | LazyChoiceTree = open ? { ref: null } : null;
-      let justChild: DataMap<LazyChoiceTree> = DataMap.empty();
-      for (const choice of choices) {
-        justChild = justChild.set(choice, { ref: null });
-      }
-      const replacementTree: ChoiceTreeNode = {
-        type: 'choice',
-        state: tree.state,
-        attribute: [name, args],
-        justChild,
-        noneOfChild,
-      };
-      if (path !== null) {
-        followChoice(path.data[0], path.data[1]).ref = replacementTree;
-      }
-      return [path, replacementTree, null];
-    }
-    default: {
-      // Conflict, UNSAT
-      return [...collapseTreeUp(path), null];
-    }
-  }
-}
-
 function ascendToRoot(path: ChoiceZipper, tree: ChoiceTree): ChoiceTree | null {
   while (path !== null) {
     tree = path.data[0];
@@ -228,17 +199,18 @@ function descendToLeaf(path: ChoiceZipper, tree: ChoiceTree): [ChoiceZipper, Cho
  *
  *  - Either the path must be non-empty or the tree must be non-null.
  *
- *  - If the tree is not a leaf, pick a random child (creating new leaf nodes for
- *    unexplored children as needed) and descend to the child repeatedly until a
- *    leaf is reached.
+ *  - If the tree is not a leaf, pick a random child (creating new leaf nodes
+ *    for unexplored children as needed) and descend to the child repeatedly
+ *    until a leaf is reached.
  *
  *  - If the tree is a leaf, and the leaf has a non-empty agenda, imperatively
- *    update the leaf with the forward engine. If a conflict is discovered, signal
- *    that the subtree should be discarded by returning `null` for the tree.
+ *    update the leaf with the forward engine. If a conflict is discovered,
+ *    signal that the subtree should be discarded by returning `null` for the
+ *    tree.
  *
  *  - If the tree is a non-empty leaf with an empty agenda:
- *    - If there are deferred choices, select a random attribute and turn the leaf
- *      into a choice node branching on that attribute.
+ *    - If there are deferred choices, select a random attribute and turn the
+ *      leaf into a choice node branching on that attribute.
  *    - If there are no deferred choices and there are unsatisfied `require`
  *      constraints, return `null` for the tree.
  *    - Otherwise, we have a model. Return `null` for the tree and return the
@@ -246,13 +218,16 @@ function descendToLeaf(path: ChoiceZipper, tree: ChoiceTree): [ChoiceZipper, Cho
  *      constraints! You can check the number of non-positive mappings in a
  *      model by querying `model.size.neg`.)
  *
- *  - If the tree is null, that means that in the last step we discarded a leaf
- *    (possibly returning its contents as a model), but if the path isn't empty,
- *    the top of the path is a parent node that still contains that leaf! First,
- *    ascend in the tree to the parent. Second, delete the former leaf. Third,
- *    check whether the parent now has only one child. If so, that parent choice
- *    node is no longer needed, and we can replace it with its (now unique) child,
- *    which may be a choice node or a leaf node.
+ *  - If the tree is null, that means that in the last step we discarded a
+ *    leaf (possibly returning its contents as a model), but if the path isn't
+ *    empty, the top of the path is a parent node that still contains that
+ *    leaf! The step will take the following steps:
+ *    1. Ascend in the tree to the parent.
+ *    2. Delete the former leaf from the parent
+ *    3. Check whether the parent now has only one child. If so, the parent
+ *       is no longer needed, and we can replace it with its (now unique)
+ *       child, a sibling of the deleted node, which may be a choice node or a
+ *       leaf node.
  */
 export function step(
   prog: Program,
