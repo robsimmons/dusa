@@ -19,5 +19,6 @@ the first implementation of finite-choice logic programming.
   [Dusa is a graph exploration language](/docs/introductions/graph/).
   Then you can take a look at some of the other introductions, or
   [fiddle with some of the default examples](/).
-- If you're interested in the mathematics of finite-choice logic programming, our
-  POPL 2025 paper by Martens, Simmons, and Michael Arntzenius may be of interest.
+- If you're interested in the mathematics of finite-choice logic programming, the
+  paper [Finite-Choice Logic Programming](https://popl25.sigplan.org/details/POPL-2025-popl-research-papers/13/Finite-Choice-Logic-Programming)
+  by Martens, Simmons, and Michael Arntzenius may be of interest.
