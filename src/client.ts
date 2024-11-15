@@ -124,17 +124,17 @@ export class Dusa {
     for (const fact of facts) {
       const { name, args, value } = this.inputFact(fact);
       if (value === null) {
-        conflict ??= assertConclusion(this.prog, this.state, args, {
+        conflict ??= assertConclusion(this.prog, this.state, args, [], 0, [], 0, {
           type: 'datalog',
           name,
           args: args.map((_, i) => ({ type: 'var', ref: i })),
         });
       } else {
-        conflict ??= assertConclusion(this.prog, this.state, [...args, value], {
+        conflict ??= assertConclusion(this.prog, this.state, args, [value], 0, [], 0, {
           type: 'closed',
           name,
           args: args.map((_, i) => ({ type: 'var', ref: i })),
-          choices: [{ type: 'var', ref: args.length }],
+          choices: [{ type: 'pass', ref: 0 }],
         });
       }
     }
@@ -220,6 +220,7 @@ class DusaSolutionImpl implements DusaSolution {
       for (const result of solution.visit(
         name,
         args.map((arg) => termToData(data, arg)),
+        args.length,
         depth,
       )) {
         yield result.map((arg) => dataToTerm(data, arg));
@@ -333,7 +334,7 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
         this.nBacktracks += 1;
         // With some probability, go ahead and return to the root
         // (intended to bump out of bad solution spaces)
-        if (Math.random() < 0.05) {
+        if (Math.random() < 0.01) {
           const [path, tree] = collapseTreeUp(this.state.path);
           if (path !== null && tree !== null) {
             this.state.path = null;

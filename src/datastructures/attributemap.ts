@@ -27,7 +27,7 @@ export class AttributeMap<T> {
 
   get(name: string, args: Data[]) {
     const trie = lookupTree(this.tree, name);
-    const leaf = lookupTrie(trie, args);
+    const leaf = lookupTrie(trie, args, args.length);
     if (leaf === null || leaf.children !== null) return null;
     return leaf.value;
   }

@@ -1,5 +1,6 @@
 import { Pattern } from '../bytecode.js';
 import { Data, HashCons } from '../datastructures/data.js';
+import { CPattern } from './program.js';
 
 export function match(data: HashCons, mutableSubst: Data[], pattern: Pattern, term: Data): boolean {
   if (pattern.type === 'var') {
@@ -29,10 +30,22 @@ export function match(data: HashCons, mutableSubst: Data[], pattern: Pattern, te
   }
 }
 
-export function apply(data: HashCons, subst: Data[], pattern: Pattern): Data {
+export function apply(
+  data: HashCons,
+  subst: Data[],
+  pattern: CPattern,
+  passed: Data[] = [],
+  passedOffset: number = 0,
+  introduced: Data[] = [],
+  introducedOffset: number = 0,
+): Data {
   switch (pattern.type) {
     case 'var':
       return subst[pattern.ref];
+    case 'intro':
+      return introduced[pattern.ref + introducedOffset];
+    case 'pass':
+      return passed[pattern.ref + passedOffset];
     case 'trivial':
     case 'bool':
     case 'string':
@@ -42,7 +55,9 @@ export function apply(data: HashCons, subst: Data[], pattern: Pattern): Data {
       return data.hide({
         type: 'const',
         name: pattern.name,
-        args: pattern.args.map((arg) => apply(data, subst, arg)),
+        args: pattern.args.map((arg) =>
+          apply(data, subst, arg, passed, passedOffset, introduced, introducedOffset),
+        ),
       });
   }
 }

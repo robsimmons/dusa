@@ -18,7 +18,7 @@ function build(source: string) {
 function simplify(prog: Program, db: Database, keys: [string, number][]) {
   const facts: string[] = [];
   for (const [key, depth] of keys) {
-    for (const args of db.visit(key, [], depth)) {
+    for (const args of db.visit(key, [], 0, depth)) {
       facts.push(`${key}${args.map((arg) => ` ${prog.data.toString(arg, true)}`).join('')}`);
     }
   }

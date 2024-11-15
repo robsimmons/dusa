@@ -1,10 +1,9 @@
-import { Conclusion } from '../bytecode.js';
 import { AttributeMap } from '../datastructures/attributemap.js';
 import { cons, List } from '../datastructures/conslist.js';
 import { Data, DataSet, HashCons } from '../datastructures/data.js';
 import { Constraint, Database } from '../datastructures/database.js';
 import { apply, match } from './dataterm.js';
-import { Program } from './program.js';
+import { Program, Conclusion } from './program.js';
 import { runInstructions } from './stackmachine.js';
 
 type Intermediate = { type: 'intermediate'; name: string; args: Data[] };
@@ -109,18 +108,20 @@ export function learnImmediateConsequences(
     for (const { args, conclusion } of prog.predUnary[attribute.name] ?? []) {
       const subst: Data[] = [];
       if (args.every((arg, i) => match(prog.data, subst, arg, factArgs[i]))) {
-        const conflict = assertConclusion(prog, state, subst, conclusion);
+        const conflict = assertConclusion(prog, state, subst, [], 0, [], 0, conclusion);
         if (conflict) return conflict;
       }
     }
     for (const { inName, inVars, conclusion } of prog.predBinary[attribute.name] ?? []) {
-      const shared = factArgs.slice(0, inVars.shared);
-      const introduced = factArgs.slice(inVars.shared);
-      for (const passed of state.explored.visit(inName, shared, inVars.passed)) {
+      for (const passed of state.explored.visit(inName, factArgs, inVars.shared, inVars.passed)) {
         const conflict = assertConclusion(
           prog,
           state,
-          [...shared, ...passed, ...introduced],
+          factArgs,
+          passed,
+          0,
+          factArgs,
+          inVars.shared,
           conclusion,
         );
         if (conflict) return conflict;
@@ -130,13 +131,15 @@ export function learnImmediateConsequences(
     if (prog.forbids[attribute.name]) return { type: 'forbid', name: attribute.name };
     state.demands = state.demands.remove(attribute.name, [])?.[0] ?? state.demands;
     for (const { inVars, premise, conclusion } of prog.intermediates[attribute.name] ?? []) {
-      const shared = factArgs.slice(0, inVars.shared);
-      const passed = factArgs.slice(inVars.shared, inVars.total);
-      for (const introduced of state.explored.visit(premise.name, shared, premise.introduced)) {
+      for (const introduced of state.explored.visit(premise.name, factArgs, inVars.shared, premise.introduced)) {
         const conflict = assertConclusion(
           prog,
           state,
-          [...shared, ...passed, ...introduced],
+          factArgs,
+          factArgs,
+          inVars.shared,
+          introduced,
+          0,
           conclusion,
         );
         if (conflict) return conflict;
@@ -146,10 +149,18 @@ export function learnImmediateConsequences(
     for (const { inVars, instructions, conclusion, runForFailure } of prog.subprograms[
       attribute.name
     ] ?? []) {
-      const memory = factArgs.slice(0, inVars);
-      const success = runInstructions(prog, memory, instructions);
+      const success = runInstructions(prog, factArgs, inVars, instructions);
       if ((runForFailure && !success) || (!runForFailure && success)) {
-        const conflict = assertConclusion(prog, state, memory, conclusion);
+        const conflict = assertConclusion(
+          prog,
+          state,
+          [],
+          factArgs,
+          0,
+          success ?? [],
+          0,
+          conclusion,
+        );
         if (conflict) return conflict;
       }
     }
@@ -162,15 +173,16 @@ export function learnImmediateConsequences(
 export function assertConclusion(
   prog: Program,
   state: SearchState,
-  subst: Data[],
+  shared: Data[],
+  passed: Data[],
+  passedOffset: number,
+  introduced: Data[],
+  introducedOffset: number,
   conclusion: Conclusion,
 ): null | Conflict {
-  let args: Data[];
-  if (conclusion.type === 'intermediate') {
-    args = conclusion.vars.map((ref) => subst[ref]);
-  } else {
-    args = conclusion.args.map((arg) => apply(prog.data, subst, arg));
-  }
+  let args: Data[] = conclusion.args.map((arg) =>
+    apply(prog.data, shared, arg, passed, passedOffset, introduced, introducedOffset),
+  );
   const exploredValue = state.explored.get(conclusion.name, args) ?? noConstraint;
 
   switch (conclusion.type) {
@@ -191,7 +203,9 @@ export function assertConclusion(
       //  - `state.frontier[a] = { open: true, values: { v1, v2, ... vn } }`
       //
       // We need to update `state.frontier[a].values` with all the open rule's conclusions.
-      const choices = conclusion.choices.map((choice) => apply(prog.data, subst, choice));
+      const choices = conclusion.choices.map((choice) =>
+        apply(prog.data, shared, choice, passed, passedOffset, introduced, introducedOffset),
+      );
       let newFrontierChoices = frontierChoices.values;
       for (const choice of choices) {
         if (!exploredValue.noneOf.has(choice)) {
@@ -213,7 +227,9 @@ export function assertConclusion(
 
     /**** ASSERT CLOSED CONCLUSION: `a is { t1, ..., tn }` ****/
     case 'closed': {
-      let choices = conclusion.choices.map((choice) => apply(prog.data, subst, choice));
+      let choices = conclusion.choices.map((choice) =>
+        apply(prog.data, shared, choice, passed, passedOffset, introduced, introducedOffset),
+      );
 
       // If `D[a] = just v`, signal failure if `v` is not among the choices in the conclusion
       if (exploredValue.type === 'just') {

@@ -8,7 +8,7 @@ import {
 } from './trie.js';
 
 const lookup = <T>(t: Trie<string, T>, x: string[]) => {
-  const res = lookupTrie(t, x);
+  const res = lookupTrie(t, x, x.length);
   if (res === null || res.children !== null) return null;
   return res.value;
 };

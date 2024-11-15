@@ -1,5 +1,4 @@
 import {
-  Conclusion,
   Pattern,
   ConclusionN,
   ProgramN,
@@ -13,6 +12,22 @@ type ConclusionInput = ConclusionN<bigint | string | number>;
 type PatternInput = PatternN<bigint | string | number>;
 type ProgramInput = ProgramN<bigint | string | number>;
 type InstructionInput = InstructionN<bigint | string | number>;
+
+export type CPattern =
+  | { type: 'trivial' }
+  | { type: 'int'; value: bigint }
+  | { type: 'bool'; value: boolean }
+  | { type: 'string'; value: string }
+  | { type: 'const'; name: string; args: CPattern[] }
+  | { type: 'var'; ref: number }
+  | { type: 'pass'; ref: number }
+  | { type: 'intro'; ref: number };
+
+export type Conclusion =
+  | { type: 'intermediate'; name: string; args: CPattern[] }
+  | { type: 'datalog'; name: string; args: CPattern[] }
+  | { type: 'open'; name: string; args: CPattern[]; choices: CPattern[] }
+  | { type: 'closed'; name: string; args: CPattern[]; choices: CPattern[] };
 
 type PredUnary = {
   [pred: string]: {
@@ -58,6 +73,25 @@ export interface Program {
   data: HashCons;
 }
 
+function ingestCPattern(pattern: PatternInput, shared: number, passed: number): CPattern {
+  if (pattern.type === 'int') {
+    return { type: 'int', value: BigInt(pattern.value) };
+  }
+  if (pattern.type === 'const') {
+    return {
+      type: 'const',
+      name: pattern.name,
+      args: pattern.args.map((arg) => ingestCPattern(arg, shared, passed)),
+    };
+  }
+  if (pattern.type === 'var') {
+    if (pattern.ref < shared) return pattern;
+    if (pattern.ref < shared + passed) return { type: 'pass', ref: pattern.ref - shared };
+    return { type: 'intro', ref: pattern.ref - shared - passed };
+  }
+  return pattern;
+}
+
 function ingestPattern(pattern: PatternInput): Pattern {
   if (pattern.type === 'int') {
     return { type: 'int', value: BigInt(pattern.value) };
@@ -68,24 +102,27 @@ function ingestPattern(pattern: PatternInput): Pattern {
   return pattern;
 }
 
-function ingestConclusion(conclusion: ConclusionInput): Conclusion {
+function ingestConclusion(conclusion: ConclusionInput, shared: number, passed: number): Conclusion {
   switch (conclusion.type) {
     case 'intermediate':
       return {
-        ...conclusion,
+        type: 'intermediate',
         name: `@${conclusion.name}`,
+        args: conclusion.vars.map((ref) => ingestCPattern({ type: 'var', ref }, shared, passed)),
       };
     case 'datalog':
       return {
-        ...conclusion,
-        args: conclusion.args.map(ingestPattern),
+        type: 'datalog',
+        name: conclusion.name,
+        args: conclusion.args.map((arg) => ingestCPattern(arg, shared, passed)),
       };
     case 'closed':
     case 'open':
       return {
-        ...conclusion,
-        args: conclusion.args.map(ingestPattern),
-        choices: conclusion.choices.map(ingestPattern),
+        type: conclusion.type,
+        name: conclusion.name,
+        args: conclusion.args.map((arg) => ingestCPattern(arg, shared, passed)),
+        choices: conclusion.choices.map((arg) => ingestCPattern(arg, shared, passed)),
       };
   }
 }
@@ -117,7 +154,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
         const matches = predUnary[rule.premise.name] ?? [];
         matches.push({
           args: rule.premise.args.map(ingestPattern),
-          conclusion: ingestConclusion(rule.conclusion),
+          conclusion: ingestConclusion(rule.conclusion, Infinity, 0),
         });
         predUnary[rule.premise.name] = matches;
         continue;
@@ -131,7 +168,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
         intermediateMatches.push({
           inVars: { shared: rule.shared, total: rule.inVars },
           premise: { name: rule.premise.name, introduced },
-          conclusion: ingestConclusion(rule.conclusion),
+          conclusion: ingestConclusion(rule.conclusion, rule.shared, passed),
         });
 
         const indexMatches = predBinary[rule.premise.name] ?? [];
@@ -139,7 +176,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
         indexMatches.push({
           inName: `@${rule.inName}`,
           inVars: { shared: rule.shared, passed },
-          conclusion: ingestConclusion(rule.conclusion),
+          conclusion: ingestConclusion(rule.conclusion, rule.shared, passed),
         });
         continue;
       }
@@ -151,7 +188,7 @@ export function ingestBytecodeProgram(prog: ProgramInput): Program {
           inVars: rule.inVars,
           runForFailure: rule.type === 'run_for_failure',
           instructions: rule.instructions.map(ingestInstruction),
-          conclusion: ingestConclusion(rule.conclusion),
+          conclusion: ingestConclusion(rule.conclusion, 0, rule.inVars),
         });
         continue;
       }

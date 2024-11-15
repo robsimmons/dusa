@@ -18,10 +18,10 @@ export type TrieNode<K, V> =
 
 export type Trie<K, V> = TrieNode<K, V> | null;
 
-export function lookup<K, V>(t: Trie<K, V>, keys: K[]): TrieNode<K, V> | null {
-  for (const key of keys) {
+export function lookup<K, V>(t: Trie<K, V>, keys: K[], limit: number): TrieNode<K, V> | null {
+  for (let i = 0; i < limit; i++) {
     if (t === null) return null;
-    t = lookupTree(t.children, key);
+    t = lookupTree(t.children, keys[i]);
   }
   return t;
 }

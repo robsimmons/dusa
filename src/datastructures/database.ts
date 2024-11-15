@@ -42,7 +42,7 @@ export class Database {
 
   get(name: string, args: Data[]) {
     const trie = lookupTree(this.tree, name);
-    const leaf = lookupTrie(trie?.trie ?? null, args);
+    const leaf = lookupTrie(trie?.trie ?? null, args, args.length);
     if (leaf === null || leaf.children !== null) return null;
     return leaf.value;
   }
@@ -68,18 +68,23 @@ export class Database {
     ];
   }
 
-  visit(name: string, args: Data[], depth: number): Generator<Data[]> {
+  visit(name: string, args: Data[], limit: number, depth: number): Generator<Data[]> {
     const relation = lookupTree(this.tree, name);
     if (relation === null) return nullIterator();
-    return visitor(relation.trie, args, depth);
+    return visitor(relation.trie, args, limit, depth);
   }
 }
 
-function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): Generator<Data[]> {
+function* visitor(
+  t: TrieNode<Data, Constraint>,
+  args: Data[],
+  limit: number,
+  depth: number,
+): Generator<Data[]> {
   // corner case: no outputs in access pattern
   if (depth === 0) {
     // even more corner case: access pattern like `a [_]* is _`
-    if (args.length === 0) {
+    if (limit === 0) {
       if (
         t.children !== null /* the predicate has arguments */ ||
         t.value.type === 'just' /* the constraint is positive */
@@ -90,28 +95,28 @@ function* visitor(t: TrieNode<Data, Constraint>, args: Data[], depth: number): G
     }
 
     // perform all lookups but the last one
-    const parent = lookupTrie(t, args.slice(0, args.length - 1));
+    const parent = lookupTrie(t, args, limit - 1);
     if (parent === null) {
       return;
     }
 
     // handle access pattern like `a [+]+ is +`
     if (parent.children === null) {
-      if (parent.value.type === 'just' && parent.value.just === args[args.length - 1]) {
+      if (parent.value.type === 'just' && parent.value.just === args[limit - 1]) {
         yield [];
       }
       return;
     }
 
     // handle access pattern like `a [+]+ [_]* is _`
-    const child = lookupTree(parent.children, args[args.length - 1]);
+    const child = lookupTree(parent.children, args[limit - 1]);
     if (child !== null) {
       yield [];
     }
     return;
   }
 
-  const base = lookupTrie(t, args);
+  const base = lookupTrie(t, args, limit);
   for (const { keys, value } of visitTrie(base, depth - 1)) {
     if (value.children === null) {
       if (value.value.type === 'just') {
