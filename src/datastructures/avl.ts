@@ -12,7 +12,7 @@ function height<K, V>(t: AVL<K, V>) {
   return t === null ? 0 : t.height;
 }
 
-export function lookup<K, V>(t: AVL<K, V>, key: K) {
+export function lookup<K, V>(t: AVL<K, V>, key: K): V | null {
   while (t !== null) {
     // const comp = compare(t.key, key);
     // if (comp === 0) return t.value;
@@ -135,19 +135,22 @@ function createAndFix<K, V>(key: K, value: V, left: AVL<K, V>, right: AVL<K, V>)
   return create(key, value, left, right);
 }
 
-export function insert<K, V>(t: AVL<K, V>, key: K, value: V): [AVLNode<K, V>, null | V] {
+export type Ref<V> = null | { current: V | null };
+
+export function insert<K, V>(t: AVL<K, V>, key: K, value: V, ref: Ref<V>): AVLNode<K, V> {
   if (t === null) {
-    return [create(key, value, null, null), null];
+    return create(key, value, null, null);
   }
 
   if (t.key === key) {
-    return [create(t.key, value, t.left, t.right), t.value];
+    if (ref) ref.current = t.value;
+    return create(t.key, value, t.left, t.right);
   } else if (t.key > key) {
-    const [newLeft, removedValue] = insert(t.left, key, value);
-    return [createAndFix(t.key, t.value, newLeft, t.right), removedValue];
+    const newLeft = insert(t.left, key, value, ref);
+    return createAndFix(t.key, t.value, newLeft, t.right);
   } else {
-    const [newRight, removedValue] = insert(t.right, key, value);
-    return [createAndFix(t.key, t.value, t.left, newRight), removedValue];
+    const newRight = insert(t.right, key, value, ref);
+    return createAndFix(t.key, t.value, t.left, newRight);
   }
 }
 
@@ -198,20 +201,23 @@ function removeMin<K, V>(t: AVLNode<K, V>): [K, V, AVLNode<K, V> | null] {
   return [key, value, createAndFix(t.key, t.value, left, t.right)];
 }
 
-export function remove<K, V>(t: AVL<K, V>, key: K): [AVL<K, V>, V] | null {
+export function remove<K, V>(t: AVL<K, V>, key: K, ref: Ref<V>): AVL<K, V> {
   if (t === null) return null;
 
   if (t.key > key) {
-    const result = remove(t.left, key);
-    return result === null ? null : [createAndFix(t.key, t.value, result[0], t.right), result[1]];
+    const newLeft = remove(t.left, key, ref);
+    if (newLeft === t.left) return t;
+    return createAndFix(t.key, t.value, newLeft, t.right);
   }
   if (t.key < key) {
-    const result = remove(t.right, key);
-    return result === null ? null : [createAndFix(t.key, t.value, t.left, result[0]), result[1]];
+    const newRight = remove(t.right, key, ref);
+    if (newRight === t.right) return t;
+    return createAndFix(t.key, t.value, t.left, newRight);
   }
-  if (t.right === null) return [t.left, t.value];
+  if (ref) ref.current = t.value;
+  if (t.right === null) return t.left;
   const [rootKey, rootValue, newRight] = removeMin(t.right);
-  return [createAndFix(rootKey, rootValue, t.left, newRight), t.value];
+  return createAndFix(rootKey, rootValue, t.left, newRight);
 }
 
 export function* iterator<K, V>(t: AVL<K, V>): Generator<[K, V]> {

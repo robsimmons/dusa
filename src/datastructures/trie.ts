@@ -5,6 +5,7 @@ import {
   remove as removeTree,
   visit as visitTree,
   singleton as singletonTree,
+  Ref,
 } from './avl.js';
 
 export type TrieNode<K, V> =
@@ -38,33 +39,69 @@ export function insert<K, V>(
   t: Trie<K, V>,
   keys: K[],
   index: number,
+  limit: number,
   value: V,
-): [TrieNode<K, V>, Trie<K, V>] {
+  ref: Ref<TrieNode<K, V>>,
+): TrieNode<K, V> {
   if (t === null) {
-    return [singleton(index, keys, value), null];
+    return singleton(index, keys, value);
   }
 
-  if (index === keys.length) {
-    return [{ children: null, value }, t];
+  if (index === limit) {
+    if (ref) ref.current = t;
+    return { children: null, value };
   }
 
   const subTrie = lookupTree(t.children, keys[index]);
-  const [child, removed] = insert(subTrie, keys, index + 1, value);
-  const [children] = insertTree(t.children, keys[index], child);
-  return [{ children }, removed];
+  const child = insert(subTrie, keys, index + 1, limit, value, ref);
+  return { children: insertTree(t.children, keys[index], child, null) };
 }
 
-type TreeIterator<K, V> = Iterator<{ key: K; value: TrieNode<K, V> }>;
+export function remove<K, V>(
+  t: Trie<K, V>,
+  keys: K[],
+  index: number,
+  limit: number,
+  ref: Ref<TrieNode<K, V>>,
+): Trie<K, V> {
+  if (t === null) return null;
+  if (index === limit) {
+    // We've reached the subtrie we want to remove!
+    if (ref !== null) ref.current = t;
+    return null;
+  }
+  if (!t.children) throw new Error('Empty trie child');
+
+  const child = lookupTree(t.children, keys[index]);
+  if (child === null) return t;
+
+  const newChild = remove(child, keys, index + 1, limit, ref);
+  if (child === newChild) return t;
+
+  if (newChild === null) {
+    const newChildren = removeTree(t.children, keys[index], null)!;
+    if (newChildren === null) {
+      return null;
+    } else {
+      return { children: newChildren };
+    }
+  } else {
+    const newChildren = insertTree(t.children, keys[index], newChild, null);
+    return { children: newChildren };
+  }
+}
+
+type TrieIterator<K, V> = Iterator<{ key: K; value: TrieNode<K, V> }>;
 
 export function* visit<K, V>(tr: Trie<K, V>, depth: number) {
   const keys: K[] = [];
-  const stack: TreeIterator<K, V>[] = [];
+  const stack: TrieIterator<K, V>[] = [];
   let current: Trie<K, V> = tr;
 
   while (current !== null) {
     // Descend
     while (stack.length < depth) {
-      const iterator: TreeIterator<K, V> = visitTree(current!.children);
+      const iterator: TrieIterator<K, V> = visitTree(current!.children);
       const result = iterator.next();
       if (result.done) throw new Error('Empty trie child');
       const child = result.value;
@@ -88,34 +125,5 @@ export function* visit<K, V>(tr: Trie<K, V>, depth: number) {
         break;
       }
     }
-  }
-}
-
-export function remove<K, V>(
-  t: Trie<K, V>,
-  keys: K[],
-  index: number,
-): [Trie<K, V>, TrieNode<K, V>] | null {
-  if (t === null) return null;
-  if (index === keys.length) return [null, t];
-  if (!t.children) throw new Error('Empty trie child');
-
-  const child = lookupTree(t.children, keys[index]);
-  if (child === null) return null;
-
-  const removeChildResult = remove(child, keys, index + 1);
-  if (removeChildResult === null) return null;
-
-  const [newChild, removed] = removeChildResult;
-  if (newChild === null) {
-    const [newChildren] = removeTree(t.children, keys[index])!;
-    if (newChildren === null) {
-      return [null, removed];
-    } else {
-      return [{ children: newChildren }, removed];
-    }
-  } else {
-    const [newChildren] = insertTree(t.children, keys[index], newChild);
-    return [{ children: newChildren }, removed];
   }
 }

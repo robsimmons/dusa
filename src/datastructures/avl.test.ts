@@ -1,19 +1,28 @@
 import { test, expect } from 'vitest';
 import {
   AVL,
+  AVLNode,
   lookup as lookupAVL,
   insert as insertAVL,
   choose as chooseAVL,
   remove as removeAVL,
   visit,
   iterator,
+  Ref,
 } from './avl.js';
 
 // Adapted from https://www.cs.cmu.edu/~rjsimmon/15122-m15/lec/16-avl/bst-test.c0
 
 const lookup = <T>(t: AVL<string, T>, x: string) => lookupAVL(t, x);
-const insert = <T>(t: AVL<string, T>, x: string, y: T) => insertAVL(t, x, y);
-const remove = <T>(t: AVL<string, T>, x: string) => removeAVL(t, x);
+const insert = <T>(t: AVL<string, T>, x: string, y: T): [AVLNode<string, T>, T | null] => {
+  const ref = { current: null };
+  return [insertAVL(t, x, y, ref), ref.current];
+};
+const remove = <T>(t: AVL<string, T>, x: string): null | [AVL<string, T>, T] => {
+  const ref: Ref<T> = { current: null };
+  const removal = removeAVL(t, x, ref);
+  return ref.current === null ? null : [removal, ref.current!];
+};
 
 test('black-box 1', () => {
   let t: AVL<string, string> = null;

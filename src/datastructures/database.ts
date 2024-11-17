@@ -1,33 +1,24 @@
 import { Data, DataSet } from './data.js';
 import {
-  AVL as Tree,
   lookup as lookupTree,
-  insert as insertTree,
   visit as visitTree,
 } from './avl.js';
 import {
   TrieNode,
   lookup as lookupTrie,
-  insert as insertTrie,
   visit as visitTrie,
 } from './trie.js';
+import { AttributeMap } from './attributemap.js';
 
 export type Constraint = { type: 'just'; just: Data } | { type: 'noneOf'; noneOf: DataSet };
 
-interface Relation {
-  pos: number;
-  neg: number;
-  trie: TrieNode<Data, Constraint>;
-}
-const emptyRelation = { trie: null, neg: 0, pos: 0 };
-
 export class Database {
-  private tree: Tree<string, Relation>;
+  private map: AttributeMap<Constraint>;
   private pos: number;
   private neg: number;
 
-  private constructor(tree: Tree<string, Relation>, pos: number, neg: number) {
-    this.tree = tree;
+  private constructor(map: AttributeMap<Constraint>, pos: number, neg: number) {
+    this.map = map;
     this.pos = pos;
     this.neg = neg;
   }
@@ -37,41 +28,29 @@ export class Database {
   }
 
   static empty(): Database {
-    return new Database(null, 0, 0);
+    return new Database(AttributeMap.empty(), 0, 0);
   }
 
-  get(name: string, args: Data[]) {
-    const trie = lookupTree(this.tree, name);
-    const leaf = lookupTrie(trie?.trie ?? null, args, args.length);
-    if (leaf === null || leaf.children !== null) return null;
-    return leaf.value;
+  get(name: string, args: Data[]): Constraint | null {
+    return this.map.get(name, args);
   }
 
-  set(name: string, args: Data[], value: Constraint): [Database, Constraint | null] {
-    const { trie, pos, neg } = lookupTree(this.tree, name) ?? emptyRelation;
-    const [result, removed] = insertTrie(trie, args, 0, value);
-
-    if (removed && removed.children) throw new Error('Database.set invariant');
+  set(
+    name: string,
+    args: Data[],
+    value: Constraint,
+    limit: number | null = null,
+  ): [Database, Constraint | null] {
+    const [newMap, removed] = this.map.set(name, args, value, limit);
     const [posInc, negInc] = value.type === 'just' ? [1, 0] : [0, 1];
-    const [posDec, negDec] =
-      removed === null ? [0, 0] : removed.value.type === 'just' ? [1, 0] : [0, 1];
-    const newRel = {
-      pos: pos + posInc - posDec,
-      neg: neg + negInc - negDec,
-      trie: result,
-    };
-    const [newTree] = insertTree(this.tree, name, newRel);
-
-    return [
-      new Database(newTree, this.pos + posInc - posDec, this.neg + negInc - negDec),
-      removed?.value ?? null,
-    ];
+    const [posDec, negDec] = removed === null ? [0, 0] : removed.type === 'just' ? [1, 0] : [0, 1];
+    return [new Database(newMap, this.pos + posInc - posDec, this.neg + negInc - negDec), removed];
   }
 
   visit(name: string, args: Data[], limit: number, depth: number): Generator<Data[]> {
-    const relation = lookupTree(this.tree, name);
+    const relation = this.map.getTrie(name);
     if (relation === null) return nullIterator();
-    return visitor(relation.trie, args, limit, depth);
+    return visitor(relation, args, limit, depth);
   }
 }
 

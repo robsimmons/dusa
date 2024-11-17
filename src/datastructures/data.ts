@@ -5,6 +5,7 @@ import {
   choose as chooseTree,
   remove as removeTree,
   iterator as iteratorTree,
+  Ref,
 } from './avl.js';
 
 type ViewsIndex = number;
@@ -210,15 +211,16 @@ export class DataMap<T> {
   }
 
   set(key: Data, value: T) {
-    const [newTree, removed] = insertTree(this.tree, key, value);
-    return new DataMap(newTree, removed === null ? this._size + 1 : this._size);
+    const ref: Ref<T> = { current: null };
+    const newTree = insertTree(this.tree, key, value, ref);
+    return new DataMap(newTree, ref.current === null ? this._size + 1 : this._size);
   }
 
   remove(key: Data): null | [DataMap<T>, T] {
-    const removeResult = removeTree(this.tree, key);
-    if (removeResult === null) return null;
-    const [newTree, removed] = removeResult;
-    return [new DataMap(newTree, removed === null ? this._size : this._size - 1), removed];
+    const ref: Ref<T> = { current: null };
+    const newTree = removeTree(this.tree, key, ref);
+    if (ref.current === null) return null;
+    return [new DataMap(newTree, this._size - 1), ref.current];
   }
 
   /** Return the only element if it exists, otherwise return null */

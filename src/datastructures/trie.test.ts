@@ -1,22 +1,33 @@
 import { test, expect } from 'vitest';
 import {
   Trie,
+  TrieNode,
   lookup as lookupTrie,
   insert as insertTrie,
   remove as removeTrie,
   visit,
 } from './trie.js';
+import { Ref } from './avl.js';
 
 const lookup = <T>(t: Trie<string, T>, x: string[]) => {
   const res = lookupTrie(t, x, x.length);
   if (res === null || res.children !== null) return null;
   return res.value;
 };
-const insert = <T>(t: Trie<string, T>, x: string[], y: T) => insertTrie(t, x, 0, y);
+const insert = <T>(
+  t: Trie<string, T>,
+  x: string[],
+  y: T,
+): [TrieNode<string, T>, Trie<string, T>] => {
+  const ref: Ref<TrieNode<string, T>> = { current: null };
+  return [insertTrie(t, x, 0, x.length, y, ref), ref.current];
+};
 const remove = <T>(t: Trie<string, T>, x: string[]): null | [Trie<string, T>, T] => {
-  const res = removeTrie(t, x, 0);
-  if (res === null || res[1].children !== null) return null;
-  return [res[0], res[1].value];
+  const ref: Ref<TrieNode<string, T>> = { current: null };
+  const res = removeTrie(t, x, 0, x.length, ref);
+  if (ref.current === null) return null;
+  if (ref.current.children !== null) return null;
+  return [res, ref.current.value];
 };
 
 test('tries data structure', () => {
