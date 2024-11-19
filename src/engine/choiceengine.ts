@@ -1,4 +1,4 @@
-import { Data, TRIV_DATA, dataToString, hide } from '../datastructures/data.js';
+import { Data, TRIVIAL, dataToString, hide } from '../datastructures/data.js';
 import { DataMap } from '../datastructures/datamap.js';
 import { Database, dbToString, insertFact, listFacts, stepDb } from './forwardengine.js';
 import { IndexedProgram } from '../language/indexize.js';
@@ -298,7 +298,7 @@ function choiceTreeNodeToString(
 
 export function factToString(fact: Fact): string {
   const args = fact.args.map((arg) => ` ${dataToString(arg)}`).join('');
-  const value = equal(fact.value, TRIV_DATA) ? '' : ` is ${dataToString(fact.value)}`;
+  const value = equal(fact.value, TRIVIAL) ? '' : ` is ${dataToString(fact.value)}`;
   return `${fact.name}${args}${value}`;
 }
 

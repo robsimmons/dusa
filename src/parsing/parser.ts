@@ -19,7 +19,19 @@ export interface StreamParser<State, Tree> {
   handleEof(state: State): null | ParserResponse<State, Tree>;
 }
 
-export type Tag = string;
+export type Tag =
+  | 'invalid' // disallowed syntax
+  | 'comment' // # hello
+  | 'variableName' // X, Y, Z
+  | 'literal' // foo, plus, a, f, succ, z
+  | 'unit' // ()
+  | 'string' // "Hello"
+  | 'escape' // "Hello\n\tthere."
+  | 'meta' // #define,  #builtin, etc.
+  | 'keyword' // is, is?
+  | 'integer' // 123, -12
+  | 'punctuation' // '...', '{', '}', '.', ':-', etc.
+  | 'variableName'; // X, _, _XY_ZZY
 export interface Issue {
   type: 'Issue';
   msg: string;
@@ -47,11 +59,12 @@ export function parseWithStreamParser<State, Tree>(
   const output: Tree[] = [];
   const issues: Issue[] = [];
 
+  let currentIndex = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     let currentColumn = 1;
     do {
-      const stream = makeStream(line, i + 1, currentColumn);
+      const stream = makeStream(line, i + 1, currentColumn, currentIndex + currentColumn - 1);
       const response = parser.advance(stream, state);
       state = response.state;
       if (response.tree) {
@@ -62,6 +75,7 @@ export function parseWithStreamParser<State, Tree>(
       }
       currentColumn = stream.currentColumn();
     } while (currentColumn <= line.length);
+    currentIndex += line.length + 1;
   }
 
   for (;;) {

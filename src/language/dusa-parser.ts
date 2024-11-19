@@ -1,10 +1,11 @@
 import { Token, dusaTokenizer } from './dusa-tokenizer.js';
 import { ParsedPattern } from './terms.js';
-import { ParsedDeclaration, ParsedPremise } from './syntax.js';
+import { ParsedConclusion, ParsedPremise, ParsedTopLevel } from './syntax.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
 import { SourceLocation, SourcePosition } from '../parsing/source-location.js';
+import { BUILT_IN_MAP, isBuiltIn } from './dusa-builtins.js';
 
-interface Istream<T> {
+interface ImperativeStream<T> {
   next(): T | null;
   peek(): T | null;
 }
@@ -22,7 +23,7 @@ export class DusaSyntaxError extends SyntaxError {
 
 export function parse(
   str: string,
-): { errors: Issue[] } | { errors: null; document: ParsedDeclaration[] } {
+): { errors: Issue[] } | { errors: null; document: ParsedTopLevel[] } {
   const tokens = parseWithStreamParser(dusaTokenizer, str);
 
   for (const issue of tokens.issues) {
@@ -36,7 +37,7 @@ export function parse(
 
   const parseResult = parseTokens(tokens.document);
   const parseIssues = parseResult.filter((decl): decl is Issue => decl.type === 'Issue');
-  const parseDecls = parseResult.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue');
+  const parseDecls = parseResult.filter((decl): decl is ParsedTopLevel => decl.type !== 'Issue');
 
   // If parsing phase gives warning-level issues, this will need to be modified as above
   if (parseIssues.length > 0) {
@@ -46,7 +47,7 @@ export function parse(
   return { errors: null, document: parseDecls };
 }
 
-function parseDeclOrIssue(t: Istream<Token>): ParsedDeclaration | Issue | null {
+function parseDeclOrIssue(t: ImperativeStream<Token>): ParsedTopLevel | Issue | null {
   try {
     return parseDecl(t);
   } catch (e) {
@@ -60,9 +61,9 @@ function parseDeclOrIssue(t: Istream<Token>): ParsedDeclaration | Issue | null {
   }
 }
 
-export function parseTokens(tokens: Token[]): (ParsedDeclaration | Issue)[] {
+export function parseTokens(tokens: Token[]): (ParsedTopLevel | Issue)[] {
   const t = mkStream(tokens);
-  const result: (ParsedDeclaration | Issue)[] = [];
+  const result: (ParsedTopLevel | Issue)[] = [];
 
   let decl = parseDeclOrIssue(t);
   while (decl !== null) {
@@ -72,7 +73,7 @@ export function parseTokens(tokens: Token[]): (ParsedDeclaration | Issue)[] {
   return result;
 }
 
-function mkStream<T>(xs: T[]): Istream<T> {
+function mkStream<T>(xs: T[]): ImperativeStream<T> {
   let i = 0;
   return {
     next() {
@@ -86,14 +87,19 @@ function mkStream<T>(xs: T[]): Istream<T> {
   };
 }
 
-function force(t: Istream<Token>, type: string): Token {
+function force(t: ImperativeStream<Token>, type: string): Token {
   const tok = t.next();
-  if (tok === null) throw new DusaSyntaxError(`Expected ${type}, found end of input.`);
-  if (tok.type !== type) throw new DusaSyntaxError(`Expected ${type}, found ${tok.type}`, tok.loc);
+  if (tok === null)
+    throw new DusaSyntaxError(`Expected to find '${type}', but instead reached the end of input.`);
+  if (tok.type !== type)
+    throw new DusaSyntaxError(
+      `Expected to find '${type}', but instead found '${tok.type}'.`,
+      tok.loc,
+    );
   return tok;
 }
 
-function chomp(t: Istream<Token>, type: string): Token | null {
+function chomp(t: ImperativeStream<Token>, type: string): Token | null {
   if (t.peek()?.type === type) {
     return t.next();
   } else {
@@ -101,63 +107,67 @@ function chomp(t: Istream<Token>, type: string): Token | null {
   }
 }
 
-function forceFullTerm(t: Istream<Token>): ParsedPattern {
+function forceFullTerm(t: ImperativeStream<Token>): ParsedPattern {
   const result = parseFullTerm(t);
   if (result === null) {
-    throw new DusaSyntaxError('Expected a term, but no term found', t.peek()?.loc ?? undefined);
+    throw new DusaSyntaxError(
+      'Expected to find a term here, but no term found.',
+      t.peek()?.loc ?? undefined,
+    );
   }
   return result;
 }
 
-export function parseHeadValue(t: Istream<Token>): {
-  values: null | ParsedPattern[];
-  exhaustive: boolean;
-  end: SourcePosition | null;
-  deprecatedQuestionMark?: Token;
-} {
+export function parseConclusion(
+  nameTok: Token & { type: 'const' },
+  t: ImperativeStream<Token>,
+): ParsedConclusion {
+  const name = nameTok.value;
+
+  let lastLoc = nameTok.loc;
+  const args: ParsedPattern[] = [];
+  let next = parseTerm(t);
+  while (next !== null) {
+    lastLoc = next.loc;
+    args.push(next);
+    next = parseTerm(t);
+  }
+
   const isToken = chomp(t, 'is') || chomp(t, 'is?');
   if (!isToken) {
-    return { values: null, exhaustive: true, end: null };
+    return { name, args, type: 'datalog', loc: { start: nameTok.loc.start, end: lastLoc.end } };
   }
 
   let tok: Token | null;
   if ((tok = chomp(t, '{')) !== null) {
-    const values = [];
-    let exhaustive = isToken.type === 'is';
-    let end = tok.loc.end;
-    if (chomp(t, '?')) {
-      exhaustive = false;
-    } else {
+    const values: ParsedPattern[] = [];
+    values.push(forceFullTerm(t));
+    while ((tok = chomp(t, '}')) === null) {
+      force(t, ',');
       values.push(forceFullTerm(t));
     }
-    let deprecatedQuestionMark: Token | undefined = undefined;
-    while ((tok = chomp(t, '}')) === null) {
-      if (chomp(t, ',')) {
-        values.push(forceFullTerm(t));
-      } else {
-        deprecatedQuestionMark = force(t, '?');
-        if (isToken.type === 'is?') {
-          throw new DusaSyntaxError(
-            `Rule conclusion cannot use both 'is?' and deprecated standalone question mark`,
-            deprecatedQuestionMark.loc,
-          );
-        }
-        end = force(t, '}').loc.end;
-        exhaustive = false;
-        break;
-      }
-    }
-    if (deprecatedQuestionMark === undefined) {
-      return { values, exhaustive, end: tok?.loc.end ?? end };
-    } else {
-      return { values, exhaustive, end: tok?.loc.end ?? end, deprecatedQuestionMark };
-    }
+    return {
+      name,
+      args,
+      type: isToken.type === 'is' ? 'closed' : 'open',
+      values,
+      loc: { start: nameTok.loc.start, end: tok.loc.end },
+    };
   } else {
     const value = parseFullTerm(t);
     if (value === null) {
-      throw new DusaSyntaxError(`Did not find value after '${isToken.type}'`, isToken.loc);
+      throw new DusaSyntaxError(
+        `Expected to find a value after '${isToken.type}', but did not.`,
+        isToken.loc,
+      );
     }
-    return { values: [value], exhaustive: isToken.type === 'is', end: value.loc.end };
+    return {
+      name,
+      args,
+      type: isToken.type === 'is' ? 'closed' : 'open',
+      values: [value],
+      loc: { start: nameTok.loc.start, end: value.loc.end },
+    };
   }
 }
 
@@ -170,7 +180,7 @@ const BINARY_PREDICATES = {
   '>': 'Gt',
 } as const;
 
-export function forcePremise(t: Istream<Token>): ParsedPremise {
+export function forcePremise(t: ImperativeStream<Token>): ParsedPremise {
   const a = forceFullTerm(t);
   for (const [tok, type] of Object.entries(BINARY_PREDICATES)) {
     if (chomp(t, tok)) {
@@ -200,11 +210,11 @@ export function forcePremise(t: Istream<Token>): ParsedPremise {
   };
 }
 
-export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
+export function parseDecl(t: ImperativeStream<Token>): ParsedTopLevel | null {
   let tok = t.next();
   if (tok === null) return null;
 
-  let result: ParsedDeclaration;
+  let result: ParsedTopLevel;
   const start: SourcePosition = tok.loc.start;
   if (tok.type === 'hashdirective') {
     if (tok.value === 'forbid') {
@@ -219,6 +229,37 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
         premises: [],
         loc: tok.loc,
       };
+    } else if (tok.value === 'builtin') {
+      const builtin = chomp(t, 'var') as null | { loc: SourceLocation; type: 'var'; value: string };
+      if (builtin === null || !isBuiltIn(builtin.value)) {
+        throw new DusaSyntaxError(
+          `#builtin must be followed by the ALL_CAPS name of a built-in operation. Options are ${Object.keys(BUILT_IN_MAP).sort().join(', ')}.`,
+          builtin?.loc ? { start: tok.loc.start, end: builtin.loc.end } : tok.loc,
+        );
+      }
+
+      const constTok = chomp(t, 'const') as null | {
+        loc: SourceLocation;
+        type: 'const';
+        value: string;
+      };
+      if (constTok === null) {
+        throw new DusaSyntaxError(
+          `#builtin ${builtin.value} must be followed by a constant to use for the built-in operation.`,
+          { start: tok.loc.start, end: builtin.loc.end },
+        );
+      }
+
+      const trailingPeriod = chomp(t, '.');
+      return {
+        type: 'Builtin',
+        builtin: builtin.value,
+        name: constTok.value,
+        loc: {
+          start: tok.loc.start,
+          end: trailingPeriod === null ? constTok.loc.end : trailingPeriod.loc.end,
+        },
+      };
     } else {
       throw new DusaSyntaxError(
         `Unexpected directive '${tok.value}'. Valid directives are #builtin, #demand, and #forbid.`,
@@ -228,22 +269,12 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
   } else if (tok.type === ':-') {
     throw new DusaSyntaxError(`Declaration started with ':-' (use #forbid instead)`, tok.loc);
   } else if (tok.type === 'const') {
-    const name = tok.value;
-    let attributeEnd = tok.loc.end;
-    const args: ParsedPattern[] = [];
-    let next = parseTerm(t);
-    while (next !== null) {
-      attributeEnd = next.loc.end;
-      args.push(next);
-      next = parseTerm(t);
-    }
-    const { values, exhaustive, end, deprecatedQuestionMark } = parseHeadValue(t);
+    const conclusion = parseConclusion(tok, t);
     result = {
       type: 'Rule',
       premises: [],
-      conclusion: { name, args, values, exhaustive, loc: { start, end: end ?? attributeEnd } },
-      loc: tok.loc, // dummy value, will be replaced
-      deprecatedQuestionMark: deprecatedQuestionMark?.loc,
+      conclusion,
+      loc: conclusion.loc, // loc.end will be replaced
     };
 
     if ((tok = chomp(t, '.')) !== null) {
@@ -263,9 +294,9 @@ export function parseDecl(t: Istream<Token>): ParsedDeclaration | null {
   return { ...result, loc: { start, end: tok.loc.end } };
 }
 
-export function parseFullTerm(t: Istream<Token>): ParsedPattern | null {
+export function parseFullTerm(t: ImperativeStream<Token>): ParsedPattern | null {
   const tok = t.peek();
-  if (tok?.type === 'const' || tok?.type === 'builtin') {
+  if (tok?.type === 'const') {
     t.next();
     const args: ParsedPattern[] = [];
     let endLoc = tok.loc.end;
@@ -275,18 +306,9 @@ export function parseFullTerm(t: Istream<Token>): ParsedPattern | null {
       args.push(next);
       next = parseTerm(t);
     }
-    if (tok.type === 'const') {
-      return {
-        type: 'const',
-        name: tok.value,
-        args,
-        loc: { start: tok.loc.start, end: endLoc },
-      };
-    }
     return {
-      type: 'special',
-      name: tok.builtin,
-      symbol: tok.value,
+      type: 'const',
+      name: tok.value,
       args,
       loc: { start: tok.loc.start, end: endLoc },
     };
@@ -295,21 +317,21 @@ export function parseFullTerm(t: Istream<Token>): ParsedPattern | null {
   return parseTerm(t);
 }
 
-export function parseTerm(t: Istream<Token>): ParsedPattern | null {
+export function parseTerm(t: ImperativeStream<Token>): ParsedPattern | null {
   const tok = t.peek();
   if (tok === null) return null;
   if (tok.type === '(') {
     t.next();
     const result = parseFullTerm(t);
     if (result === null) {
-      throw new DusaSyntaxError('No term following an open parenthesis', {
+      throw new DusaSyntaxError('Did not find a term following an open parenthesis.', {
         start: tok.loc.start,
         end: t.peek()?.loc.end ?? tok.loc.end,
       });
     }
     const closeParen = t.next();
     if (closeParen?.type !== ')') {
-      throw new DusaSyntaxError('Did not find expected matching parenthesis', {
+      throw new DusaSyntaxError('Did not find the matching parenthesis that was expected.', {
         start: tok.loc.start,
         end: closeParen?.loc.end ?? result.loc.end,
       });
@@ -319,7 +341,7 @@ export function parseTerm(t: Istream<Token>): ParsedPattern | null {
 
   if (tok.type === 'triv') {
     t.next();
-    return { type: 'triv', loc: tok.loc };
+    return { type: 'trivial', loc: tok.loc };
   }
 
   if (tok.type === 'var') {
@@ -345,11 +367,6 @@ export function parseTerm(t: Istream<Token>): ParsedPattern | null {
   if (tok.type === 'const') {
     t.next();
     return { type: 'const', name: tok.value, args: [], loc: tok.loc };
-  }
-
-  if (tok.type === 'builtin') {
-    t.next();
-    return { type: 'special', name: tok.builtin, symbol: tok.value, args: [], loc: tok.loc };
   }
 
   return null;

@@ -1,4 +1,4 @@
-import { Data, TRIV_DATA, getRef, hide } from './datastructures/data.js';
+import { Data, TRIVIAL, getRef, hide } from './datastructures/data.js';
 import {
   ChoiceTree,
   ChoiceTreeNode,
@@ -17,6 +17,7 @@ import {
 } from './engine/forwardengine.js';
 import { check } from './language/check.js';
 import { compile } from './language/compile.js';
+import { builtinModes } from './language/dusa-builtins.js';
 import { parse } from './language/dusa-parser.js';
 import { IndexedProgram } from './language/indexize.js';
 import { Issue } from './parsing/parser.js';
@@ -31,7 +32,7 @@ import {
   termToData,
 } from './termoutput.js';
 export type { Term, Fact, InputTerm, InputFact, JsonData } from './termoutput.js';
-export { dataToTerm, termToData } from './termoutput.js';
+export { dataToTerm, termToData, termToString } from './termoutput.js';
 
 export type { Issue, Stats };
 export type { SourcePosition, SourceLocation } from './parsing/source-location.js';
@@ -136,7 +137,7 @@ function* solutionGenerator(
 export class Dusa {
   private program: IndexedProgram;
   private debug: boolean;
-  private arities: Map<string, number>;
+  private arities: Map<string, { args: number; value: boolean }>;
   private db: Database;
   private stats: Stats;
   private cachedSolution: DusaSolution | null = null;
@@ -154,19 +155,19 @@ export class Dusa {
       throw new DusaError(parsed.errors);
     }
 
-    const { errors, arities } = check(parsed.document);
+    const { errors, arities, builtins } = check(builtinModes, parsed.document);
     if (errors.length !== 0) {
       throw new DusaError(errors);
     }
 
     this.debug = debug;
     this.arities = arities;
-    this.program = compile(parsed.document, debug);
+    this.program = compile(builtins, arities, parsed.document, debug);
     this.db = makeInitialDb(this.program);
     this.stats = { cycles: 0, deadEnds: 0 };
   }
 
-  private checkPredicateForm(pred: string, arity: number) {
+  private checkPredicateForm(pred: string, arity: { args: number; value: boolean }) {
     const expected = this.arities.get(pred);
     if (!pred.match(/^[a-z][A-Za-z0-9]*$/)) {
       throw new DusaError([
@@ -179,13 +180,21 @@ export class Dusa {
     }
     if (expected === undefined) {
       this.arities.set(pred, arity);
-    } else if (arity !== expected) {
+    } else if (arity.args !== expected.args) {
       throw new DusaError([
         {
           type: 'Issue',
           msg: `Predicate ${pred} should have ${expected} argument${
-            expected === 1 ? '' : 's'
+            expected.args === 1 ? '' : 's'
           }, but the asserted fact has ${arity}`,
+          severity: 'error',
+        },
+      ]);
+    } else if (arity.value !== expected.value) {
+      throw new DusaError([
+        {
+          type: 'Issue',
+          msg: `Predicate ${pred} should ${expected.value ? '' : 'not '}have a value, but the asserted fact ${arity.value ? 'has' : 'does not have'} one.`,
           severity: 'error',
         },
       ]);
@@ -200,11 +209,11 @@ export class Dusa {
     this.cachedSolution = null;
     this.db = { ...this.db };
     for (const { name, args, value } of facts) {
-      this.checkPredicateForm(name, args.length);
+      this.checkPredicateForm(name, { args: args?.length ?? 0, value: value !== undefined });
       insertFact(
         name,
-        args.map(termToData),
-        value === undefined ? TRIV_DATA : termToData(value),
+        args?.map(termToData) ?? [],
+        value === undefined ? TRIVIAL : termToData(value),
         this.db,
       );
     }
@@ -221,7 +230,7 @@ export class Dusa {
     this.db = { ...this.db };
 
     if (pred !== undefined) {
-      this.checkPredicateForm(pred, 2);
+      this.checkPredicateForm(pred, { args: 2, value: true });
     }
     const usedPred = pred ?? '->';
     const triples: [Data, Data, Data][] = [];

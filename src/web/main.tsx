@@ -46,4 +46,5 @@ setup({
   ],
   appName: 'Dusa',
   infoUrl: '/docs/',
+  documentName: 'program',
 });

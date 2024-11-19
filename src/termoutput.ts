@@ -1,4 +1,4 @@
-import { Data, TRIV_DATA, expose, hide } from './datastructures/data.js';
+import { Data, TRIVIAL, escapeString, expose, hide } from './datastructures/data.js';
 
 export type Term =
   | null // Trivial type ()
@@ -22,7 +22,7 @@ export type InputTerm =
   | { name: string; args?: InputTerm[] };
 export interface InputFact {
   name: string;
-  args: InputTerm[];
+  args?: InputTerm[];
   value?: InputTerm;
 }
 
@@ -30,7 +30,7 @@ export type JsonData = null | number | bigint | string | JsonData[] | { [field: 
 
 export function dataToTerm(d: Data): Term {
   const view = expose(d);
-  if (view.type === 'triv') return null;
+  if (view.type === 'trivial') return null;
   if (view.type === 'int') return view.value;
   if (view.type === 'bool') return view.value;
   if (view.type === 'string') return view.value;
@@ -41,7 +41,7 @@ export function dataToTerm(d: Data): Term {
 }
 
 export function termToData(tm: InputTerm): Data {
-  if (tm === null) return TRIV_DATA;
+  if (tm === null) return TRIVIAL;
   if (typeof tm === 'boolean') return hide({ type: 'bool', value: tm });
   if (typeof tm === 'string') return hide({ type: 'string', value: tm });
   if (typeof tm === 'bigint') return hide({ type: 'int', value: tm });
@@ -50,4 +50,16 @@ export function termToData(tm: InputTerm): Data {
     return hide({ type: 'const', name: tm.name, args: tm.args?.map(termToData) ?? [] });
   }
   return hide({ type: 'int', value: BigInt(tm) });
+}
+
+export function termToString(tm: Term, parens = false): string {
+  if (tm === null) return '()';
+  if (typeof tm === 'boolean') return `bool#${tm}`;
+  if (typeof tm === 'string') return `"${escapeString(tm)}"`;
+  if (typeof tm === 'bigint') return `${tm}`;
+  if (tm.name === null) return `ref#${tm.value}`;
+  if (!tm.args) return tm.name;
+  const tmStr = `${tm.name} ${tm.args.map((arg) => termToString(arg, true)).join('')}`;
+  if (!parens) return tmStr;
+  return `(${tmStr})`;
 }

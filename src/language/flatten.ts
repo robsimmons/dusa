@@ -1,34 +1,21 @@
 import { SourceLocation } from '../parsing/source-location.js';
-import { checkPropositionArity } from './check.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
 import {
   Conclusion,
   ParsedDeclaration,
   ParsedPremise,
-  freeVarsPremise,
+  ParsedTopLevel,
   headToString,
 } from './syntax.js';
-import { ParsedPattern, Pattern, termToString, theseVarsGroundThisPattern } from './terms.js';
+import { ParsedPattern, Pattern, termToString } from './terms.js';
 
-export interface FlatProposition {
-  type: 'Proposition';
-  name: string;
+export type FlatPremise = {
   args: Pattern[];
-  value: Pattern;
   loc: SourceLocation;
-}
-
-export interface BuiltinProposition {
-  type: 'Builtin';
-  name: BUILT_IN_PRED;
-  symbol: null | string;
-  matchPosition: null | number;
-  args: Pattern[];
-  value: Pattern;
-  loc: SourceLocation;
-}
-
-export type FlatPremise = FlatProposition | BuiltinProposition;
+} & (
+  | { type: 'builtin'; name: BUILT_IN_PRED; value: Pattern }
+  | { type: 'fact'; name: string; value: Pattern | null }
+);
 
 export type FlatDeclaration =
   | { type: 'Forbid'; premises: FlatPremise[]; loc?: SourceLocation }
@@ -40,286 +27,125 @@ export type FlatDeclaration =
       loc?: SourceLocation;
     };
 
-/*
- * The flattening transformation picks the order in which built-in terms and which functonal
- * propositions in term position will be sequenced, and also turns syntactically supported
- * built-ins (like == and !=) into their supported form as built-in functional propositions.
- *
- * This is relatively straightforward for built-ins where all arguments are grounded by the
- * time the built-in is encountered: the function calls will be placed immediately prior to
- * the premise.
- *
- * In this example:
- *
- *     #demand f X, g (s (s X)) Y, h X (s Y).
- *
- * This needs to get flattend to:
- *
- *     #demand f X, s X is #1, s #1 is #2, g #2 Y, s Y is #3, h X #3.
- *
- * However, some built-in functions (NAT_SUCC, INT_PLUS, INT_MINUS, STRING_CONCAT) allow for
- * a distinguished "match" argument that can be resolved afterwards. In those cases, the
- *
- *     #demand f Y, g (s (s X)) Y, h X (s Z).
- *
- * This needs to get transformed to:
- *
- *     #demand f X, g #1 is Y, s |#2| is #1, s |X| is #2, h X #3, s |Z| is #3.
- *
- * to allow the checks to be run after the fact. (The pipes are used here to offset the
- * argument in the distinguished match location.)
- */
-
-/**
- * When a pattern is grounded, we want to run any built-in functions or check
- * any functional predicates before trying to calculate the ground term.
- */
-function flattenGroundPattern(
-  preds: Set<string>,
+function flattenPattern(
+  preds: Map<string, undefined | BUILT_IN_PRED>,
   counter: { current: number },
   parsedPattern: ParsedPattern,
 ): { before: FlatPremise[]; pattern: Pattern } {
   switch (parsedPattern.type) {
-    case 'triv':
-    case 'int':
-    case 'bool':
-    case 'string':
-    case 'wildcard': // Impossible
-    case 'var':
-      return { before: [], pattern: parsedPattern };
-    case 'const':
-    case 'special': {
-      const before: FlatPremise[] = [];
-      const args = [];
-      for (const arg of parsedPattern.args) {
-        const sub = flattenGroundPattern(preds, counter, arg);
-        before.push(...sub.before);
-        args.push(sub.pattern);
-      }
-      if (parsedPattern.type === 'special' || preds.has(parsedPattern.name)) {
-        const replacementVar = `#${counter.current++}`;
-        before.push(
-          parsedPattern.type === 'special'
-            ? {
-                type: 'Builtin',
-                name: parsedPattern.name,
-                symbol: parsedPattern.symbol,
-                args,
-                value: { type: 'var', name: replacementVar },
-                matchPosition: null,
-                loc: parsedPattern.loc,
-              }
-            : {
-                type: 'Proposition',
-                name: parsedPattern.name,
-                args,
-                value: { type: 'var', name: replacementVar },
-                loc: parsedPattern.loc,
-              },
-        );
-        return { before, pattern: { type: 'var', name: replacementVar } };
-      }
-      return { before, pattern: { type: 'const', name: parsedPattern.name, args } };
-    }
-  }
-}
-
-/**
- * When a pattern is definitely NOT grounded and we encounter a (supported) functional
- * predicate or a built-in, we replace the term with a new variable and do remaining
- * matching later.
- */
-function flattenNonGroundPattern(
-  preds: Set<string>,
-  counter: { current: number },
-  boundVars: Set<string>,
-  parsedPattern: ParsedPattern,
-): { before: FlatPremise[]; after: FlatPremise[]; pattern: Pattern } {
-  switch (parsedPattern.type) {
-    case 'triv':
+    case 'trivial':
     case 'int':
     case 'bool':
     case 'string':
     case 'wildcard':
     case 'var':
-      return { before: [], after: [], pattern: parsedPattern };
+      return { before: [], pattern: parsedPattern };
     case 'const': {
-      const before: FlatPremise[] = [];
-      const after: FlatPremise[] = [];
-      const args = [];
-      for (const arg of parsedPattern.args) {
-        if (theseVarsGroundThisPattern(boundVars, arg)) {
-          const sub = flattenGroundPattern(preds, counter, arg);
-          before.push(...sub.before);
-          args.push(sub.pattern);
-        } else {
-          const sub = flattenNonGroundPattern(preds, counter, boundVars, arg);
-          before.push(...sub.before);
-          after.push(...sub.after);
-          args.push(sub.pattern);
-        }
-      }
+      const { before, args } = flattenPatterns(preds, counter, parsedPattern.args);
       if (!preds.has(parsedPattern.name)) {
-        return { before, after, pattern: { type: 'const', name: parsedPattern.name, args } };
+        return { before, pattern: { type: 'const', name: parsedPattern.name, args } };
       } else {
-        const replacementVar = `#${counter.current++}`;
-        return {
-          before: [],
-          after: [
-            ...before,
-            {
-              type: 'Proposition',
-              name: parsedPattern.name,
-              args,
-              value: { type: 'var', name: replacementVar },
-              loc: parsedPattern.loc,
-            },
-            ...after,
-          ],
-          pattern: { type: 'var', name: replacementVar },
-        };
+        const loc = parsedPattern.loc;
+        const replacementVar: Pattern = { type: 'var', name: `#${counter.current++}` };
+        const builtin = preds.get(parsedPattern.name);
+        const newPremise: FlatPremise = builtin
+          ? { type: 'builtin', name: builtin, args, value: replacementVar, loc }
+          : { type: 'fact', name: parsedPattern.name, args, value: replacementVar, loc };
+
+        return { before: [...before, newPremise], pattern: replacementVar };
       }
-    }
-    case 'special': {
-      // Exactly one of the subterms must be non-ground
-      const nonGroundIndex = parsedPattern.args.findIndex(
-        (arg) => !theseVarsGroundThisPattern(boundVars, arg),
-      );
-      const replacementVar = `#${counter.current++}`;
-      const before: FlatPremise[] = [];
-      const args: Pattern[] = [];
-      const nonGroundSubterm = flattenNonGroundPattern(
-        preds,
-        counter,
-        boundVars,
-        parsedPattern.args[nonGroundIndex],
-      );
-      for (const [i, arg] of parsedPattern.args.entries()) {
-        if (i !== nonGroundIndex) {
-          const sub = flattenGroundPattern(preds, counter, arg);
-          args.push(sub.pattern);
-          before.push(...sub.before);
-        } else {
-          args.push(nonGroundSubterm.pattern);
-        }
-      }
-      return {
-        pattern: { type: 'var', name: replacementVar },
-        before,
-        after: [
-          ...nonGroundSubterm.before,
-          {
-            type: 'Builtin',
-            name: parsedPattern.name,
-            symbol: parsedPattern.symbol,
-            args,
-            value: { type: 'var', name: replacementVar },
-            matchPosition: nonGroundIndex,
-            loc: parsedPattern.loc,
-          },
-          ...nonGroundSubterm.after,
-        ],
-      };
     }
   }
 }
 
-function flattenPattern(
-  preds: Set<string>,
+function flattenPatterns(
+  preds: Map<string, undefined | BUILT_IN_PRED>,
   counter: { current: number },
-  boundVars: Set<string>,
-  pattern: ParsedPattern,
-): { pattern: Pattern; before: FlatPremise[]; after: FlatPremise[] } {
-  if (theseVarsGroundThisPattern(boundVars, pattern)) {
-    return { ...flattenGroundPattern(preds, counter, pattern), after: [] };
-  } else {
-    return flattenNonGroundPattern(preds, counter, boundVars, pattern);
+  parsedArgs: ParsedPattern[],
+): { before: FlatPremise[]; args: Pattern[] } {
+  const before: FlatPremise[] = [];
+  const args = [];
+  for (const arg of parsedArgs) {
+    const sub = flattenPattern(preds, counter, arg);
+    before.push(...sub.before);
+    args.push(sub.pattern);
   }
+  return { before, args };
 }
 
 function flattenPremise(
-  preds: Set<string>,
+  preds: Map<string, undefined | BUILT_IN_PRED>,
   counter: { current: number },
-  boundVars: Set<string>,
   premise: ParsedPremise,
 ): FlatPremise[] {
   switch (premise.type) {
     case 'Proposition': {
-      const before: FlatPremise[] = [];
-      const after: FlatPremise[] = [];
-      const args: Pattern[] = [];
-      for (const arg of premise.args) {
-        const argResult = flattenPattern(preds, counter, boundVars, arg);
-        before.push(...argResult.before);
-        after.push(...argResult.after);
-        args.push(argResult.pattern);
-      }
-      const valueResult: { pattern: Pattern; before: FlatPremise[]; after: FlatPremise[] } =
+      const { before, args } = flattenPatterns(preds, counter, premise.args);
+      const valueResult: { pattern: Pattern | null; before: FlatPremise[] } =
         premise.value === null
-          ? { pattern: { type: 'triv' }, before: [], after: [] }
-          : flattenPattern(preds, counter, boundVars, premise.value);
+          ? { pattern: null, before: [] }
+          : flattenPattern(preds, counter, premise.value);
       before.push(...valueResult.before);
-      after.push(...valueResult.after);
+
+      const builtin = preds.get(premise.name);
+      const loc = premise.loc;
       return [
         ...before,
-        {
-          type: 'Proposition',
-          name: premise.name,
-          args,
-          value: valueResult.pattern,
-          loc: premise.loc,
-        },
-        ...after,
+        builtin
+          ? { type: 'builtin', name: builtin, args, value: valueResult.pattern!, loc }
+          : { type: 'fact', name: premise.name, args, value: valueResult.pattern, loc },
       ];
     }
+
     case 'Gt':
     case 'Geq':
     case 'Lt':
     case 'Leq':
     case 'Equality':
     case 'Inequality': {
-      const matchPosition = !theseVarsGroundThisPattern(boundVars, premise.a)
-        ? 0
-        : !theseVarsGroundThisPattern(boundVars, premise.b)
-          ? 1
-          : null;
-      const aResult = flattenPattern(preds, counter, boundVars, premise.a);
-      const bResult = flattenPattern(preds, counter, boundVars, premise.b);
-      const name =
-        premise.type === 'Leq' || premise.type === 'Gt'
-          ? 'GT'
-          : premise.type === 'Lt' || premise.type === 'Geq'
-            ? 'GEQ'
-            : 'EQUAL';
-      const value = premise.type === 'Geq' || premise.type === 'Gt' || premise.type === 'Equality';
-      return [
-        ...aResult.before,
-        ...bResult.before,
-        {
-          type: 'Builtin',
-          name,
-          symbol: null,
-          args: [aResult.pattern, bResult.pattern],
-          value: { type: 'bool', value },
-          matchPosition: matchPosition,
-          loc: premise.loc,
-        },
-        ...aResult.after,
-        ...bResult.after,
-      ];
+      let builtin: BUILT_IN_PRED;
+      let value: Pattern;
+      switch (premise.type) {
+        case 'Equality':
+          builtin = 'EQUAL';
+          value = { type: 'trivial' };
+          break;
+        case 'Inequality':
+          builtin = 'NOT_EQUAL';
+          value = { type: 'trivial' };
+          break;
+        case 'Gt':
+          builtin = 'CHECK_GT';
+          value = { type: 'bool', value: true };
+          break;
+        case 'Geq':
+          builtin = 'CHECK_GEQ';
+          value = { type: 'bool', value: true };
+          break;
+        case 'Lt':
+          builtin = 'CHECK_LT';
+          value = { type: 'bool', value: true };
+          break;
+        case 'Leq':
+          builtin = 'CHECK_LEQ';
+          value = { type: 'bool', value: true };
+          break;
+      }
+
+      const { before, args } = flattenPatterns(preds, counter, [premise.a, premise.b]);
+      return [...before, { type: 'builtin', name: builtin, args, value, loc: premise.loc }];
     }
   }
 }
 
-function flattenDecl(preds: Set<string>, decl: ParsedDeclaration): FlatDeclaration {
+function flattenDecl(
+  preds: Map<string, undefined | BUILT_IN_PRED>,
+  decl: ParsedDeclaration,
+): FlatDeclaration {
   const counter = { current: 1 };
-  const boundVars = new Set<string>();
   const premises: FlatPremise[] = [];
   for (const premise of decl.premises) {
-    premises.push(...flattenPremise(preds, counter, boundVars, premise));
-    for (const v of freeVarsPremise(premise)) {
-      boundVars.add(v);
-    }
+    premises.push(...flattenPremise(preds, counter, premise));
   }
 
   switch (decl.type) {
@@ -327,91 +153,100 @@ function flattenDecl(preds: Set<string>, decl: ParsedDeclaration): FlatDeclarati
     case 'Forbid':
       return { type: decl.type, loc: decl.loc, premises };
     case 'Rule': {
-      const args: Pattern[] = [];
-      for (const arg of decl.conclusion.args) {
-        const result = flattenGroundPattern(preds, counter, arg);
-        args.push(result.pattern);
+      const args: Pattern[] = decl.conclusion.args.map((arg) => {
+        const result = flattenPattern(preds, counter, arg);
         premises.push(...result.before);
-      }
-      const values: Pattern[] = [];
-      if (decl.conclusion.values === null) {
-        values.push({ type: 'triv' });
-      } else {
-        for (const value of decl.conclusion.values) {
-          const result = flattenGroundPattern(preds, counter, value);
-          values.push(result.pattern);
-          premises.push(...result.before);
+        return result.pattern;
+      });
+      switch (decl.conclusion.type) {
+        case 'datalog':
+          return {
+            type: 'Rule',
+            premises,
+            conclusion: {
+              name: decl.conclusion.name,
+              args,
+              type: 'datalog',
+              loc: decl.conclusion.loc,
+            },
+          };
+        case 'open':
+        case 'closed': {
+          const values: Pattern[] = [];
+          for (const value of decl.conclusion.values) {
+            const result = flattenPattern(preds, counter, value);
+            values.push(result.pattern);
+            premises.push(...result.before);
+          }
+          return {
+            type: 'Rule',
+            premises,
+            conclusion: {
+              name: decl.conclusion.name,
+              args,
+              type: decl.conclusion.type,
+              values,
+              loc: decl.conclusion.loc,
+            },
+          };
         }
       }
-      return {
-        type: 'Rule',
-        premises,
-        conclusion: {
-          name: decl.conclusion.name,
-          args,
-          values,
-          exhaustive: decl.conclusion.exhaustive,
-          loc: decl.conclusion.loc,
-        },
-        loc: decl.loc,
-      };
     }
   }
 }
 
-export function indexToRuleName(index: number): string {
-  if (index >= 26) {
-    return `${indexToRuleName(Math.floor(index / 26))}${String.fromCharCode(97 + (index % 26))}`;
-  }
-  return String.fromCharCode(97 + index);
-}
-
-export function flattenAndName(decls: ParsedDeclaration[]): [string, FlatDeclaration][] {
-  const arityInfo = checkPropositionArity(decls);
-  if (arityInfo.issues !== null) {
-    throw new Error('Invariant violation: flattenAndName called with bad program');
-  }
-  const preds = new Set(Object.keys(arityInfo.arities));
-
-  const flatDecls: [string, FlatDeclaration][] = [];
-  for (const [index, decl] of decls.entries()) {
-    flatDecls.push([indexToRuleName(index), flattenDecl(preds, decl)]);
-  }
-  return flatDecls;
+/**
+ * Perform the flattening transformation on a checked program.
+ *
+ * The flattening transformation resolves uses of built-in propositions and uses of
+ * function relations within terms. It's partially a very naive query planner.
+ *
+ * Because, at present, a functional predicate in term position is required to have only ground
+ * arguments, any functional relations get boosted out before the premise:
+ *
+ *     #demand f X Y, h (plus X Y).
+ *       -->
+ *     #demand f X Y, plus X Y is Z, h Z
+ *
+ * These effects stack:
+ *
+ *     #demand f X Y, g (plus (plus X X) (plus X Y)).
+ *       -->
+ *     #demand f X Y, plus X X is X2, plus X Y is Z, plus X2 Z is G, g G.
+ *
+ * Built-in predicates and functional propositions are treated the same way in the flattening
+ * transformation.
+ */
+export function flattenDecls(
+  preds: Map<string, undefined | BUILT_IN_PRED>,
+  decls: ParsedTopLevel[],
+): FlatDeclaration[] {
+  return decls
+    .filter((decl): decl is ParsedDeclaration => decl.type !== 'Builtin')
+    .map((decl) => flattenDecl(preds, decl));
 }
 
 export function flatPremiseToString(premise: FlatPremise) {
   const args = premise.args.map((arg) => termToString(arg));
-  const value = termToString(premise.value);
-  switch (premise.type) {
-    case 'Builtin': {
-      if (premise.matchPosition !== null) {
-        args[premise.matchPosition] = `|${args[premise.matchPosition]}|`;
-      }
-      const name = premise.symbol === null ? premise.name : `${premise.symbol}/${premise.name}`;
-      return `${name}${args.map((arg) => ` ${arg}`).join('')} is ${value}`;
-    }
-    case 'Proposition': {
-      return `${premise.name}${args.map((arg) => ` ${arg}`).join('')} is ${value}`;
-    }
-  }
+  const value = premise.value === null ? '' : ` is ${termToString(premise.value)}`;
+  return `${premise.type === 'builtin' ? '.' : ''}${premise.name}${args.map((arg) => ` ${arg}`).join('')}${value}`;
 }
 
-export function flatDeclToString([name, decl]: [string, FlatDeclaration]) {
+export function flatDeclToString(decl: FlatDeclaration) {
   const premises = decl.premises.map(flatPremiseToString).join(', ');
   switch (decl.type) {
     case 'Forbid':
-      return `${name}: #forbid ${premises}.`;
+      return `#forbid ${premises}.`;
     case 'Demand':
-      return `${name}: #forbid ${premises}.`;
+      return `#demand ${premises}.`;
     case 'Rule':
       if (decl.premises.length === 0) {
-        return `${name}: ${headToString(decl.conclusion)}.`;
+        return `${headToString(decl.conclusion)}.`;
       }
-      return `${name}: ${headToString(decl.conclusion)} :- ${premises}.`;
+      return `${headToString(decl.conclusion)} :- ${premises}.`;
   }
 }
 
-export function flatProgramToString(flatProgram: [string, FlatDeclaration][]) {
-  return flatProgram.map(flatDeclToString).join('\n');
+export function flatProgramToString(flatProgram: { name: string; decl: FlatDeclaration }[]) {
+  return flatProgram.map(({ name, decl }) => `${name}: ${flatDeclToString(decl)}`).join('\n');
 }

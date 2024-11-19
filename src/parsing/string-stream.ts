@@ -42,9 +42,11 @@ export function makeStream(
   baseString: string,
   lineNumber: number,
   startingColumn: number,
+  startingIndex: number,
 ): ExtendedStringStream {
   let str = baseString.slice(startingColumn - 1);
   let currentColumn = startingColumn;
+  let currentIndex = startingIndex;
 
   function match(match: string | RegExp, advance: boolean) {
     if (typeof match === 'string') {
@@ -52,6 +54,7 @@ export function makeStream(
         if (advance) {
           str = str.slice(match.length);
           currentColumn += match.length;
+          currentIndex += match.length;
         }
         return match;
       }
@@ -67,6 +70,7 @@ export function makeStream(
     if (advance) {
       str = str.slice(found[0].length);
       currentColumn += found[0].length;
+      currentIndex += found[0].length;
     }
     return found[0];
   }
@@ -84,8 +88,8 @@ export function makeStream(
     eol: () => str === '',
     currentColumn: () => currentColumn,
     matchedLocation: () => ({
-      start: { line: lineNumber, column: startingColumn },
-      end: { line: lineNumber, column: currentColumn },
+      start: { line: lineNumber, column: startingColumn, index: startingIndex },
+      end: { line: lineNumber, column: currentColumn, index: currentIndex },
     }),
   };
 }

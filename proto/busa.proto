@@ -40,7 +40,7 @@ message Rule {
     }
 
     /*
-    conclusion <Args> is <Values> :- prefix X0 ... XN
+    conclusion <Args> :- prefix X0 ... XN
 
      - Premise has arguments X0 ... XN in order
      - Conclusion has arbitrary patterns with vars X0...XN
@@ -54,27 +54,39 @@ message Rule {
     }
 
     /*
-    conclusion <Args> is { <Values> } :- prefix X0 ... XN (exhaustive)
-    conclusion <Args> is { <Values>? } :- prefix X0 ... XN (non-exhaustive)
+    conclusion <Args> is? { <Values> } :- prefix X0 ... XN
 
      - Premise has arguments X0 ... XN in order
      - Conclusion has arbitrary patterns with vars X0...XN
      - Conclusion is a fact with one value
     */
-    message ChoiceConclusion {
+    message OpenConclusion {
         string conclusion = 1;
         repeated Pattern args = 2;
         repeated Pattern choices = 3;
-        bool exhaustive = 4;
         string prefix = 5;
     }
 
     /*
-    conclusion Y3 X1 Z4 :- prefix X0 X1 Y2 Y3, fact X0 X1 Z2 is Z3 Z4.
+    conclusion <Args> is { <Values> } :- prefix X0 ... XN
 
-     - Prefix and fact premise share first N arguments X0...XN
-     - prefix can have additional arguments ...YM, M >= N
-     - fact can have additional arguments in args and values ...ZP, P >= N
+     - Premise has arguments X0 ... XN in order
+     - Conclusion has arbitrary patterns with vars X0...XN
+     - Conclusion is a fact with one value
+    */
+    message ClosedConclusion {
+        string conclusion = 1;
+        repeated Pattern args = 2;
+        repeated Pattern choices = 3;
+        string prefix = 5;
+    }
+
+    /*
+    conclusion Fact1 Shared1 Prefix1 FactValue :- prefix Shared0 Shared1 Prefix0 Prefix1, fact Shared0 Shared1 Fact0 Fact1 is FactValue.
+
+     - Prefix and fact premise share first N arguments Shared0...SharedN
+     - prefix can have additional arguments Prefix0...PrefixM
+     - fact can have additional arguments in args and values Fact0...FactP
      - conclusion is another prefix and has no repeat variables
     */
     message Join {
@@ -114,9 +126,12 @@ message Rule {
             INT_MINUS = 5;
             INT_TIMES = 6;
             STRING_CONCAT = 7;
-            EQUAL = 8;
-            GT = 9;
-            GEQ = 10;
+            CHECK_GT = 8;
+            CHECK_GEQ = 9;
+            CHECK_LT = 10;
+            CHECK_LEQ = 11;
+            EQUAL = 12;
+            NOT_EQUAL = 13;
         }
 
         string conclusion = 1;

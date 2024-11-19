@@ -4,6 +4,7 @@ import { parse } from '../language/dusa-parser.js';
 import { makeInitialDb } from './forwardengine.js';
 import { test, expect } from 'vitest';
 import { check } from '../language/check.js';
+import { builtinModes } from '../language/dusa-builtins.js';
 
 function testExecution(source: string, debug = false) {
   const parsed = parse(source);
@@ -11,110 +12,14 @@ function testExecution(source: string, debug = false) {
     throw parsed.errors;
   }
 
-  const { errors } = check(parsed.document);
+  const { builtins, arities, errors } = check(builtinModes, parsed.document);
   if (errors.length !== 0) {
     throw errors;
   }
 
-  const program = compile(parsed.document, debug);
+  const program = compile(builtins, arities, parsed.document, debug);
   return execute(program, makeInitialDb(program), debug);
 }
-
-// Broken in 0.0.8, because (s (s Q)) != 1 no longer works as a premise -
-// we need to disallow functional predicates in non-ground inequalities (issue #10),
-// since we can't in general count on those predicates being injective
-
-/*
-test('Multi-step declaration, basic nat (in)equality', () => {
-  const { solutions, deadEnds } = testExecution(`
-    #builtin NAT_ZERO z
-    #builtin NAT_SUCC s
-  
-    a :- 1 == 1, 0 != s z, 1 == s z, 0 == z, 1 == s 0, 2 == s _, s _Y != 0, s (s Q) != 1.
-    b :- a, a.
-    c :- b.
-    d :- c, z == 1.
-    d :- c, s z == 0.
-    d :- c, z != 0.
-    d :- c, s z != 1.
-    e :- d.
-    `);
-  expect(deadEnds).toEqual(0);
-  expect(solutionsToStrings(solutions)).toEqual(['a, b, c']);
-});
-
-test('Matching nats', () => {
-  const { solutions } = testExecution(`
-    #builtin NAT_SUCC s
-  
-    a 2.
-    a 4.
-    b X :- a Y, Y == s X.
-    c X :- a Y, X == s Y.
-    d X :- b X, X != s (s Y).
-    e (s (s X)) :- a X, s (s (s _)) != X.
-    e (s X) :- a X, X != s (s (s _Y)).`);
-
-  expect(solutionsToStrings(solutions)).toEqual(['a 2, a 4, b 1, b 3, c 3, c 5, d 1, e 3, e 4']);
-});
-*/
-
-test('Multi-step declaration, basic nat (in)equality, simplified', () => {
-  const { solutions, deadEnds } = testExecution(`
-    #builtin NAT_ZERO z
-    #builtin NAT_SUCC s
-  
-    a :- 1 == 1, 0 != s z, 1 == s z, 0 == z, 1 == s 0, 2 == s _, s _Y == 1, s Q == 1.
-    b :- a, a.
-    c :- b.
-    d :- c, z == 1.
-    d :- c, s z == 0.
-    d :- c, z != 0.
-    d :- c, s z != 1.
-    e :- d.
-    `);
-  expect(deadEnds).toEqual(0);
-  expect(solutionsToStrings(solutions)).toEqual(['a, b, c']);
-});
-
-test(`Built-in functions get flattened`, () => {
-  const { solutions, deadEnds } = testExecution(`
-    #builtin NAT_SUCC s
-
-    a N :- N == 4.
-    b N :- N == s 2.
-    c N :- s N == 1.
-    d N :- s N == s 0.
-    e N :- 3 == N.
-    f N :- s 1 == N.
-    g N :- 4 == s N.
-    h N :- s 3 == s N.
-    i N :- 0 == s N. `);
-  expect(deadEnds).toEqual(0);
-  expect(solutionsToStrings(solutions)).toEqual(['a 4, b 3, c 0, d 0, e 3, f 2, g 3, h 3']);
-});
-
-test(`Functional predicates get flattened in match position`, () => {
-  const { solutions, deadEnds } = testExecution(`
-    s 0 is 1.
-    s 1 is 2.
-    s 2 is 3.
-    s 3 is 4.
-
-    a N :- N == 4.
-    b N :- N == s 2.
-    c N :- s N == 1.
-    d N :- s N == s 0.
-    e N :- 3 == N.
-    f N :- s 1 == N.
-    g N :- 4 == s N.
-    h N :- s 3 == s N.
-    i N :- 0 == s N.`);
-  expect(deadEnds).toEqual(0);
-  expect(solutionsToStrings(solutions)).toEqual([
-    'a 4, b 3, c 0, d 0, e 3, f 2, g 3, h 3, s 0 is 1, s 1 is 2, s 2 is 3, s 3 is 4',
-  ]);
-});
 
 test(`Functional predicates get flattened in ground position`, () => {
   const { solutions, deadEnds } = testExecution(`
@@ -153,18 +58,6 @@ test('Long chain of inferences', () => {
   ]);
 });
 
-test('Chained equality', () => {
-  const { solutions } = testExecution(`
-    #builtin NAT_SUCC s
-    
-    a 0.
-    b E :- a A, s A == B, s B == C, s C == D, D == s (s E), E != D, F == E.
-    c A :- a (s A).
-    d B :- b (s B).
-    `);
-  expect(solutionsToStrings(solutions)).toEqual(['a 0, b 1, d 0']);
-});
-
 test('Equality on structures', () => {
   const { solutions } = testExecution(`
     a (pair 10 2).
@@ -175,6 +68,24 @@ test('Equality on structures', () => {
     f X :- d A, c Y, A == pair X Y.
     `);
   expect(solutionsToStrings(solutions)).toEqual(['a (pair 10 2), b 10, c 2, d (pair 2 10), e 10']);
+});
+
+test('Inequality on numbers', () => {
+  const { solutions } = testExecution(`
+    a :- 3 < 4.
+    b :- 4 < 4.
+    c :- 5 < 4.
+    d :- 3 <= 4.
+    e :- 4 <= 4.
+    f :- 5 <= 4.
+    g :- 3 > 4.
+    h :- 4 > 4.
+    i :- 5 > 4.
+    j :- 3 >= 4.
+    k :- 4 >= 4.
+    l :- 5 >= 4.
+    `);
+  expect(solutionsToStrings(solutions)).toEqual(['a, d, e, i, k, l']);
 });
 
 test('Exhaustive choices', () => {
@@ -343,7 +254,7 @@ test('Generating edges', () => {
     #builtin NAT_SUCC s
   
     vertex 2.
-    vertex N :- vertex (s N).
+    vertex N :- vertex M, s N is M.
   
     edge X Y is { extant, absent } :- vertex X, vertex Y, X != Y.
     edge X Y is Z :- edge Y X is Z.
