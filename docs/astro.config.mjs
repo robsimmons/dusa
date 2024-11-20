@@ -13,7 +13,7 @@ export default defineConfig({
         github: 'https://github.com/robsimmons/dusa',
       },
       editLink: {
-        baseUrl: 'https://git.sr.ht/~robsimmons/dusa/tree/main/item/docs/',
+        baseUrl: 'https://github.com/robsimmons/dusa/tree/main/docs/',
       },
       customCss: [
         './src/custom.css',
