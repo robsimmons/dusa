@@ -10,7 +10,7 @@ A companion page to the companion zine to [Dusa Zine #1](https://ko-fi.com/s/3ca
 There actually aren't clear rules for what goes in the crossed-out boxes: you could reasonably draw nothing, or just a circle, or a circle with a smile, or a circle with a smile and spiral overlapping. There's only one consistent way to fill out the other boxes:
 
 ```
-Top row: 
+Top row:
   square-smiley
   circle-smiley? (crossed out)
   circle-spiral
