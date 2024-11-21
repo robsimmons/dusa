@@ -17,7 +17,15 @@ import { compile } from './language/compile.js';
 import { parse } from './language/dusa-parser.js';
 import { Issue } from './parsing/parser.js';
 import { bytecodeToJSON } from './serialize.js';
-import { dataToTerm, InputFact, InputTerm, Term, termToData } from './termoutput.js';
+import {
+  compareTerms,
+  dataToTerm,
+  Fact,
+  InputFact,
+  InputTerm,
+  Term,
+  termToData,
+} from './termoutput.js';
 
 export type { ProgramN as BytecodeProgramN } from './bytecode.js';
 export type { Issue } from './parsing/parser.js';
@@ -43,7 +51,7 @@ export class Dusa {
   private prog: InternalProgram;
   private state: SearchState | null;
   private cachedSolution: null | 'conflict' | DusaSolution = null;
-  
+
   get relations(): string[] {
     return [...Object.keys(this.prog.arities)];
   }
@@ -167,6 +175,7 @@ export interface DusaSolution {
   get(name: string, ...args: InputTerm[]): Term | undefined;
   has(name: string, ...args: InputTerm[]): boolean;
   lookup(name: string, ...args: InputTerm[]): Generator<Term[]>;
+  facts(): Fact[];
 }
 
 class DusaSolutionImpl implements DusaSolution {
@@ -232,6 +241,22 @@ class DusaSolutionImpl implements DusaSolution {
       }
     }
     return loop(this.prog.data, this.prog.arities[name], this.solution);
+  }
+
+  facts(): Fact[] {
+    return [...Object.entries(this.prog.arities)]
+      .toSorted((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0))
+      .flatMap(([pred, arity]): Fact[] => {
+        const rows = [...this.lookup(pred)].toSorted(compareTerms);
+        if (arity.value) {
+          return rows.map((args) => {
+            const value = args.pop()!;
+            return { name: pred, args, value };
+          });
+        } else {
+          return rows.map((args) => ({ name: pred, args, value: null }));
+        }
+      });
   }
 }
 
@@ -320,22 +345,25 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
       }
     }
 
-    let model: Database | null;
-    let { path, tree } = this.state;
     for (let i = 0; i < limit; i++) {
-      if (path === null && tree === null) return true;
-      [path, tree, model] = step(this.prog, path, tree);
+      if (this.state.path === null && this.state.tree === null) {
+        return true; // Ready to produce with done = true
+      }
+      const stepResult = step(this.prog, this.state.path, this.state.tree);
+      this.state.path = stepResult[0];
+      this.state.tree = stepResult[1];
+      this.stagedSolution = stepResult[2];
       this.nSteps += 1;
-      if (model !== null) {
-        if (model.size.neg === 0) {
-          this.state.path = path;
-          this.state.tree = tree;
-          this.stagedSolution = model;
-          return true;
+      if (this.stagedSolution !== null) {
+        if (this.stagedSolution.size.neg === 0) {
+          return true; // Ready to produce with done = false
         } else {
+          this.stagedSolution = null;
           this.nNonPos += 1;
         }
-      } else if (tree === null) {
+      }
+
+      if (this.stagedSolution === null && this.state.tree === null) {
         this.nBacktracks += 1;
         // With some probability, go ahead and return to the root
         // (intended to bump out of bad solution spaces)
@@ -344,12 +372,14 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
           if (path !== null && tree !== null) {
             this.state.path = null;
             this.state.tree = ascendToRoot(path, tree);
+          } else {
+            this.state.path = path;
+            this.state.tree = tree;
           }
         }
       }
     }
-    this.state.path = path;
-    this.state.tree = tree;
+
     return false;
   }
 

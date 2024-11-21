@@ -1,13 +1,6 @@
-import { Fact as OutputFact, dataToTerm } from '../termoutput.js';
-import { listFacts, makeInitialDb } from '../engine/forwardengine.js';
-import {
-  ChoiceTree,
-  ChoiceTreeNode,
-  pathToString,
-  stepTreeRandomDFS,
-} from '../engine/choiceengine.js';
-import { Data, compareData } from '../datastructures/data.js';
-import { IndexedProgram } from '../language/indexize.js';
+import { Fact as OutputFact } from '../termoutput.js';
+import { ProgramN } from '../bytecode.js';
+import { Dusa, DusaIterator } from '../client.js';
 
 export type WorkerQuery = {
   type: 'list';
@@ -20,31 +13,29 @@ export interface WorkerStats {
   deadEnds: number;
 }
 
-export type WorkerToApp =
+export type WorkerToAppMsg =
   | { type: 'error'; msg: string }
   | { type: 'stats'; stats: WorkerStats }
   | { type: 'solution'; facts: OutputFact[] }
   | { type: 'done' };
 
-export type AppToWorker =
-  | { type: 'load'; program: IndexedProgram }
+export type AppToWorkerMsg =
+  | { type: 'load'; program: ProgramN<string | number> }
   | { type: 'stop' }
   | { type: 'start' };
 
-const DEBUG_EXECUTION = false;
-const CYCLE_LIMIT = 100;
+const CYCLE_LIMIT = 5000;
 const STATS_UPDATE = 100;
 
 let state: 'uninitialized' | 'in-progress' | 'error' | 'done' = 'uninitialized';
-let program: IndexedProgram;
-let tree: ChoiceTree;
-let path: [ChoiceTreeNode, Data | 'defer'][] = [];
 const stats: WorkerStats = {
   cycles: 0,
   deadEnds: 0,
 };
 
-function post(message: WorkerToApp): true {
+let dusa: DusaIterator;
+
+function post(message: WorkerToAppMsg): true {
   postMessage(message);
   return true;
 }
@@ -64,57 +55,30 @@ function loop(): true {
     lastStatsTime = Date.now();
   }
 
-  for (let i = 0; i < CYCLE_LIMIT + Math.random() * CYCLE_LIMIT; i++) {
-    try {
-      if (DEBUG_EXECUTION) {
-        console.log(pathToString(tree, path));
-      }
-      const result = stepTreeRandomDFS(program, tree, path, stats);
-
-      if (result.solution) {
-        post({ type: 'stats', stats });
-        post({
-          type: 'solution',
-          facts: [...listFacts(result.solution)]
-            .sort((a, b) => {
-              if (a.name > b.name) return 1;
-              if (a.name < b.name) return -1;
-              if (a.args.length < b.args.length) return 1;
-              if (a.args.length > b.args.length) return -1;
-              for (let i = 0; i < a.args.length; i++) {
-                const c = compareData(a.args[i], b.args[i]);
-                if (c !== 0) return c;
-              }
-              return compareData(a.value, b.value);
-            })
-            .map(({ name, args, value }) => ({
-              name,
-              args: args.map(dataToTerm),
-              value: dataToTerm(value),
-            })),
-        });
-      }
-
-      if (result.tree === null) {
+  try {
+    const readyToReport = dusa.advance(CYCLE_LIMIT + Math.random() * CYCLE_LIMIT);
+    if (readyToReport) {
+      const next = dusa.next();
+      if (next.done) {
         post({ type: 'stats', stats });
         post({ type: 'done' });
         state = 'done';
         return true;
       } else {
-        tree = result.tree;
-        path = result.tree === null ? path : result.path;
+        post({ type: 'solution', facts: next.value.facts() });
       }
-    } catch (e) {
-      post({ type: 'error', msg: `${e}` });
-      state = 'error';
-      return true;
     }
+  } catch (e) {
+    console.log(e);
+    post({ type: 'error', msg: `${e}` });
+    state = 'error';
+    return true;
   }
   loopHandle = setTimeout(loop);
   return true;
 }
 
-onmessage = (event: MessageEvent<AppToWorker>): true => {
+onmessage = (event: MessageEvent<AppToWorkerMsg>): true => {
   if (state === 'error' || state === 'done') return true;
 
   if (state === 'uninitialized') {
@@ -127,8 +91,7 @@ onmessage = (event: MessageEvent<AppToWorker>): true => {
       return true;
     } else {
       try {
-        program = event.data.program;
-        tree = { type: 'leaf', db: makeInitialDb(program) };
+        dusa = new Dusa(event.data.program)[Symbol.iterator]();
         loopHandle = setTimeout(loop);
         state = 'in-progress';
         return true;
@@ -146,7 +109,7 @@ onmessage = (event: MessageEvent<AppToWorker>): true => {
     case 'load': {
       post({
         type: 'error',
-        msg: `A 'load' message must be first, received '${event.data.type}' instead.`,
+        msg: `A 'load' message can only be received as the first message.`,
       });
       state = 'error';
       return true;
