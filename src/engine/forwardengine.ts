@@ -206,12 +206,20 @@ export function assertConclusion(
       const choices = conclusion.choices.map((choice) =>
         apply(prog.data, shared, choice, passed, passedOffset, introduced, introducedOffset),
       );
+      let addsNewFrontierChoices = false;
       let newFrontierChoices = frontierChoices.values;
       for (const choice of choices) {
         if (!exploredValue.noneOf.has(choice)) {
+          addsNewFrontierChoices = true;
           newFrontierChoices = newFrontierChoices.add(choice);
         }
       }
+
+      // An open rule *also* has no effect if all of the open rule's
+      // conclusions are already included in the rejection set X (where 
+      // D[a] = noneOf X)
+      if (!addsNewFrontierChoices) return null;
+
       const [frontier, isAlreadyInFrontier] = state.frontier.set(conclusion.name, args, {
         open: true,
         values: newFrontierChoices,

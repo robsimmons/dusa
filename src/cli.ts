@@ -99,7 +99,7 @@ function validateFact(fact: any): fact is InputFact {
     }
   }
 
-  if (fact.value !== undefined) {
+  if (fact.value === undefined) {
     return args.every(validateTerm);
   } else {
     return args.every(validateTerm) && validateTerm(fact.value);

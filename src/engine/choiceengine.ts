@@ -107,13 +107,13 @@ export enum StepResult {
   STEPPED = 3,
 }
 
-/** 
+/**
  * A zipper always points to a particular subtree. This function deletes that
  * pointed-to tree from the tree.
- * 
+ *
  * This may mean that the deleted tree's parent now only has one child. In
  * that case, the parent is also deleted and replaced with its singleton
- * child, the node that was previously the now-deleted subtree's sibling. 
+ * child, the node that was previously the now-deleted subtree's sibling.
  */
 export function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, ChoiceTree | null] {
   if (pathToCollapseUp === null) return [null, null];
