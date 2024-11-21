@@ -101,15 +101,15 @@ test('black-box 2', () => {
 test('insert and remove in different orders', () => {
   let t: AVL<string, number>;
   let r: number | null;
-  const tb = { height: 1, key: 'b', left: null, right: null, value: 1 };
-  const td = { height: 1, key: 'd', left: null, right: null, value: 2 };
+  const tb = { height: 1, size: 1, key: 'b', left: null, right: null, value: 1 };
+  const td = { height: 1, size: 1, key: 'd', left: null, right: null, value: 2 };
 
   [t, r] = insert(null, 'b', 1);
   expect(t).toStrictEqual(tb);
   expect(r).toBeNull();
 
   [t, r] = insert(t, 'd', 2);
-  expect(t).toStrictEqual({ height: 2, key: 'b', value: 1, left: null, right: td });
+  expect(t).toStrictEqual({ height: 2, size: 2, key: 'b', value: 1, left: null, right: td });
   expect(r).toBeNull();
 
   expect(remove(t, 'a')).toBeNull();
@@ -123,7 +123,7 @@ test('insert and remove in different orders', () => {
   expect(r).toBeNull();
 
   [t, r] = insert(t, 'b', 1);
-  expect(t).toStrictEqual({ height: 2, key: 'd', value: 2, left: tb, right: null });
+  expect(t).toStrictEqual({ height: 2, size: 2, key: 'd', value: 2, left: tb, right: null });
   expect(r).toBeNull();
 
   expect(remove(t, 'a')).toBeNull();

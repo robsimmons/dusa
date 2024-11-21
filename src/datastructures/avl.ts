@@ -1,5 +1,6 @@
 export interface AVLNode<K, V> {
   height: number;
+  size: number;
   key: K;
   value: V;
   left: null | AVLNode<K, V>;
@@ -10,6 +11,10 @@ export type AVL<K, V> = AVLNode<K, V> | null;
 
 function height<K, V>(t: AVL<K, V>) {
   return t === null ? 0 : t.height;
+}
+
+function size<K, V>(t: AVL<K, V>) {
+  return t === null ? 0 : t.size;
 }
 
 export function lookup<K, V>(t: AVL<K, V>, key: K): V | null {
@@ -31,6 +36,7 @@ export function lookup<K, V>(t: AVL<K, V>, key: K): V | null {
 function create<K, V>(key: K, value: V, left: AVL<K, V>, right: AVL<K, V>): AVLNode<K, V> {
   return {
     height: Math.max(height(left), height(right)) + 1,
+    size: size(left) + size(right) + 1,
     key,
     value,
     left,
@@ -154,29 +160,19 @@ export function insert<K, V>(t: AVL<K, V>, key: K, value: V, ref: Ref<V>): AVLNo
   }
 }
 
-/**
- * Ad-hoc way of cheaply returning a random element that's,
- * y'know, uniform-ish.
- */
 export function choose<K, V>(t: AVL<K, V>): [K, V] | null {
-  // First, chart a random path from the root to a leaf
-  const options: AVLNode<K, V>[] = [];
-  while (t !== null) {
-    options.push(t);
-    t = Math.random() < 0.5 ? t.left : t.right;
-  }
+  let nth = Math.floor(Math.random() * size(t));
 
-  // Then, starting at the leaf, repeatedly flip a coin.
-  // Walk back up if its heads, stop if it's tails (or got back to the root).
-  if (options.length === 0) return null;
-  let i = options.length - 1;
-  let r = Math.random();
-  while (i > 0 && r < 0.5) {
-    r *= 2;
-    i--;
+  let leftSize: number;
+  while (t !== null && (leftSize = size(t.left)) !== nth) {
+    if (leftSize > nth) {
+      t = t.left;
+    } else {
+      nth = nth - leftSize - 1;
+      t = t.right;
+    }
   }
-  const selected = options[i];
-  return [selected.key, selected.value];
+  return t === null ? null : [t.key, t.value];
 }
 
 export function* visit<K, V>(t: AVL<K, V>): IterableIterator<{ key: K; value: V }> {

@@ -4,6 +4,7 @@ import {
   insert as insertTree,
   choose as chooseTree,
   remove as removeTree,
+  singleton as singletonTree,
   iterator as iteratorTree,
   Ref,
 } from './avl.js';
@@ -203,7 +204,7 @@ export class DataMap<T> {
   }
 
   static singleton<T>(key: Data, value: T) {
-    return new DataMap<T>({ height: 1, key, value, left: null, right: null }, 1);
+    return new DataMap<T>(singletonTree(key, value), 1);
   }
 
   get(key: Data) {

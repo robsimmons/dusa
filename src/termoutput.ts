@@ -98,3 +98,4 @@ export function compareTerm(t: Term, s: Term): number {
   if (s.name !== null) return 1;
   return t.value - s.value;
 }
+

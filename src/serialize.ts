@@ -1,4 +1,5 @@
 import { ConclusionN, PatternN, ProgramN, RuleN } from './bytecode.js';
+import { Term } from './termoutput.js';
 
 const MAX_INT = BigInt(Number.MAX_SAFE_INTEGER);
 const MIN_INT = BigInt(Number.MIN_SAFE_INTEGER);
@@ -8,6 +9,18 @@ function bigintToJSON(n: bigint): string | number {
     return `${n}`;
   } else {
     return Number(n);
+  }
+}
+
+export function termToJson(t: Term): any {
+  if (t === null || typeof t === 'string' || typeof t === 'boolean') return t;
+  if (typeof t === 'bigint') {
+    return bigintToJSON(t);
+  }
+  if (typeof t === 'object') {
+    if (t.name === null) return t;
+    if (!t.args) return { name: t.name };
+    return { name: t.name, args: t.args.map(termToJson) };
   }
 }
 

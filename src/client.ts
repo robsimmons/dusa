@@ -23,6 +23,7 @@ export type { ProgramN as BytecodeProgramN } from './bytecode.js';
 export type { Issue } from './parsing/parser.js';
 export type { InputFact, InputTerm, Fact, Term } from './termoutput.js';
 export { compareTerm, compareTerms, termToString } from './termoutput.js';
+export { termToJson } from './serialize.js';
 
 export class DusaError extends Error {
   issues: Issue[];
@@ -42,6 +43,10 @@ export class Dusa {
   private prog: InternalProgram;
   private state: SearchState | null;
   private cachedSolution: null | 'conflict' | DusaSolution = null;
+  
+  get relations(): string[] {
+    return [...Object.keys(this.prog.arities)];
+  }
 
   get solution() {
     if (this.cachedSolution === null) {
