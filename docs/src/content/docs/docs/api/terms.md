@@ -11,10 +11,10 @@ All Dusa terms have a correspondence with JavaScript types:
 - The integer and natural number types in Dusa correspond to the
   [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
   type in JavaScript. The JavaScript BigInt four is written as `4n`, not `4`.
-- Constants like `a`, `tt`, or `bob` in Dusa correspond to objects `{ name: 'a' }`,
-  `{ name: 'tt' }`, or `{ name: 'bob' }` in JavaScript.
-- An uninterpreted function with arguments like `h 9 "fish"` in Dusa corresponds
-  to an object `{ name: 'h', args: [9n, 'fish'] }` in JavaScript.
+- Constants like `a`, `tt`, or `bob` in Dusa correspond to objects 
+  `{ name: 'a' }`, `{ name: 'tt' }`, or `{ name: 'bob' }` in JavaScript.
+- An uninterpreted function with arguments like `h 9 "fish"` in Dusa
+  corresponds to an object `{ name: 'h', args: [9n, 'fish'] }` in JavaScript.
 
 ### type `Term`
 
@@ -50,19 +50,19 @@ Dusa will accept numbers of type `number` and convert them to
 values. This will raise a `RangeError` if you try to pass a non-integer `number`
 to Dusa.
 
-An input constant like `a` can also be given as `{ name: 'a', args: [] }`, even
-though that constant will always be output as `{ name: 'a' }`.
+An input constant like `a` can also be given as `{ name: 'a', args: [] }`,
+even though that constant will always be output as `{ name: 'a' }`.
 
 ### type `InputFact`
 
 ```typescript
 export interface InputFact {
   name: string;
-  args: InputTerm[];
+  args?: InputTerm[];
   value?: InputTerm;
 }
 ```
 
-The `value` field is optional when giving a fact as an argument (for example, to
-the [`assert()` method](/docs/api/dusa/#assert-method).), and a missing value
-field will be interpreted as the trivial Dusa value `()`.
+Both the `args` field and the `value` field are is optional when giving a fact
+as an argument (for example, to the [`assert()`
+method](/docs/api/dusa/#assert-method).).

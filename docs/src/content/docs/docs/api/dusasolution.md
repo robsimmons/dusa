@@ -29,78 +29,16 @@ get(name: string, ...args: InputTerm): undefined | Term;
 ```
 
 An error will be raised if the number of `args` is not equal to the number of
-arguments that the proposition has (not counting the value).
-
-### Example
-
-Since [functional and relational propositions are actually the same
-thing](/docs/language/facts/#everythings-secretly-functional), either `has()`
-or `get()` can be used with any proposition.
-
-In a solution with propositions of the form `node _`, `edge _ _`, and
-`color _ is _`, the implied Typescript types for `has()` and `get()` are as follows:
-
-```typescript
-has(name: 'node', arg1: InputTerm): boolean;
-has(name: 'edge', arg1: InputTerm, arg2: InputTerm): boolean;
-has(name: 'color', arg1: InputTerm): boolean;
-get(name: 'node', arg1: InputTerm): undefined | null;
-get(name: 'edge', arg1: InputTerm, arg2: InputTerm): undefined | null;
-get(name: 'color', arg1: InputTerm): undefined | Term;
-```
-
-These can be used like this:
-
-```javascript
-const dusa = new Dusa(`
-    edge 1 2.
-    node 1.
-    node 2.
-    node 3.
-    color 1 is "blue".
-    color 2 is "red".`);
-
-dusa.solution.has('node', 1); // === true
-dusa.solution.has('node', 7); // === false
-dusa.solution.get('node', 3); // === null, () in Dusa
-dusa.solution.get('node', 9); // === undefined
-
-dusa.solution.has('edge', 1, 2); // === true
-dusa.solution.has('edge', 2, 1); // === false
-
-dusa.solution.get('color', 1); // === "blue"
-dusa.solution.get('color', 9); // === undefined
-```
-
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-kk2qno?file=index.js&view=editor)
-
-## Enumerating all facts
-
-### `facts` getter
-
-The `facts` getter provides an iterator over all the [facts](/docs/api/terms/#type-fact)
-in a solution.
-
-```javascript
-const dusa = new Dusa(`
-    #builtin INT_MINUS minus
-    digit 9.
-    digit (minus N 1) :- digit N, N != 0.`);
-
-for (const fact of dusa.solution.facts) {
-  console.log(fact);
-}
-```
-
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-4fvfea?file=index.js&view=editor)
+arguments that the proposition has (not counting the value), or if the
+predicate `name` is a Datalog predicate that does not have an `is` value.
 
 ## Querying solutions
 
 ### `lookup()` method
 
-The `lookup()` method on solutions is a powerful query mechanism. If your program
-has a relational proposition `path _ _`, then given only the first argument
-`'path'`, `lookup()` will return an iterator over all the paths.
+The `lookup()` method on solutions is a powerful query mechanism. If your
+program has a relational proposition `path _ _`, then given only the first
+argument `'path'`, `lookup()` will return an iterator over all the paths.
 
 ```javascript
 const dusa = new Dusa(`
@@ -114,9 +52,9 @@ for (const [a, b] of dusa.solution.lookup('path')) {
 }
 ```
 
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-xhjrt3?file=index.js&view=editor)
+[Explore this example on val.town](https://www.val.town/v/robsimmons/lookup_all)
 
-This will print the following:
+This will print the following in some order:
 
     Path from 1 to 2
     Path from 1 to 3
@@ -141,7 +79,7 @@ for (const [b] of dusa.solution.lookup('path', 2n)) {
 }
 ```
 
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-15xb9l?file=index.js&view=editor)
+[Explore this example on val.town](https://www.val.town/v/robsimmons/lookup_some)
 
 This will print the following:
 
@@ -151,9 +89,9 @@ This will print the following:
 In Typescript terms, the `lookup()` method has the following type:
 
 ```typescript
-lookup(name: 'path'): IterableIterator<[Term, Term, null]>;
-lookup(name: 'path', arg1: InputTerm): IterableIterator<[Term, null]>;
-lookup(name: 'path', arg1: InputTerm, arg2: InputTerm): IterableIterator<[null]>;
+lookup(name: 'path'): IterableIterator<[Term, Term]>;
+lookup(name: 'path', arg1: InputTerm): IterableIterator<[Term]>;
+lookup(name: 'path', arg1: InputTerm, arg2: InputTerm): IterableIterator<[]>;
 ```
 
 For a functional proposition like `name _ is _`, the effective type of the
@@ -163,3 +101,24 @@ For a functional proposition like `name _ is _`, the effective type of the
 lookup(name: 'name'): IterableIterator<[Term, Term]>;
 lookup(name: 'name', arg1: InputTerm): IterableIterator<[Term]>;
 ```
+
+## Enumerating all facts
+
+### `facts()`
+
+The `facts` method provides a list of all the 
+[facts](/docs/api/terms/#type-fact) in a solution. The `lookup()` method
+is generally going to be preferable.
+
+```javascript
+const dusa = new Dusa(`
+    #builtin INT_MINUS minus
+    digit 9.
+    digit (minus N 1) :- digit N, N != 0.`);
+
+for (const fact of dusa.solution.facts) {
+  console.log(fact);
+}
+```
+
+[Explore this example on val.town](https://www.val.town/v/robsimmons/list_the_facts)
