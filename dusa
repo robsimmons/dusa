@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+
+const { argv, exit } = await import('process');
+const { runDusaCli } = await import('./lib/cli.js');
+exit(runDusaCli(argv.slice(2)));
