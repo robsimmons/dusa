@@ -25,7 +25,7 @@ test('Readme examples: mutual exclusion', () => {
   expect(result.outs[0]).toBe('Solving...');
   expect(result.outs[1]).toBe('Answer: 1');
   expect(result.outs[3]).toBe('SATISFIABLE (1+ model)');
-  2;
+
   result = testCli(['examples/mutual-exclusion.dusa', '-n0']);
   expect(result.code).toBe(0);
   expect(result.errs).toStrictEqual([]);
