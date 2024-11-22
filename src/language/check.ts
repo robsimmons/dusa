@@ -80,7 +80,10 @@ function checkForUniqueWildcardsInDecl(decl: ParsedDeclaration): Issue[] {
   return errors;
 }
 
-/** Descends into terms to find any incorrect uses of functional predicates in these patterns */
+/**
+ * Descends into terms to find any incorrect uses of functional predicates in
+ * these patterns
+ */
 function checkRelationsAndBuiltinsInPatterns(
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
@@ -94,7 +97,10 @@ function checkRelationsAndBuiltinsInPatterns(
   );
 }
 
-/** Descends into terms to find any incorrect uses of functional predicates in this pattern */
+/**
+ * Descends into terms to find any incorrect uses of functional predicates in
+ * this pattern
+ */
 function checkRelationsAndBuiltinsInPattern(
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
@@ -206,7 +212,10 @@ function getWildcardsInPattern(
   }
 }
 
-/** Descends into terms to find all variables that will be bound by matching these patterns */
+/**
+ * Descends into terms to find all variables that will be bound by matching
+ * these patterns
+ */
 function getNewlyBoundVarsInPatterns(
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
@@ -220,7 +229,10 @@ function getNewlyBoundVarsInPatterns(
   );
 }
 
-/** Descends into terms to find all variables that will be bound by matching this pattern */
+/**
+ * Descends into terms to find all variables that will be bound by matching
+ * this pattern
+ */
 function getNewlyBoundVarsInPattern(
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
@@ -420,11 +432,13 @@ export function check(program: ParsedTopLevel[]): {
     if (wildcardsInDeclIssues.length > 0) continue;
     const groundVars = new Map();
 
-    /* For each premise: call checkBuiltin if applicable, call checkRelationsAndBuiltinsInPatterns,
-     * and then register any new variables as bound. */
+    /* For each premise: call checkBuiltin if applicable, call
+     * checkRelationsAndBuiltinsInPatterns, and then register any new
+     * variables as bound. */
     for (const premise of decl.premises) {
-      // There are many different configurations where we need to check the properties
-      // of builtins: consolidating the arguments to checkBuiltin makes this much simpler
+      // There are many different configurations where we need to check the
+      // properties of builtins: consolidating the arguments to checkBuiltin
+      // makes this much simpler
       function checkBuiltinHelper(
         builtin: BUILT_IN_PRED,
         args: ParsedPattern[],

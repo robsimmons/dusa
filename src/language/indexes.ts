@@ -27,8 +27,8 @@ import { patternsToShapes, shapesEqual, shapesToPatterns } from './shape.js';
  *
  *     @p-4 X Y Z W :- @p-3 X Y Z, a X Y 17 (h X W) V
  *
- * leads to the index constraints that X and Y must come first, and W must come later before
- * anything else. That looks like this:
+ * leads to the index constraints that X and Y must come first, and W must
+ * come later before anything else. That looks like this:
  *
  *     { args: ..., order: [ {X Y}, {X, Y, W} ] }
  *
@@ -36,7 +36,8 @@ import { patternsToShapes, shapesEqual, shapesToPatterns } from './shape.js';
  *
  *     @q-3 X Y Z W :- @q-2 Y Z, a X Y 17 (h X W) V.
  *
- * will modify this constraint with the extra information that X needs to come before Y:
+ * will modify this constraint with the extra information that X needs to come
+ * before Y:
  *
  *     { args: ..., order: [ {Y}, {X, Y}, {X, Y, W} ] }
  *
@@ -44,7 +45,8 @@ import { patternsToShapes, shapesEqual, shapesToPatterns } from './shape.js';
  *
  *     @r-5 X Y W V :- @r-4 X Y W, a X Y 17 (h X W) V.
  *
- * will modify this constraint with the fact that after X, Y, and W, V should be added before anything else:
+ * will modify this constraint with the fact that after X, Y, and W, V should
+ * be added before anything else:
  *
  *     { args: ..., order: [ {Y}, {X, Y}, {X, Y, W}, {X, Y, W, V} ] }
  *
@@ -88,25 +90,25 @@ function partitionIfPossible(ordering: Constraint, first: Set<number>, extensibl
       if (ordering[i].isSupersetOf(first)) return ordering;
       continue;
     }
-    // We've reached the smallest set in the order that's _not_ smaller than first.
-    // if it's a superset of first, we can succeed by further constraining the order.
-    // example: ordering is [[a], [a,b,c,d]] and first is [a,d], we'll hit this condition
-    // on i = 1 and need to return [[a], [a,d], [a,b,c,d]]
+    // We've reached the smallest set in the order that's _not_ smaller than
+    // first. if it's a superset of first, we can succeed by further
+    // constraining the order. example: ordering is [[a], [a,b,c,d]] and first
+    // is [a,d], we'll hit this condition on i = 1 and need to return [[a], [a,d], [a,b,c,d]]
     if (ordering[i].isSupersetOf(first)) {
       return [...ordering.slice(0, i), first, ...ordering.slice(i)];
     }
 
-    // Otherwise, this partially-constrained ordering is inconsistent with
-    // an order that puts all the elements in `first` first. For example, ordering is
-    // [[a], [a,d], [a,b,c,d]] and first is [a,c,b]: we'll hit this condition on i = 1
-    // and there's no way to satisfy the ordering.
+    // Otherwise, this partially-constrained ordering is inconsistent with an
+    // order that puts all the elements in `first` first. For example,
+    // ordering is [[a], [a,d], [a,b,c,d]] and first is [a,c,b]: we'll hit
+    // this condition on i = 1 and there's no way to satisfy the ordering.
     return null;
   }
 
   // This case can't be encountered unless there's an index we're only using
-  // partially, like if we know `c X X Y :- p _ X Y`, we can use c/1 but not c/2 or c/3
-  // as an index for p. Because all user-defined predicates can be extended, we never
-  // do this optimization so never take this if-statement.
+  // partially, like if we know `c X X Y :- p _ X Y`, we can use c/1 but not
+  // c/2 or c/3 as an index for p. Because all user-defined predicates can be
+  // extended, we never do this optimization so never take this if-statement.
 
   /* istanbul ignore next */
   if (!extensible) throw new Error('I should probably return null here');
@@ -114,12 +116,12 @@ function partitionIfPossible(ordering: Constraint, first: Set<number>, extensibl
 }
 
 /**
- * Takes an index spec and checks if that spec (or a more refined version of that spec)
- * is suitable for a given rule. Returns null if the spec is not suitable, returns the
- * (possibly refined) index spec otherwise.
+ * Takes an index spec and checks if that spec (or a more refined version of
+ * that spec) is suitable for a given rule. Returns null if the spec is not
+ * suitable, returns the (possibly refined) index spec otherwise.
  *
- * Precondition: the index spec is actually an index spec for the main premise of this
- * rule. (This means index.args.length === rule.premise.args.length)
+ * Precondition: the index spec is actually an index spec for the main premise
+ * of this rule. (This means index.args.length === rule.premise.args.length)
  */
 function refineIfPossible(index: IndexSpec, rule: JoinRule): IndexSpec | null {
   const { shapes, varsKnown } = patternsToShapes(rule.premise.args);
@@ -127,7 +129,8 @@ function refineIfPossible(index: IndexSpec, rule: JoinRule): IndexSpec | null {
   // shared vars: all the variables used in both premises
   const shared: Set<number> = new Set([...joinVars(rule)].map((x) => varsKnown.indexOf(x)!));
 
-  // needed vars: all the variables in the second premise that appear in the conclusion
+  // needed vars: all the variables in the second premise that appear in the
+  // conclusion
   const needed = [...freeVarsConclusion(rule.conclusion)]
     .map((x) => varsKnown.indexOf(x))
     .filter((x): x is number => x !== -1);
@@ -163,10 +166,10 @@ function learnNeededIndices(program: BinarizedProgram): IndexMap {
     }
   }
 
-  // Add the default index-you-get-for-free for every predicate
-  // that can't include negative information (we don't use predicates
-  // with negative information as indices, because if `a 4 2 |-> noneOf { 1,2,3 }`
-  // we don't want that to indicate support for `a 4`.
+  // Add the default index-you-get-for-free for every predicate that can't
+  // include negative information (we don't use predicates with negative
+  // information as indices, because if `a 4 2 |-> noneOf { 1,2,3 }` we don't
+  // want that to indicate support for `a 4`.
   const learnedSpecs = new Map<string, IndexSpec[]>();
   for (const [pred, arity] of maxArgs) {
     if (isAlwaysClosed(program, pred)) {
@@ -274,11 +277,10 @@ export function generateIndices(program: BinarizedProgram): BinarizedProgram {
           });
           break;
         }
-        // Danger! If we exit this loop without ever breaking
-        // then the program is definitely wrong. (But we shouldn't
-        // be able to ever exit the loop without breaking, because
-        // we've ensured that there's a pattern that can match every
-        // premise.)
+        // Danger! If we exit this loop without ever breaking then the program
+        // is definitely wrong. (But we shouldn't be able to ever exit the
+        // loop without breaking, because we've ensured that there's a pattern
+        // that can match every premise.)
       }
     }
   }
