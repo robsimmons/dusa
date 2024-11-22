@@ -136,3 +136,9 @@ test('Builtin STRING_CONCAT', () => {
     ),
   ).toStrictEqual(['']);
 });
+
+test('Builtin INT_MINUS (issue #29)', () => {
+  expect(
+    solutions(new Dusa('#builtin INT_MINUS minus.\ny 4.\nx N :- y M, minus N 1 is M.'), 'x'),
+  ).toStrictEqual(['x 5']);
+});
