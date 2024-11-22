@@ -59,6 +59,8 @@ function parseArgsConfig(args: string[]): ParseArgsConfig {
   };
 }
 
+/* eslint @typescript-eslint/no-explicit-any: "off" */
+
 function validateTerm(term: any): term is InputTerm {
   if (typeof term === 'number') return true;
   if (typeof term === 'string') return true;
@@ -122,7 +124,7 @@ function validateJsonString(source: string, str: string): InputFact[] {
     throw new Error(`JSON in ${source} is not a list`);
   }
 
-  let facts: InputFact[] = [];
+  const facts: InputFact[] = [];
   for (const [i, fact] of input.entries()) {
     try {
       if (validateFact(fact)) {

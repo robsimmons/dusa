@@ -12,6 +12,7 @@ function bigintToJSON(n: bigint): string | number {
   }
 }
 
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export function termToJson(t: Term): any {
   if (t === null || typeof t === 'string' || typeof t === 'boolean') return t;
   if (typeof t === 'bigint') {

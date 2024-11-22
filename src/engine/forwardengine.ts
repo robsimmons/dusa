@@ -185,7 +185,7 @@ export function assertConclusion(
   introducedOffset: number,
   conclusion: Conclusion,
 ): null | Conflict {
-  let args: Data[] = conclusion.args.map((arg) =>
+  const args: Data[] = conclusion.args.map((arg) =>
     apply(prog.data, shared, arg, passed, passedOffset, introduced, introducedOffset),
   );
   const exploredValue = state.explored.get(conclusion.name, args) ?? noConstraint;
