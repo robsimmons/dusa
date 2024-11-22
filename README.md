@@ -1,7 +1,8 @@
 # Dusa Language
 
-Dusa is a logic programming language that has features of both Datalog and
-answer set programming.
+Dusa is an implementation of
+[finite-choice logic programming](https://arxiv.org/abs/2405.19040), which
+takes ideas from logic programming in both Datalog and answer set programming.
 
 [![Run static checks](https://github.com/robsimmons/dusa/actions/workflows/check.yml/badge.svg)](https://github.com/robsimmons/dusa/actions/workflows/check.yml)
 [![Coverage Status](https://coveralls.io/repos/github/robsimmons/dusa/badge.svg?branch=main)](https://coveralls.io/github/robsimmons/dusa?branch=main)
