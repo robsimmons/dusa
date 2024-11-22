@@ -11,7 +11,7 @@ All Dusa terms have a correspondence with JavaScript types:
 - The integer and natural number types in Dusa correspond to the
   [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
   type in JavaScript. The JavaScript BigInt four is written as `4n`, not `4`.
-- Constants like `a`, `tt`, or `bob` in Dusa correspond to objects 
+- Constants like `a`, `tt`, or `bob` in Dusa correspond to objects
   `{ name: 'a' }`, `{ name: 'tt' }`, or `{ name: 'bob' }` in JavaScript.
 - An uninterpreted function with arguments like `h 9 "fish"` in Dusa
   corresponds to an object `{ name: 'h', args: [9n, 'fish'] }` in JavaScript.

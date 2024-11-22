@@ -106,7 +106,7 @@ lookup(name: 'name', arg1: InputTerm): IterableIterator<[Term]>;
 
 ### `facts()`
 
-The `facts` method provides a list of all the 
+The `facts` method provides a list of all the
 [facts](/docs/api/terms/#type-fact) in a solution. The `lookup()` method
 is generally going to be preferable.
 

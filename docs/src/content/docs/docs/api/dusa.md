@@ -49,8 +49,8 @@ const dusa = new Dusa(`
     path X Y :- edge X Y.
     path X Z :- edge X Y, path Y Z.`);
 dusa.solution; // Object of type DusaSolution
-[...dusa.solution.lookup("path", "b")]; // [['c'], ['d']]
-[...dusa.solution.lookup("path", "c")]; // [['d']]
+[...dusa.solution.lookup('path', 'b')]; // [['c'], ['d']]
+[...dusa.solution.lookup('path', 'c')]; // [['d']]
 ```
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solution_getter_yes)
@@ -98,7 +98,7 @@ potentially returning solutions in a different order.
 
 ## Modifying a Dusa instance
 
-The Dusa implementation doesn't support adding and removing rules after a 
+The Dusa implementation doesn't support adding and removing rules after a
 `Dusa` class instance has been created, but it does support adding additional
 **facts**, which can be just as powerful. This can be useful for applications
 where the actual set of facts isn't known ahead of time, but the desired
