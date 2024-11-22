@@ -174,7 +174,7 @@ test('Inputs and term validation', () => {
 
   expect(testCli(['/dev/null', '-a', '/'])).toStrictEqual({
     code: 1,
-    errs: [`Invalid JSON in command-line fact #1: Unexpected token '/', \"/\" is not valid JSON`],
+    errs: [`Invalid JSON in command-line fact #1: Unexpected token '/', "/" is not valid JSON`],
     outs: [],
   });
 
