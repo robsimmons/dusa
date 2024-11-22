@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "ES2022",
     "skipLibCheck": true,
 
     /* Bundling */
