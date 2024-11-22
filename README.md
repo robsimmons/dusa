@@ -19,7 +19,7 @@ supportive environment full of interesting people!
 
 ## Command-line quickstart
 
-The dusa command-line program can be run directly from
+The `dusa` command-line program can be run directly from
 [`npx`](https://docs.npmjs.com/cli/v8/commands/npx), the only requirement is
 that you are using Node v22 or above. The examples used here can be found
 [on github](https://github.com/robsimmons/dusa/tree/main/examples).

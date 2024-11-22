@@ -26,6 +26,7 @@
     "datalog",
     "logic programming"
   ],
+  "bin": "dusa",
   "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsc && vite build",
