@@ -96,7 +96,7 @@ export class Dusa {
 
   private inputFact(fact: InputFact): { name: string; args: Data[]; value: Data | null } {
     const nArgs = fact.args?.length ?? 0;
-    const hasValue = !!fact.value;
+    const hasValue = fact.value !== undefined;
 
     let arity = this.prog.arities[fact.name];
     if (!arity) {
@@ -125,7 +125,7 @@ export class Dusa {
     return {
       name: fact.name,
       args: (fact.args ?? []).map((arg) => termToData(this.prog.data, arg)),
-      value: fact.value ? termToData(this.prog.data, fact.value) : null,
+      value: fact.value !== undefined ? termToData(this.prog.data, fact.value) : null,
     };
   }
 

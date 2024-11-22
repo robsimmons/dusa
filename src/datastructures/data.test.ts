@@ -8,6 +8,8 @@ test('Internalizing basic types', () => {
     { type: 'int', value: 123n },
     { type: 'int', value: 123456789012345678901234567890123456762354n },
     { type: 'int', value: 0n },
+    { type: 'int', value: 1n },
+    { type: 'int', value: -1n },
     { type: 'string', value: 'abc' },
     { type: 'string', value: '"🦊"' },
     { type: 'string', value: "'\n\t\x9DĦ\0\\" },
@@ -31,11 +33,13 @@ test('Internalizing basic types', () => {
   }
 
   expect(data.hide({ type: 'trivial' })).toEqual(data.hide({ type: 'trivial' }));
-  expect(testData.slice(0, 15).map((d) => data.toString(data.hide(d)))).toStrictEqual([
+  expect(testData.slice(0, 17).map((d) => data.toString(data.hide(d)))).toStrictEqual([
     '()',
     '123',
     '123456789012345678901234567890123456762354',
     '0',
+    '1',
+    '-1',
     '"abc"',
     '"\\"\\u{1f98a}\\""',
     '"\'\\n\\x09\\x9d\\u{126}\\x00\\\\"',
