@@ -159,6 +159,13 @@ export function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, C
   }
 }
 
+export interface Stats {
+  deductions: number;
+  rejected: number;
+  choices: number;
+  models: number;
+}
+
 export function stepState(prog: Program, state: SearchState): StepResult | Conflict {
   if (state.agenda === null) {
     if (state.deferred.size > 0) {
@@ -233,6 +240,7 @@ export function step(
   prog: Program,
   path: ChoiceZipper,
   tree: ChoiceTree | null,
+  stats?: Stats,
 ): [ChoiceZipper, ChoiceTree | null, Database | null] {
   if (path === null && tree === null) throw new Error('step precondition failed');
 
@@ -246,14 +254,17 @@ export function step(
 
   switch (stepState(prog, tree.state)) {
     case StepResult.STEPPED: {
+      if (stats) stats.deductions++;
       return [path, tree, null];
     }
 
     case StepResult.IS_MODEL: {
+      if (stats) stats.models++;
       return [path, null, tree.state.explored];
     }
 
     case StepResult.DEFERRED: {
+      if (stats) stats.choices++;
       const { name, args } = tree.state.deferred.choose()!;
       const { values: choices, open } = tree.state.frontier.get(name, args)!;
       let justChild: DataMap<LazyChoiceTree> = DataMap.empty();
@@ -277,6 +288,7 @@ export function step(
 
     default: {
       // Conflict, UNSAT
+      if (stats) stats.rejected++;
       return [path, null, null];
     }
   }

@@ -1,5 +1,18 @@
 #!/usr/bin/env node
 
-const { argv, exit } = await import('process');
+const { argv, exit, version, stdout, stderr } = await import('process');
 const { runDusaCli } = await import('./lib/cli.js');
-exit(runDusaCli(argv.slice(2)));
+
+const intVersion = parseInt(version.slice(1));
+if (!version.startsWith(`v${intVersion}`) || intVersion < 22) {
+  console.error(`node ${version} not supported, >= v22.x required`);
+  exit(1);
+}
+
+exit(
+  runDusaCli(
+    argv.slice(2),
+    (s) => stdout.write(`${s}\n`),
+    (s) => stderr.write(`${s}\n`),
+  ),
+);

@@ -1,0 +1,26 @@
+# Graph coloring
+
+edge a b. # a   f--k--j
+edge a c. # | \    | 
+edge b c. # b--c   g  h
+edge b d. # |  |      |
+edge c e. # d--e   i--l
+edge d e.
+edge f k.
+edge g k.
+edge h l.
+edge i l.
+edge k j.
+
+edge Y X :- edge X Y.
+node X :- edge X _.
+node X :- edge _ X.
+
+color X is { red, yellow, blue } :- node X.
+isBlue X :- color X is blue.
+#forbid edge X Y, color X is Color, color Y is Color.
+#demand color a is Color, color f is Color, color h is Color.
+
+# Adding these edges makes the problem unsolvable
+# edge a d.
+# edge c d.

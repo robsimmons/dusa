@@ -268,6 +268,11 @@ export interface DusaIterator extends Iterator<DusaSolution> {
    * Returns true iff next() can return without doing any work.
    */
   advance(limit?: number): boolean;
+
+  /**
+   * Information about the progress towards solutions.
+   */
+  stats(): { deductions: number; rejected: number; choices: number; nonPos: number };
 }
 
 class DusaIteratorImpl implements Iterator<DusaSolution> {
@@ -276,10 +281,8 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
     | { type: 'tree'; path: ChoiceZipper; tree: ChoiceTree | null };
   private stagedSolution: Database | null = null;
   private prog: InternalProgram;
-  private nSteps: number = 0;
-  private nSolutions: number = 0;
-  private nBacktracks: number = 0;
   private nNonPos: number = 0;
+  private stats_ = { deductions: 0, rejected: 0, choices: 0, models: 0 };
 
   constructor(prog: InternalProgram, state: SearchState | null) {
     this.prog = prog;
@@ -288,6 +291,15 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
     } else {
       this.state = { type: 'parent', state };
     }
+  }
+
+  stats() {
+    return {
+      deductions: this.stats_.deductions,
+      rejected: this.stats_.rejected + this.nNonPos,
+      choices: this.stats_.choices,
+      nonPos: this.nNonPos,
+    };
   }
 
   stepState(
@@ -306,10 +318,9 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
         case StepResult.IS_MODEL:
           return { result: 'is_model', stepsTaken: i };
         case StepResult.STEPPED:
-          this.nSteps += 1;
+          this.stats_.deductions += 1;
           break;
         default: {
-          this.nBacktracks += 1;
           return { result: 'conflict', stepsTaken: i };
         }
       }
@@ -324,10 +335,12 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
       const advanceResult = this.stepState(this.prog, this.state.state, limit);
       switch (advanceResult.result) {
         case 'is_model':
+          this.stats_.models += 1;
           this.stagedSolution = this.state.state.explored;
           this.state = { type: 'tree', path: null, tree: null };
           return true;
         case 'conflict': {
+          this.stats_.rejected += 1;
           this.state = { type: 'tree', path: null, tree: null };
           return true;
         }
@@ -349,11 +362,10 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
       if (this.state.path === null && this.state.tree === null) {
         return true; // Ready to produce with done = true
       }
-      const stepResult = step(this.prog, this.state.path, this.state.tree);
+      const stepResult = step(this.prog, this.state.path, this.state.tree, this.stats_);
       this.state.path = stepResult[0];
       this.state.tree = stepResult[1];
       this.stagedSolution = stepResult[2];
-      this.nSteps += 1;
       if (this.stagedSolution !== null) {
         if (this.stagedSolution.size.neg === 0) {
           return true; // Ready to produce with done = false
@@ -364,7 +376,6 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
       }
 
       if (this.stagedSolution === null && this.state.tree === null) {
-        this.nBacktracks += 1;
         // With some probability, go ahead and return to the root
         // (intended to bump out of bad solution spaces)
         if (Math.random() < 0.01) {
@@ -398,7 +409,6 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
         this.state.path = path;
         this.state.tree = tree;
       }
-      this.nSolutions += 1;
       this.stagedSolution = null;
       return { done: false, value };
     } else {

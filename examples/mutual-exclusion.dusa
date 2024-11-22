@@ -1,0 +1,5 @@
+# Mutual exclusion
+p is? ff.
+q is? ff.
+p is { tt } :- q is ff.
+q is { tt } :- p is ff.

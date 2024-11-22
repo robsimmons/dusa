@@ -9,8 +9,9 @@ export type WorkerQuery = {
 };
 
 export interface WorkerStats {
-  cycles: number;
-  deadEnds: number;
+  deductions: number;
+  rejected: number;
+  choices: number;
 }
 
 export type WorkerToAppMsg =
@@ -28,10 +29,6 @@ const CYCLE_LIMIT = 5000;
 const STATS_UPDATE = 100;
 
 let state: 'uninitialized' | 'in-progress' | 'error' | 'done' = 'uninitialized';
-const stats: WorkerStats = {
-  cycles: 0,
-  deadEnds: 0,
-};
 
 let dusa: DusaIterator;
 
@@ -51,7 +48,7 @@ function loop(): true {
   if (state === 'error' || state === 'done') return true;
 
   if (Date.now() - lastStatsTime > STATS_UPDATE) {
-    post({ type: 'stats', stats });
+    post({ type: 'stats', stats: dusa.stats() });
     lastStatsTime = Date.now();
   }
 
@@ -60,7 +57,7 @@ function loop(): true {
     if (readyToReport) {
       const next = dusa.next();
       if (next.done) {
-        post({ type: 'stats', stats });
+        post({ type: 'stats', stats: dusa.stats() });
         post({ type: 'done' });
         state = 'done';
         return true;
@@ -124,7 +121,7 @@ onmessage = (event: MessageEvent<AppToWorkerMsg>): true => {
       if (loopHandle !== null) {
         clearTimeout(loopHandle);
         loopHandle = null;
-        post({ type: 'stats', stats });
+        post({ type: 'stats', stats: dusa.stats() });
       }
       return true;
     }

@@ -73,7 +73,7 @@ export default function Inspector({ doc, visible }: Props) {
     (message: AppToWorkerMsg) => worker.current!.postMessage(message),
     [worker],
   );
-  const [stats, setStats] = React.useState<WorkerStats>({ cycles: 0, deadEnds: 0 });
+  const [stats, setStats] = React.useState<WorkerStats>({ deductions: 0, rejected: 0, choices: 0 });
 
   // solutionIndex === solutions.length means we're "following" the latest state
   const [solutionIndex, setSolutionIndex] = React.useState<number | null>(null);
@@ -232,8 +232,9 @@ export default function Inspector({ doc, visible }: Props) {
           <PlayIcon width={ICON_SIZE} height={ICON_SIZE} /> Resume
         </button>
         <div className="status-text">
-          {state === 'done' ? 'done' : state === 'paused' ? 'paused' : 'running'}, {stats.cycles}{' '}
-          cycle{stats.cycles !== 1 && 's'}
+          {state === 'done' ? 'done' : state === 'paused' ? 'paused' : 'running'},{' '}
+          {stats.deductions} deduction{stats.deductions !== 1 && 's'}, {stats.choices} choice
+          {stats.choices !== 1 && 's'}, {stats.rejected} dead end{stats.rejected !== 1 && 's'}{' '}
         </div>
       </div>
     </div>

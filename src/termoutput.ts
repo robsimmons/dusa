@@ -74,27 +74,30 @@ export function compareTerms(t: Term[], s: Term[]): number {
   return s.length - t.length;
 }
 
-export function compareTerm(t: Term, s: Term): number {
-  if (t === null) return s === null ? 0 : -1;
-  if (s === null) return 1;
-  if (typeof t === 'boolean') {
-    return typeof s === 'boolean' ? (t ? 1 : 0) - (s ? 1 : 0) : -1;
+export function compareTerm(t1: Term, t2: Term): number {
+  if (t1 === null) return t2 === null ? 0 : -1;
+  if (t2 === null) return 1;
+  if (typeof t1 === 'boolean') {
+    return typeof t2 === 'boolean' ? (t1 ? 1 : 0) - (t2 ? 1 : 0) : -1;
   }
-  if (typeof s === 'boolean') return 1;
-  if (typeof t === 'string') {
-    return typeof s === 'string' ? new Intl.Collator('en').compare(t, s) : -1;
+  if (typeof t2 === 'boolean') return 1;
+
+  if (typeof t1 === 'string') {
+    return typeof t2 === 'string' ? new Intl.Collator('en').compare(t1, t2) : -1;
   }
-  if (typeof s === 'string') return 1;
-  if (typeof t === 'bigint') {
-    return typeof s === 'bigint' ? Number(t - s) : -1;
+  if (typeof t2 === 'string') return 1;
+
+  if (typeof t1 === 'bigint' || typeof t1 === 'number') {
+    return typeof t2 === 'bigint' || typeof t2 === 'number' ? Number(t1) - Number(t2) : -1;
   }
-  if (typeof s === 'bigint') return 1;
-  if (t.name !== null) {
-    if (s.name === null) return -1;
-    const c = new Intl.Collator('en').compare(t.name, s.name);
+  if (typeof t2 === 'bigint') return 1;
+
+  if (t1.name !== null) {
+    if (t2.name === null) return -1;
+    const c = new Intl.Collator('en').compare(t1.name, t2.name);
     if (c !== 0) return c;
-    return compareTerms(t.args ?? [], s.args ?? []);
+    return compareTerms(t1.args ?? [], t2.args ?? []);
   }
-  if (s.name !== null) return 1;
-  return t.value - s.value;
+  if (t2.name !== null) return 1;
+  return t1.value - t2.value;
 }

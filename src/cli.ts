@@ -1,4 +1,5 @@
 import {
+  compareTerms,
   Dusa,
   DusaError,
   DusaRuntimeError,
@@ -17,15 +18,15 @@ function parseArgsConfig(args: string[]): ParseArgsConfig {
     strict: true,
     allowPositionals: true,
     options: {
-      facts: {
+      assert: {
         type: 'string',
-        short: 'f',
+        short: 'a',
         multiple: true,
         default: [],
       },
-      input: {
+      facts: {
         type: 'string',
-        short: 'i',
+        short: 'f',
         multiple: true,
         default: [],
       },
@@ -53,7 +54,7 @@ function parseArgsConfig(args: string[]): ParseArgsConfig {
       verbose: {
         type: 'string',
         short: 'v',
-        default: '1',
+        default: '2',
       },
     },
   };
@@ -154,48 +155,52 @@ type Term = number | string | boolean | { name: string, args?: Term[] };
 Options:
   -h --help          print this message and exit
 
-  -f --facts <str>   load list facts as a JSON string <str>
-  -i --input <file>  load file <file> containing a list of JSON facts
+  -a --assert <str>  load a single fact as a JSON string
+  -f --facts <fact>  load file <file> containing a list of JSON facts
 
-  -n --models <n>    compute at most <n> models (0 for all)
-  -c --count <pred>  returns a count <pred> facts in a solution
+  -n --models <n>    compute at most <n> models (default 1, 0 for all)
+  -c --count <pred>  returns the number of <pred> facts in each solution
   -q --query <pred>  returns the list of <pred> facts in a solution
-  -v --verbose <n>   -v0 prints nothing but JSON outputs & CLI errors
+  -v --verbose <n>   -v0 prints nothing to stdout
+                     -v1 prints only JSON output to stdout
+                     -v2 (default) print solution counts & JSON to stdout
 `;
 
-export function runDusaCli(argv: string[]): number {
+export function runDusaCli(
+  argv: string[],
+  log: (message: any) => void,
+  err: (message: any) => void,
+): number {
   let args: ReturnType<typeof parseArgs>;
   try {
     args = parseArgs(parseArgsConfig(argv));
   } catch (e) {
-    if (e instanceof Error) console.log(`\n${e.message}\n`);
-    console.log(usage);
+    if (e instanceof Error) err(`\n${e.message}\n`);
+    err(usage);
     return 1;
   }
 
   if (args.values.help) {
-    console.log(usage);
+    err(usage);
     return 0;
   }
 
   const verbose = parseInt(`${args.values.verbose}`);
   if (`${verbose | 0}` !== args.values.verbose) {
-    console.log(`--verbose must be an integer`);
-    console.log(usage);
+    err(`--verbose must be an integer`);
+    err(usage);
     return 1;
   }
 
   if (args.positionals.length !== 1) {
-    console.log(
-      '\nA single positional argument, a filename containing a Dusa program, is required.\n',
-    );
-    console.log(usage);
+    err('\nA single positional argument, a filename containing a Dusa program, is required.\n');
+    err(usage);
     return 1;
   }
 
   const max_num_solutions = parseInt(`${args.values.models}`);
   if (`${max_num_solutions}` !== args.values.models) {
-    console.log(`Number of models '${args.values.models}' not an natural number`);
+    err(`Number of models '${args.values.models}' not an natural number`);
     return 1;
   }
 
@@ -203,7 +208,7 @@ export function runDusaCli(argv: string[]): number {
   try {
     file = readFileSync(args.positionals[0]).toString('utf-8');
   } catch (e) {
-    if (e instanceof Error) console.log(`Could not read Dusa program (${e.message})`);
+    if (e instanceof Error) err(`Could not read Dusa program (${e.message})`);
     return 1;
   }
 
@@ -211,40 +216,43 @@ export function runDusaCli(argv: string[]): number {
   try {
     dusa = new Dusa(file);
   } catch (e) {
-    if (e instanceof DusaError && verbose > 0) {
-      console.log(
+    if (e instanceof DusaError) {
+      err(
         `Error${e.issues?.length === 1 ? '' : 's'} loading Dusa program:\n${e.issues
           .map(({ msg, loc }) => `${loc?.start ? `Line ${loc.start.line}: ` : ''}${msg}`)
           .join('\n')}`,
       );
     }
-    if (e instanceof DusaRuntimeError && verbose > 0) {
-      console.log(`Runtime error: ${e.message}`);
+    if (e instanceof DusaRuntimeError) {
+      err(`Runtime error: ${e.message}`);
     }
     return 1;
   }
 
-  const factArgs = args.values.facts as string[];
+  const assertArgs = args.values.assert as string[];
   try {
-    for (let i = 0; i < factArgs.length; i++) {
-      const facts = validateJsonString(`command-line fact list #${i + 1}`, factArgs[i]);
+    for (let i = 0; i < assertArgs.length; i++) {
+      const facts = validateJsonString(`command-line fact #${i + 1}`, `[${assertArgs[i]}]`);
       dusa.assert(...facts);
     }
   } catch (e) {
-    if (e instanceof Error && verbose > 0) console.log(e.message);
+    if (e instanceof Error) err(e.message);
     return 1;
   }
 
-  const inputs = args.values.input as string[];
+  const assertFileArgs = args.values.facts as string[];
   try {
-    for (let i = 0; i < inputs.length; i++) {
-      const facts = validateJsonString(inputs[i], readFileSync(inputs[i]).toString('utf-8'));
+    for (let i = 0; i < assertFileArgs.length; i++) {
+      const facts = validateJsonString(
+        assertFileArgs[i],
+        readFileSync(assertFileArgs[i]).toString('utf-8'),
+      );
       for (const fact of facts) {
         dusa.assert(fact);
       }
     }
   } catch (e) {
-    if (e instanceof Error && verbose > 0) console.log(e.message);
+    if (e instanceof Error) err(e.message);
     return 1;
   }
 
@@ -254,25 +262,28 @@ export function runDusaCli(argv: string[]): number {
       ? dusa.relations.toSorted()
       : (args.values.query as string[]);
 
-  if (verbose > 0) console.log('Solving...');
+  if (verbose >= 2) log('Solving...');
   const solutions = dusa[Symbol.iterator]();
   let num_solutions = 0;
   while (max_num_solutions === 0 || num_solutions < max_num_solutions) {
     const solution = solutions.next();
     if (solution.done) break;
-    if (verbose > 0) console.log(`Answer: ${++num_solutions}`);
+    num_solutions += 1;
+    if (verbose >= 2) log(`Answer: ${num_solutions}`);
     const answer: { [pred: string]: Term[][] | number } = {};
     for (const pred of [...count, ...query]) {
-      answer[pred] = [...solution.value.lookup(pred).map((terms) => terms.map(termToJson))];
+      answer[pred] = [
+        ...solution.value.lookup(pred).map((terms) => terms.map(termToJson)),
+      ].toSorted(compareTerms);
       if (count.includes(pred)) {
         answer[pred] = answer[pred].length;
       }
     }
-    console.log(JSON.stringify(answer));
+    if (verbose >= 1) log(JSON.stringify(answer));
   }
 
-  if (verbose > 0) {
-    console.log(
+  if (verbose >= 2) {
+    log(
       num_solutions === 0
         ? 'UNSATISFIABLE'
         : `SATISFIABLE (${num_solutions}${
