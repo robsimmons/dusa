@@ -1,7 +1,13 @@
-import { binarize, binarizedProgramToString } from './binarize.js';
+import { Program } from '../bytecode.js';
+import {
+  binarize,
+  binarizedProgramToString,
+  makeIntermediatePredicatesMatchJoinOrder,
+} from './binarize.js';
+import { generateBytecode } from './bytecode.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { flattenDecls, flatProgramToString } from './flatten.js';
-import { IndexedProgram, indexedProgramToString, indexize } from './indexize.js';
+import { generateIndices } from './indexes.js';
 import { ParsedDeclaration, ParsedTopLevel } from './syntax.js';
 
 export function indexToRuleName(index: number): string {
@@ -17,7 +23,7 @@ export function compile(
   arities: Map<string, { args: number; value: boolean }>,
   program: ParsedTopLevel[],
   debug = false,
-): IndexedProgram {
+): Program {
   const decls = program.filter((x): x is ParsedDeclaration => x.type !== 'Builtin');
 
   const flattened = flattenDecls(
@@ -55,11 +61,11 @@ ${flatProgramToString(named)}`);
 ${binarizedProgramToString(binarized)}`);
   }
 
-  const indexed = indexize(binarized);
+  const indexed = makeIntermediatePredicatesMatchJoinOrder(generateIndices(binarized));
   if (debug) {
     console.log(`\nForm 3: Index-aware program
-${indexedProgramToString(indexed)}`);
+${binarizedProgramToString(indexed)}`);
   }
 
-  return indexed;
+  return generateBytecode(indexed, arities);
 }

@@ -1,83 +1,63 @@
-import { Data, expose, hide } from '../datastructures/data.js';
-import { Pattern } from '../language/terms.js';
+import { Pattern } from '../bytecode.js';
+import { Data, HashCons } from '../datastructures/data.js';
+import { CPattern } from './program.js';
 
-export type Substitution = { [varName: string]: Data };
+export function match(data: HashCons, mutableSubst: Data[], pattern: Pattern, term: Data): boolean {
+  if (pattern.type === 'var') {
+    if (pattern.ref === mutableSubst.length) {
+      mutableSubst.push(term);
+      return true;
+    } else {
+      return mutableSubst[pattern.ref] === term;
+    }
+  }
 
-export function match(
-  substitution: Substitution,
-  pattern: Pattern,
-  data: Data,
-): null | Substitution {
-  const dv = expose(data);
+  const view = data.expose(term);
   switch (pattern.type) {
     case 'trivial':
-      if (pattern.type !== dv.type) return null;
-      return substitution;
+      return view.type === 'trivial';
     case 'int':
-      if (dv.type !== 'int') return null;
-      if (BigInt(pattern.value) !== dv.value) return null;
-      return substitution;
     case 'string':
     case 'bool':
-      if (pattern.type !== dv.type) return null;
-      if (pattern.value !== dv.value) return null;
-      return substitution;
-
+      return view.type === pattern.type && view.value === pattern.value;
     case 'const':
-      if (dv.type !== 'const' || pattern.name !== dv.name || pattern.args.length !== dv.args.length)
-        return null;
-      for (let i = 0; i < pattern.args.length; i++) {
-        const candidate = match(substitution, pattern.args[i], dv.args[i]);
-        if (candidate === null) return null;
-        substitution = candidate;
-      }
-      return substitution;
-
-    case 'wildcard':
-      return substitution;
-
-    case 'var':
-      if (substitution[pattern.name] !== undefined) {
-        return equal(substitution[pattern.name], data) ? substitution : null;
-      }
-      return { [pattern.name]: data, ...substitution };
+      return (
+        view.type === pattern.type &&
+        view.name === pattern.name &&
+        view.args.length === pattern.args.length &&
+        view.args.every((subTerm, i) => match(data, mutableSubst, pattern.args[i], subTerm))
+      );
   }
 }
 
-export function apply(substitution: Substitution, pattern: Pattern): Data {
+export function apply(
+  data: HashCons,
+  subst: Data[],
+  pattern: CPattern,
+  passed: Data[] = [],
+  passedOffset: number = 0,
+  introduced: Data[] = [],
+  introducedOffset: number = 0,
+): Data {
   switch (pattern.type) {
+    case 'var':
+      return subst[pattern.ref];
+    case 'intro':
+      return introduced[pattern.ref + introducedOffset];
+    case 'pass':
+      return passed[pattern.ref + passedOffset];
     case 'trivial':
     case 'bool':
-    case 'string': {
-      return hide(pattern);
-    }
+    case 'string':
     case 'int':
-      return hide({ type: 'int', value: BigInt(pattern.value) });
-
-    case 'const': {
-      return hide({
+      return data.hide(pattern);
+    case 'const':
+      return data.hide({
         type: 'const',
         name: pattern.name,
-        args: pattern.args.map((arg) => apply(substitution, arg)),
+        args: pattern.args.map((arg) =>
+          apply(data, subst, arg, passed, passedOffset, introduced, introducedOffset),
+        ),
       });
-    }
-
-    case 'wildcard': {
-      throw new Error(`Cannot match apply a substitution to a pattern containing the wildcard '_'`);
-    }
-
-    case 'var': {
-      const result = substitution[pattern.name];
-      if (result == null) {
-        throw new Error(
-          `Free variable '${pattern.name}' not assigned to in grounding substitution`,
-        );
-      }
-      return result;
-    }
   }
-}
-
-export function equal(t: Data, s: Data): boolean {
-  return t === s;
 }

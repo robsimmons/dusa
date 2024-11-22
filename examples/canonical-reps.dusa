@@ -1,0 +1,19 @@
+# Canonical representatives
+# Assign an arbitrary canonical representative to each connected component,
+# which makes it efficient to determine how many connected components there
+# are and whether two nodes are in the same connected component.
+
+edge Y X :- edge X Y.
+
+# Any node may be its own representative
+representative X is? X :- node X.
+
+# Connected nodes must have the same representative
+# Representative must be unique
+# Every node must have a representative
+representative Y is Rep :-
+    edge X Y,
+    representative X is Rep.
+
+# Count the number of connected components
+isRep Rep :- representative _ is Rep.

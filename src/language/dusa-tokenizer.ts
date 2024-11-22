@@ -42,7 +42,7 @@ export type Token =
   | { loc: SourceLocation; type: 'var'; value: string }
   | { loc: SourceLocation; type: 'wildcard'; value: string }
   | { loc: SourceLocation; type: 'triv' }
-  | { loc: SourceLocation; type: 'int'; value: number }
+  | { loc: SourceLocation; type: 'int'; value: bigint }
   | { loc: SourceLocation; type: 'string'; value: string }
   | { loc: SourceLocation; type: 'hashdirective'; value: string };
 
@@ -318,7 +318,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
             return {
               state,
               tag: 'integer',
-              tree: { type: 'int', value: parseInt(tok), loc: stream.matchedLocation() },
+              tree: { type: 'int', value: BigInt(tok), loc: stream.matchedLocation() },
             };
           }
           if (tok.match(CONST_TOKEN)) {

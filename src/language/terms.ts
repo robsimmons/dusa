@@ -2,7 +2,7 @@ import { SourceLocation } from '../parsing/source-location.js';
 
 export type Pattern =
   | { type: 'trivial' }
-  | { type: 'int'; value: number }
+  | { type: 'int'; value: bigint }
   | { type: 'bool'; value: boolean }
   | { type: 'string'; value: string }
   | { type: 'const'; name: string; args: Pattern[] }
@@ -11,7 +11,7 @@ export type Pattern =
 
 export type ParsedPattern =
   | { type: 'trivial'; loc: SourceLocation }
-  | { type: 'int'; value: number; loc: SourceLocation }
+  | { type: 'int'; value: bigint; loc: SourceLocation }
   | { type: 'bool'; value: boolean; loc: SourceLocation }
   | { type: 'string'; value: string; loc: SourceLocation }
   | { type: 'const'; name: string; args: ParsedPattern[]; loc: SourceLocation }

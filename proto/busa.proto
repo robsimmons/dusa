@@ -1,6 +1,23 @@
 // npx buf generate proto
 syntax = "proto3";
 
+enum Builtin {
+    BOOLEAN_FALSE = 0;
+    BOOLEAN_TRUE = 1;
+    NAT_ZERO = 2;
+    NAT_SUCC = 3;
+    INT_PLUS = 4;
+    INT_MINUS = 5;
+    INT_TIMES = 6;
+    STRING_CONCAT = 7;
+    CHECK_GT = 8;
+    CHECK_GEQ = 9;
+    CHECK_LT = 10;
+    CHECK_LEQ = 11;
+    EQUAL = 12;
+    NOT_EQUAL = 13;
+}
+
 message Pattern {
     enum PatternEnum {
         Unit = 0;
@@ -22,135 +39,65 @@ message Pattern {
     }
 }
 
-message Rule {
-    /*
-    conclusion X0 ... XN :- premise <Args> is <Values>.
-
-     - Premise uses arbitrary patterns with vars X0...XN
-     - Every variable is bound in the premise
-     - Conclusion has arguments in order
-     - Conclusion is a fact (with all args, no values)
-    */
-    message Index {
-        string conclusion = 1;
-        int32 num_conclusion_args = 2;
-        string premise = 3;
-        repeated Pattern args = 4;
-        repeated Pattern values = 5;
+message Conclusion {
+    message IntermediateConclusion {
+        string name = 1;
+        repeated int32 vars = 2;
     }
 
-    /*
-    conclusion <Args> :- prefix X0 ... XN
-
-     - Premise has arguments X0 ... XN in order
-     - Conclusion has arbitrary patterns with vars X0...XN
-     - Conclusion is a fact
-    */
     message DatalogConclusion {
-        string conclusion = 1;
+        string name = 1;
+        repeated Pattern vars = 2;
+    }
+
+    message OpenConclusion {
+        string name = 1;
         repeated Pattern args = 2;
         repeated Pattern values = 3;
-        string prefix = 4;
     }
 
-    /*
-    conclusion <Args> is? { <Values> } :- prefix X0 ... XN
-
-     - Premise has arguments X0 ... XN in order
-     - Conclusion has arbitrary patterns with vars X0...XN
-     - Conclusion is a fact with one value
-    */
-    message OpenConclusion {
-        string conclusion = 1;
-        repeated Pattern args = 2;
-        repeated Pattern choices = 3;
-        string prefix = 5;
-    }
-
-    /*
-    conclusion <Args> is { <Values> } :- prefix X0 ... XN
-
-     - Premise has arguments X0 ... XN in order
-     - Conclusion has arbitrary patterns with vars X0...XN
-     - Conclusion is a fact with one value
-    */
     message ClosedConclusion {
-        string conclusion = 1;
+        string name = 1;
         repeated Pattern args = 2;
-        repeated Pattern choices = 3;
-        string prefix = 5;
-    }
-
-    /*
-    conclusion Fact1 Shared1 Prefix1 FactValue :- prefix Shared0 Shared1 Prefix0 Prefix1, fact Shared0 Shared1 Fact0 Fact1 is FactValue.
-
-     - Prefix and fact premise share first N arguments Shared0...SharedN
-     - prefix can have additional arguments Prefix0...PrefixM
-     - fact can have additional arguments in args and values Fact0...FactP
-     - conclusion is another prefix and has no repeat variables
-    */
-    message Join {
-        message JoinPattern {
-            enum JoinLocation {
-                Shared = 0;
-                Prefix = 1;
-                FactArg = 2;
-                FactValue = 3;
-            }
-
-            JoinLocation loc = 1;
-            int32 var = 2;
-        }
-        string conclusion = 1;
-        repeated JoinPattern args = 2;
-        string prefix = 3;
-        string fact = 4;
-        int32 num_shared = 5;
-    }
-
-    /*
-    conclusion X2 X4 X3 :- prefix X0 X1 X2 X3, <built-in-premise>
-
-     - There are various extra constraints on each built-in premises,
-       but they can be forced to bind additional variables in some cases,
-       which can then be used in the conclusion (again, in some cases).
-     - conclusion is another prefix and has no repeat variables
-    */
-    message Function {
-        enum Builtin {
-            BOOLEAN_TRUE = 0;
-            BOOLEAN_FALSE = 1;
-            NAT_ZERO = 2;
-            NAT_SUCC = 3;
-            INT_PLUS = 4;
-            INT_MINUS = 5;
-            INT_TIMES = 6;
-            STRING_CONCAT = 7;
-            CHECK_GT = 8;
-            CHECK_GEQ = 9;
-            CHECK_LT = 10;
-            CHECK_LEQ = 11;
-            EQUAL = 12;
-            NOT_EQUAL = 13;
-        }
-
-        string conclusion = 1;
-        repeated int32 args = 2;
-        string prefix = 3;
-        oneof type {
-            Builtin builtin = 4;
-            string other = 5;
-        }
-        repeated Pattern function_args = 6;
-        int32 num_vars = 7;
+        repeated Pattern values = 3;
     }
 
     oneof is {
-        Index index = 1;
-        Join join = 2;
-        Function function = 3;
-        ChoiceConclusion choice_conclusion = 4;
-        DatalogConclusion datalog_conclusion = 5;
+        IntermediateConclusion intermediate = 1;
+        DatalogConclusion datalog = 2;
+        OpenConclusion open = 3;
+        ClosedConclusion closed = 4;
+    }
+}
+
+message Rule {
+    message UnaryRule {
+        string premise = 4;
+        repeated Pattern args = 6;
+        Conclusion conclusion = 7;
+    }
+
+    message JoinRule {
+        string inName = 1;
+        int32 numShared = 2;
+        int32 numIn = 3;
+        string premise = 4;
+        repeated int32 args = 6;
+        Conclusion conclusion = 7;
+    }
+
+    message BuiltInRule {
+        string inName = 1;
+        int32 numIn = 3;
+        Builtin builtin = 5;
+        repeated Pattern args = 6;
+        Conclusion conclusion = 7; 
+    }
+
+    oneof is {
+        UnaryRule unary = 1;
+        JoinRule join = 2;
+        BuiltInRule builtin = 3;
     }
 }
 

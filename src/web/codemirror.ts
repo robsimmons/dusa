@@ -17,11 +17,10 @@ import { classHighlighter } from '@lezer/highlight';
 import { ParserState, dusaTokenizer } from '../language/dusa-tokenizer.js';
 import { StringStream } from '../parsing/string-stream.js';
 import { Issue, parseWithStreamParser } from '../parsing/parser.js';
-import { SourcePosition } from '../client.js';
 import { parseTokens } from '../language/dusa-parser.js';
 import { ParsedDeclaration } from '../language/syntax.js';
 import { check } from '../language/check.js';
-import { builtinModes } from '../language/dusa-builtins.js';
+import { SourcePosition } from '../parsing/source-location.js';
 
 const bogusPosition = {
   start: { line: 1, column: 1, index: 0 },
@@ -117,7 +116,6 @@ function dusaLinter(view: EditorView): readonly Diagnostic[] {
   }
 
   const { errors } = check(
-    builtinModes,
     parsed.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue'),
   );
 
@@ -185,7 +183,6 @@ const highlightDetailPlugin = ViewPlugin.define((view: EditorView) => {
       if (tokens.issues.length > 0) return;
       const parsed = parseTokens(tokens.document);
       const { arities, builtins } = check(
-        builtinModes,
         parsed.filter((decl): decl is ParsedDeclaration => decl.type !== 'Issue'),
       );
 

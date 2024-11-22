@@ -1,0 +1,62 @@
+# Character creation
+# and a bit of Tracery-style template story creation
+
+name "Celeste".
+name "Nimbus".
+name "Terra".
+name "Luna".
+
+# Pick names for three characters: a hero, sidekick, and villan
+character hero is? Name :- name Name.
+character sidekick is? Name :- name Name.
+character villain is? Name :- name Name.
+
+# No two characters can have the same name
+#forbid character Char1 is N, character Char2 is N, Char1 != Char2.
+
+# everyone must have a different training
+training C is { warrior, mage, assassin, bard } :- character C is _.
+#forbid training Char1 is T, training Char2 is T, Char1 != Char2.
+
+# hero and villain can't be from the same home
+home C is { highlands, seaside_town, city, foothills } :- character C is _.
+#forbid home hero is H, home villain is H.
+
+# Building the story with string concatenation
+#builtin STRING_CONCAT concat.
+
+lowerCase warrior is "warrior".
+upperCase warrior is "Warrior".
+lowerCase mage is "mage".
+upperCase mage is "Mage".
+lowerCase assassin is "assassin".
+upperCase assassin is "Assassin".
+lowerCase bard is "bard".
+upperCase bard is "Bard".
+
+homeName Char is "the Highlands" :- home Char is highlands.
+homeName Char is "Seaside Village" :- home Char is seaside_town.
+homeName Char is "the Foothills" :- home Char is foothills.
+homeName Char is (concat (upperCase (training Char)) " City") :-
+   home Char is city.
+
+a_story is (concat 
+  "Our hero " 
+  (character hero) 
+  ", a talented " 
+  (lowerCase (training hero)) 
+  " hailing from " 
+  (homeName hero) 
+  ", sets off for adventure with their trusty " 
+  (lowerCase (training sidekick)) 
+  " sidekick " 
+  (character sidekick) 
+  " from " 
+  (homeName sidekick) 
+  ". Together they defeat the " 
+  (lowerCase (training villain)) 
+  " villain " 
+  (character villain) 
+  " of "
+  (homeName villain)
+  "!").

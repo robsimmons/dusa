@@ -1,9 +1,7 @@
 import { DOCUMENT } from 'sketchzone';
 import React from 'react';
-import { parse } from '../language/dusa-parser.js';
-import { check } from '../language/check.js';
-import type { WorkerStats, AppToWorker, WorkerToApp } from './worker.js';
-import type { Issue } from '../client.js';
+import type { WorkerStats, AppToWorkerMsg, WorkerToAppMsg } from './worker.js';
+import { Dusa, DusaError, type Issue } from '../client.js';
 import type { Fact, Term } from '../termoutput.js';
 import {
   ChevronLeftIcon,
@@ -14,8 +12,7 @@ import {
   PlayIcon,
 } from '@radix-ui/react-icons';
 import { escapeString } from '../datastructures/data.js';
-import { builtinModes } from '../language/dusa-builtins.js';
-import { compile } from '../language/compile.js';
+import { ProgramN } from '../bytecode.js';
 
 interface Props {
   doc: DOCUMENT;
@@ -73,10 +70,10 @@ export default function Inspector({ doc, visible }: Props) {
   const [issues, setIssues] = React.useState<Issue[]>([]);
   const worker = React.useRef<Worker>();
   const post = React.useCallback(
-    (message: AppToWorker) => worker.current!.postMessage(message),
+    (message: AppToWorkerMsg) => worker.current!.postMessage(message),
     [worker],
   );
-  const [stats, setStats] = React.useState<WorkerStats>({ cycles: 0, deadEnds: 0 });
+  const [stats, setStats] = React.useState<WorkerStats>({ deductions: 0, rejected: 0, choices: 0 });
 
   // solutionIndex === solutions.length means we're "following" the latest state
   const [solutionIndex, setSolutionIndex] = React.useState<number | null>(null);
@@ -84,20 +81,20 @@ export default function Inspector({ doc, visible }: Props) {
   const [state, setState] = React.useState<'running' | 'paused' | 'done'>('running');
 
   React.useEffect(() => {
-    const ast = parse(doc);
-    if (ast.errors !== null) {
-      setIssues(ast.errors);
-      return;
-    }
-    const checkResult = check(builtinModes, ast.document);
-
-    if (checkResult.errors.length > 0) {
-      setIssues(checkResult.errors);
-      return;
+    let bytecode: ProgramN<string | number>;
+    try {
+      bytecode = Dusa.compile(doc);
+    } catch (e) {
+      if (e instanceof DusaError) {
+        setIssues(e.issues);
+        return;
+      } else {
+        throw e;
+      }
     }
 
     worker.current = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
-    worker.current.onmessage = (message: MessageEvent<WorkerToApp>) => {
+    worker.current.onmessage = (message: MessageEvent<WorkerToAppMsg>) => {
       switch (message.data.type) {
         case 'stats': {
           setStats(message.data.stats);
@@ -121,10 +118,9 @@ export default function Inspector({ doc, visible }: Props) {
       }
     };
 
-    const compiledProgram = compile(checkResult.builtins, checkResult.arities, ast.document, true);
     post({
       type: 'load',
-      program: compiledProgram,
+      program: bytecode,
     });
     post({ type: 'start' });
     return () => {
@@ -236,8 +232,9 @@ export default function Inspector({ doc, visible }: Props) {
           <PlayIcon width={ICON_SIZE} height={ICON_SIZE} /> Resume
         </button>
         <div className="status-text">
-          {state === 'done' ? 'done' : state === 'paused' ? 'paused' : 'running'}, {stats.cycles}{' '}
-          cycle{stats.cycles !== 1 && 's'}
+          {state === 'done' ? 'done' : state === 'paused' ? 'paused' : 'running'},{' '}
+          {stats.deductions} deduction{stats.deductions !== 1 && 's'}, {stats.choices} choice
+          {stats.choices !== 1 && 's'}, {stats.rejected} dead end{stats.rejected !== 1 && 's'}{' '}
         </div>
       </div>
     </div>

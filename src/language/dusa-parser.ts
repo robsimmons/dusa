@@ -140,17 +140,17 @@ export function parseConclusion(
 
   let tok: Token | null;
   if ((tok = chomp(t, '{')) !== null) {
-    const values: ParsedPattern[] = [];
-    values.push(forceFullTerm(t));
+    const choices: ParsedPattern[] = [];
+    choices.push(forceFullTerm(t));
     while ((tok = chomp(t, '}')) === null) {
       force(t, ',');
-      values.push(forceFullTerm(t));
+      choices.push(forceFullTerm(t));
     }
     return {
       name,
       args,
       type: isToken.type === 'is' ? 'closed' : 'open',
-      values,
+      choices,
       loc: { start: nameTok.loc.start, end: tok.loc.end },
     };
   } else {
@@ -165,7 +165,7 @@ export function parseConclusion(
       name,
       args,
       type: isToken.type === 'is' ? 'closed' : 'open',
-      values: [value],
+      choices: [value],
       loc: { start: nameTok.loc.start, end: value.loc.end },
     };
   }
