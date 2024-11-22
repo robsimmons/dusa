@@ -66,17 +66,20 @@ function validateTerm(term: any): term is InputTerm {
   if (typeof term === 'number') return true;
   if (typeof term === 'string') return true;
   if (typeof term === 'boolean') return true;
+  /* istanbul ignore next -- not possible for json inputs @preserve */
   if (typeof term !== 'object') {
-    throw new Error('term not number, string, boolean, or term object');
+    throw new Error(
+      '(unexpected internal error, please report) term not number, string, boolean, or term object',
+    );
   }
-  if (!term.name) {
+  if (term.name === undefined) {
     throw new Error("no 'name' field in term object");
   }
   if (typeof term.name !== 'string') {
     throw new Error("'name' field in term object not a string");
   }
-  if (!term.args) return true;
-  if (typeof term.args !== 'object' || typeof term.args.length !== 'number') {
+  if (term.args === undefined) return true;
+  if (!Array.isArray(term.args)) {
     throw new Error("'args' field in term object not an array");
   }
   return term.args.every(validateTerm);
@@ -86,7 +89,7 @@ function validateFact(fact: any): fact is InputFact {
   if (typeof fact !== 'object') {
     throw new Error('not an object');
   }
-  if (!fact.name) {
+  if (fact.name === undefined) {
     throw new Error("no 'name' field in fact object");
   }
   if (typeof fact.name !== 'string') {
@@ -109,7 +112,31 @@ function validateFact(fact: any): fact is InputFact {
   }
 }
 
-function validateJsonString(source: string, str: string): InputFact[] {
+function validateJsonFact(arg: number, str: string): InputFact {
+  let input: any;
+  try {
+    input = JSON.parse(str);
+  } catch (e) {
+    if (e instanceof Error) {
+      throw new Error(`Invalid JSON in command-line fact #${arg}: ${e.message}`);
+    } else {
+      throw e;
+    }
+  }
+
+  try {
+    validateFact(input);
+    return input;
+  } catch (e) {
+    if (e instanceof Error) {
+      throw new Error(`Error in command-line fact #${arg}: ${e.message}`);
+    } else {
+      throw e;
+    }
+  }
+}
+
+function validateJsonFacts(source: string, str: string): InputFact[] {
   let input: any;
   try {
     input = JSON.parse(str);
@@ -232,8 +259,8 @@ export function runDusaCli(
   const assertArgs = args.values.assert as string[];
   try {
     for (let i = 0; i < assertArgs.length; i++) {
-      const facts = validateJsonString(`command-line fact #${i + 1}`, `[${assertArgs[i]}]`);
-      dusa.assert(...facts);
+      const fact = validateJsonFact(i + 1, assertArgs[i]);
+      dusa.assert(fact);
     }
   } catch (e) {
     if (e instanceof Error) err(e.message);
@@ -243,7 +270,7 @@ export function runDusaCli(
   const assertFileArgs = args.values.facts as string[];
   try {
     for (let i = 0; i < assertFileArgs.length; i++) {
-      const facts = validateJsonString(
+      const facts = validateJsonFacts(
         assertFileArgs[i],
         readFileSync(assertFileArgs[i]).toString('utf-8'),
       );

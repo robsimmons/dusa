@@ -90,7 +90,7 @@ export function compareTerm(t1: Term, t2: Term): number {
   if (typeof t1 === 'bigint' || typeof t1 === 'number') {
     return typeof t2 === 'bigint' || typeof t2 === 'number' ? Number(t1) - Number(t2) : -1;
   }
-  if (typeof t2 === 'bigint') return 1;
+  if (typeof t2 === 'bigint' || typeof t2 === 'number') return 1;
 
   if (t1.name !== null) {
     if (t2.name === null) return -1;

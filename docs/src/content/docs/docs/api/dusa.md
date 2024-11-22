@@ -30,17 +30,16 @@ const dusa = new Dusa(`edge a X.`);
 
 ## Solving a Dusa instance
 
-Dusa programs can't be directly queried: they must first be solved. There are several
-different ways to direct Dusa to generate solutions, all of which provide access to
-[`DusaSolution` objects](/docs/api/dusasolution/).
+Dusa programs can't be directly queried: they must first be solved. There are
+several different ways to direct Dusa to generate solutions, all of which
+provide access to [`DusaSolution` objects](/docs/api/dusasolution/).
 
 ### `solution` getter
 
-If a Dusa program has at most one solution, that solution can be accessed with the
-`solution` getter. The first time this method is accessed it will cause some
-computation to happen (and it could even fail to terminate if there aren't finite
-solutions). The result is cached, so subsequent calls will not trigger additional
-computation.
+Often all you need is to find a single solution (or to know that know
+solutions exist). The first time you try to access `dusa.solution` some
+computation will happen (and this could even fail to terminate). But then the
+result is cached; subsequent calls will not trigger additional computation.
 
 ```javascript
 const dusa = new Dusa(`
@@ -50,11 +49,11 @@ const dusa = new Dusa(`
     path X Y :- edge X Y.
     path X Z :- edge X Y, path Y Z.`);
 dusa.solution; // Object of type DusaSolution
-[...dusa.solution.lookup('path', 'b')]; // [['c', null], ['d', null]]
-[...dusa.solution.lookup('path', 'c')]; // [['d', null]]
+[...dusa.solution.lookup('path', 'b')]; // [['c'], ['d']]
+[...dusa.solution.lookup('path', 'c')]; // [['d']]
 ```
 
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-kmrbac?file=index.js&view=editor)
+[Explore this example on val.town](https://www.val.town/v/robsimmons/solution_getter_yes)
 
 If no solutions exist, the `solution` getter will return `null`.
 
@@ -65,77 +64,50 @@ const dusa = new Dusa(`
 dusa.solution; // null
 ```
 
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-qmaf3y?file=index.js&view=editor)
+[Explore this example on val.town](htthttps://www.val.town/v/robsimmons/solution_getter_no)
 
-This getter can only be used if a single solution exists. Dusa will check for
-additional solutions when the `solution` getter is accessed, and will throw an
-exception if there are other solutions.
+If there are multiple solutions, the `solution` getter will pick one solution,
+and will always return that one.
 
 ```javascript
 const dusa = new Dusa(`name is { "one", "two" }.`);
 dusa.solution; // raises DusaError
 ```
 
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-ybvpcq?file=index.js&view=editor)
+[Explore this example on val.town](https://www.val.town/v/robsimmons/solution_getter_maybe)
 
-For programs with multiple solutions, use the `sample()` method or the `solutions`
-getter, which returns an iterator.
+### Getting all solutions
 
-### `sample()` method
-
-The `sample()` method will return an arbitrary solution to the Dusa program, or
-`null` if no solution exists.
-
-Each call to `sample()` re-computes the program, so even if there are only a finite
-(but nonzero) number of solutions, `sample()` can be called as many times as desired.
+To enumerate the solutions to a program, you can use the Javascript iterator
+notation. The iterator works in an arbitrary order: this program will either
+print `[["one"]]` and then `[["two"]]` or else it will print `[["two"]]` and
+then `[["one"]]`.
 
 ```javascript
 const dusa = new Dusa(`name is { "one", "two" }.`);
 
-for (let i = 0; i < 1000; i++) {
-  for (const [name] of dusa.sample().lookup('name')) {
-    console.log(name);
-  }
-}
-```
-
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-dqe9g4?file=index.js&view=editor)
-
-The current Dusa interpreter does not have a well-defined probabilistic semantics for
-complex programs, but the simple program above will print `"one"` about 500 times and
-will print `"two"` about 500 times.
-
-### solutions getter
-
-The `solutions` getter iterates through all the possible distinct solutions of a Dusa
-program. The iterator works in an arbitrary order: this program will either print
-`[["one"]]` and then `[["two"]]` or else it will print `[["two"]]` and then `[["one"]]`.
-
-```javascript
-const dusa = new Dusa(`name is { "one", "two" }.`);
-
-for (const solution of dusa.solutions) {
+for (const solution of dusa) {
   console.log([...solution.lookup('name')]);
 }
 ```
 
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-cysbcb?file=index.js&view=editor)
+[Explore this example on val.town](https://www.val.town/v/robsimmons/solutions_enumerate)
 
-Each time the `dusa.solutions` getter is accessed, an iterator is returned that
-re-runs solution search, potentially returning solutions in a different order.
+Each time you invoke the iterator `dusa` getter is accessed, search is re-run,
+potentially returning solutions in a different order.
 
 ## Modifying a Dusa instance
 
-The Dusa implementation doesn't support adding and removing rules after a `Dusa`
-class instance has been created, but it does support adding additional **facts**,
-which can be just as powerful. This can be useful for applications where the actual
-set of facts isn't known ahead of time, but the desired analysis on those facts is
-known.
+The Dusa implementation doesn't support adding and removing rules after a
+`Dusa` class instance has been created, but it does support adding additional
+**facts**, which can be just as powerful. This can be useful for applications
+where the actual set of facts isn't known ahead of time, but the desired
+analysis on those facts is known.
 
 ### assert() method
 
-The `assert` method of a Dusa instance takes an arbitrary number of arguments, each
-one a Fact, and adds them to the database.
+The `assert` method of a Dusa instance takes an arbitrary number of arguments,
+each one a Fact, and adds them to the database.
 
 ```javascript
 const dusa = new Dusa(`
@@ -153,4 +125,4 @@ dusa.assert(
 [...dusa.solution.lookup('path', 'a')]; // [['b', null], ['c', null]]
 ```
 
-[Explore this example on StackBlitz](https://stackblitz.com/edit/node-7k1apl?file=index.js&view=editor)
+[Explore this example on val.town](https://www.val.town/v/robsimmons/dusa_assertion)
