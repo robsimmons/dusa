@@ -74,7 +74,9 @@ export class AttributeMap<T> {
     return [new AttributeMap(newTree, this._size - 1), ref.current.value];
   }
 
-  /** Quickly return a single element, or null if one exists */
+  /**
+   * Quickly return a single element, or null if one exists
+   */
   example(): null | { name: string; args: Data[]; value: T } {
     if (this.tree === null) return null;
     const name = this.tree.key;
@@ -88,7 +90,10 @@ export class AttributeMap<T> {
     return { name, args, value: trie!.value };
   }
 
-  /** Return an element if one exists, with some chance that any element will be selected */
+  /**
+   * Return an element if one exists, with some chance that any element will
+   * be selected
+   */
   choose(): null | { name: string; args: Data[]; value: T } {
     if (this.tree === null) return null;
     const [name, trie_] = chooseTree(this.tree)!;
@@ -102,7 +107,10 @@ export class AttributeMap<T> {
     return { name, args, value: trie!.value };
   }
 
-  /** Abstraction-boundary-violating access to the underlying trie; necessary for how the Database type currently performs visits. */
+  /**
+   * Abstraction-boundary-violating access to the underlying trie; necessary
+   * for how the Database type currently performs visits.
+   */
   getTrie(name: string): Trie<Data, T> {
     return lookupTree(this.tree, name);
   }

@@ -127,10 +127,10 @@ export function collapseTreeUp(pathToCollapseUp: ChoiceZipper): [ChoiceZipper, C
       break;
     }
     case 'noneOf': {
-      // XXX COVERAGE: currently we never explore a noneOfChild first, leaving these
-      // lines uncovered. But this is a change we eventually want to make to the engine,
-      // to stop deterministically preferring the positive branches always, so it's
-      // good to leave these lines untested for now.
+      // XXX COVERAGE: currently we never explore a noneOfChild first, leaving
+      // these lines uncovered. But this is a change we eventually want to
+      // make to the engine, to stop deterministically preferring the positive
+      // branches always, so it's good to leave these lines untested for now.
       tree.noneOfChild = null;
       break;
     }

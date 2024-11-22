@@ -1,13 +1,6 @@
 import { Data, DataSet } from './data.js';
-import {
-  lookup as lookupTree,
-  visit as visitTree,
-} from './avl.js';
-import {
-  TrieNode,
-  lookup as lookupTrie,
-  visit as visitTrie,
-} from './trie.js';
+import { lookup as lookupTree, visit as visitTree } from './avl.js';
+import { TrieNode, lookup as lookupTrie, visit as visitTrie } from './trie.js';
 import { AttributeMap } from './attributemap.js';
 
 export type Constraint = { type: 'just'; just: Data } | { type: 'noneOf'; noneOf: DataSet };

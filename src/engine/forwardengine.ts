@@ -18,18 +18,18 @@ export type AgendaMember = Intermediate | NewFact;
  * choice set or as a map from attributes to (non-empty) sets of pairwise
  * incompatible constraints, and it is always the case that `{D[a]} <= C[a]`.
  *
- * The database D is represented by `state.explored`.
- * For all attributes `a`:
+ * The database D is represented by `state.explored`. For all attributes `a`:
  *  - If `D[a] = noneOf {}`, then `!state.explored`.
  *  - Otherwise, `state.explored[a] = D[a]`.
  *
- * The chart C is represented by the combination of `state.explored` and `state.frontier`.
- * For all attributes `a`:
+ * The chart C is represented by the combination of `state.explored` and
+ * `state.frontier`. For all attributes `a`:
  *  - If `{D[a]} = C[a]`, then `!state.explored`.
- *  - Otherwise, `{D[a]} < C[a]` by invariant and `{D[a]} \/ state.frontier[a] = C[a]`.
+ *  - Otherwise, `{D[a]} < C[a]` by invariant and
+ *    `{D[a]} \/ state.frontier[a] = C[a]`.
  *
- * The agenda A contains exactly the attributes where `{D[a]} < C[a]`.
- * For all `a ∈ A`:
+ * The agenda A contains exactly the attributes where `{D[a]} < C[a]`. For all
+ * `a ∈ A`:
  *  - If `C[a] = { just v }`, then `a` is in `state.agenda`.
  *  - Otherwise, `a` is in `state.deferred`.
  */
@@ -99,8 +99,8 @@ export function learnImmediateConsequences(
   });
   state.explored = explored;
 
-  // Now we've (probably) broken our central invariant: the chart C might no longer
-  // contain all the immediate consequences of the database D.
+  // Now we've (probably) broken our central invariant: the chart C might no
+  // longer contain all the immediate consequences of the database D.
   //
   // The rest of the function restores this invariant by adding all immediate
   // consequences of the `D` combined with `p(a) is value` into the chart.
@@ -131,7 +131,12 @@ export function learnImmediateConsequences(
     if (prog.forbids[attribute.name]) return { type: 'forbid', name: attribute.name };
     state.demands = state.demands.remove(attribute.name, [])?.[0] ?? state.demands;
     for (const { inVars, premise, conclusion } of prog.intermediates[attribute.name] ?? []) {
-      for (const introduced of state.explored.visit(premise.name, factArgs, inVars.shared, premise.introduced)) {
+      for (const introduced of state.explored.visit(
+        premise.name,
+        factArgs,
+        inVars.shared,
+        premise.introduced,
+      )) {
         const conflict = assertConclusion(
           prog,
           state,
@@ -191,8 +196,8 @@ export function assertConclusion(
       // An open rule has no effect if `D[a] = just v`
       if (exploredValue.type === 'just') return null;
 
-      // An open rule also has no effect if `D[a] = noneOf X` but `C[a]` is closed
-      // (that is, if `C[a] = { just v1, just v2, ..., just vn }`)
+      // An open rule also has no effect if `D[a] = noneOf X` but `C[a]` is
+      // closed (that is, if `C[a] = { just v1, just v2, ..., just vn }`)
       const frontierChoices = state.frontier.get(conclusion.name, args) ?? noChoices;
       if (!frontierChoices.open) return null;
 
@@ -202,7 +207,8 @@ export function assertConclusion(
       //  - `Y = { v1, v2, ..., vn } ∪ X`
       //  - `state.frontier[a] = { open: true, values: { v1, v2, ... vn } }`
       //
-      // We need to update `state.frontier[a].values` with all the open rule's conclusions.
+      // We need to update `state.frontier[a].values` with all the open rule's
+      // conclusions.
       const choices = conclusion.choices.map((choice) =>
         apply(prog.data, shared, choice, passed, passedOffset, introduced, introducedOffset),
       );
@@ -216,7 +222,7 @@ export function assertConclusion(
       }
 
       // An open rule *also* has no effect if all of the open rule's
-      // conclusions are already included in the rejection set X (where 
+      // conclusions are already included in the rejection set X (where
       // D[a] = noneOf X)
       if (!addsNewFrontierChoices) return null;
 
@@ -239,7 +245,8 @@ export function assertConclusion(
         apply(prog.data, shared, choice, passed, passedOffset, introduced, introducedOffset),
       );
 
-      // If `D[a] = just v`, signal failure if `v` is not among the choices in the conclusion
+      // If `D[a] = just v`, signal failure if `v` is not among the choices in
+      // the conclusion
       if (exploredValue.type === 'just') {
         if (choices.some((choice) => choice === exploredValue.just)) return null;
         return {
@@ -272,7 +279,8 @@ export function assertConclusion(
         });
         state.frontier = frontier;
 
-        // Unless `a` was, and remains, on the deferred agenda, we have to fix the agenda
+        // Unless `a` was, and remains, on the deferred agenda, we have to fix
+        // the agenda
         if (!isAlreadyInFrontier) {
           if (choices.length === 1) {
             state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
@@ -289,7 +297,8 @@ export function assertConclusion(
         // We will intersect these options with choices
         const maybeUniqueFrontierChoice = frontierChoices.values.getSingleton();
 
-        // If `C[a] = { just v }`, signal failure if `v` is not among the choices in the conclusion
+        // If `C[a] = { just v }`, signal failure if `v` is not among the
+        // choices in the conclusion
         if (maybeUniqueFrontierChoice !== null) {
           const [uniqueFrontierChoice] = maybeUniqueFrontierChoice;
           if (choices.some((choice) => choice === uniqueFrontierChoice)) return null;
@@ -326,7 +335,8 @@ export function assertConclusion(
           values: intersection,
         })[0];
 
-        // If `a` can be moved from the deferred agenda to the active agenda, do so!
+        // If `a` can be moved from the deferred agenda to the active agenda,
+        // do so!
         if (intersection.size === 1) {
           // We can remove this from the deferred agenda!
           state.deferred = state.deferred.remove(conclusion.name, args)![0];

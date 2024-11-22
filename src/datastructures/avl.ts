@@ -51,10 +51,10 @@ export function singleton<K, V>(key: K, value: V): AVLNode<K, V> {
 /** Precondition: height(left) === 2 + height(right) */
 function createAndFixLeft<K, V>(keyZ: K, valueZ: V, x: AVLNode<K, V>, D: AVL<K, V>) {
   if (height(x.left) >= height(x.right)) {
-    /* This is the 'single rotation case,' where a single rotation will fix things.
-     * During insertion, the heights will never be equal, and the resulting tree will
-     * have height h+2. During deletion, it's possible for the resulting tree to have
-     * height h+3.
+    /* This is the 'single rotation case,' where a single rotation will fix
+     * things. During insertion, the heights will never be equal, and the
+     * resulting tree will have height h+2. During deletion, it's possible for
+     * the resulting tree to have height h+3.
      *
      *         z              x
      *       /   \           / \
@@ -66,7 +66,8 @@ function createAndFixLeft<K, V>(keyZ: K, valueZ: V, x: AVLNode<K, V>, D: AVL<K, 
      */
     return create(x.key, x.value, x.left, create(keyZ, valueZ, x.right, D));
   } else {
-    /* This is the double rotation case. The resulting tree will have height h+2
+    /* This is the double rotation case. The resulting tree will have height
+     * h+2.
      *
      *         z                 y
      *       /   \             /   \
@@ -91,10 +92,10 @@ function createAndFixLeft<K, V>(keyZ: K, valueZ: V, x: AVLNode<K, V>, D: AVL<K, 
 /** Precondition: height(left) + 2 === height(right) */
 function createAndFixRight<K, V>(keyX: K, valueX: V, A: AVL<K, V>, z: AVLNode<K, V>) {
   if (height(z.left) <= height(z.right)) {
-    /* This is the 'single rotation case,' where a single rotation will fix things.
-     * During insertion, the heights will never be equal, and the resulting tree will
-     * have height h+2. During deletion, it's possible for the resulting tree to have
-     * height h+3.
+    /* This is the 'single rotation case,' where a single rotation will fix
+     * things. During insertion, the heights will never be equal, and the
+     * resulting tree will have height h+2. During deletion, it's possible for
+     * the resulting tree to have height h+3.
      *
      *      x                   z
      *    /   \                / \
@@ -106,7 +107,8 @@ function createAndFixRight<K, V>(keyX: K, valueX: V, A: AVL<K, V>, z: AVLNode<K,
      */
     return create(z.key, z.value, create(keyX, valueX, A, z.left), z.right);
   } else {
-    /* This is the double rotation case. The resulting tree will have height h+2
+    /* This is the double rotation case. The resulting tree will have height
+     * h+2.
      *
      *       x                  y
      *     /   \              /   \

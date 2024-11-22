@@ -12,10 +12,11 @@ import {
 type ViewsIndex = number;
 
 /**
- * Outside data.ts, the type Data should be treated externally as an opaque type.
+ * Outside data.ts, the type Data should be treated externally as an opaque
+ * type.
  *
- * A piece of Data belongs to a specific HashCons object, and Data returned from
- * one HashCons.hide() cannot be given to another HashCons object.
+ * A piece of Data belongs to a specific HashCons object, and Data returned
+ * from one HashCons.hide() cannot be given to another HashCons object.
  */
 export type Data = number;
 
@@ -235,7 +236,10 @@ export class DataMap<T> {
     return this.tree === null ? null : [this.tree.key, this.tree.value];
   }
 
-  /** Return an element if one exists, with some chance that any element will be selected. */
+  /**
+   * Return an element if one exists, with some chance that any element will
+   * be selected.
+   */
   choose(): null | [Data, T] {
     return chooseTree(this.tree);
   }
@@ -282,7 +286,10 @@ export class DataSet {
     return this.map.example()?.[0] ?? null;
   }
 
-  /** Return an element if one exists, with some chance that any element will be selected. */
+  /**
+   * Return an element if one exists, with some chance that any element will
+   * be selected.
+   */
   choose() {
     return this.map.choose()?.[0] ?? null;
   }
