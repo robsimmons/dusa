@@ -1,0 +1,132 @@
+---
+title: Rules
+---
+
+import Dusa from '../../../../components/Dusa.astro';
+
+The most important [declarations](/docs/language/declarations/) in Dusa are rules. 
+A rule has the form `<conclusion> :- <premises>`, where each premise is a 
+[fact](/docs/language/fact/) and the conclusion is a [choice](/docs/language/choices/).
+When a rule has no premises, the `:-` symbol is omitted.
+
+Rules with open and closed choices as the conclusion are called, respectively,
+open and closed rules.
+
+
+## Premises
+
+Premises to a rule can have the following form:
+
+- Premises can be [facts](/docs/language/fact/) of the form `<attribute>` or `<attribute> is <term>`.
+  The attribute and value can both contain free variables.
+- `<term> == <term>`, which is only satisfied if the two terms can be made equal.
+  Both sides of the equation can contain variables, but all the variables on one side
+  or the other must have been mentioned in a previous premise.
+- `<term> != <term>`, which is only satisfied if the two terms cannot be made equal.
+  Both sides of the equation can contain variables, but all the variables on one side
+  must have been mentioned in a previous premise, and variables first mentioned in an
+  inequality premise cannot be mentioned in subsequent premises or in the conclusion.
+
+## Closed rules
+
+An closed rule looks like this:
+
+```
+<attr> is { <value_1>, ..., <value_n> } :- <premises>.
+```
+
+but if `n` is 1, it can be written like this:
+
+```
+<attr> is <value_1> :- <premises>.
+```
+
+If the premises of a closed rule hold, Dusa must assign the attribute to one of the
+listed values. If we've already given the attribute a value, then that attribute must
+be one of the listed values, or else the solution will be invalidated.
+
+## Open rules
+
+Open rules use the `is?` keyword instead of the `is` keyword in their conclusion.
+
+```
+<attribute> is? <value> :- <premises>.
+```
+
+It's also possible to use curly braces to make an open rule with multiple values:
+
+```
+<attribute> is? { <value_1>, ..., <value_n> } :- <premises>.
+```
+
+This rule is shorthand for writing the following `n` rules:
+
+```
+<attribute> is? <value_1> :- <premises>.
+...
+<attribute> is? <value_n> :- <premises>.
+
+```
+
+If all premises of an open rule hold, then Dusa will try to evaluate the program
+further with each of the listed attributes, but will **also** leave open the option
+that some other chain of reasoning might assign some different value to the attribute.
+
+<Dusa predicates={['color', 'species']} code={`
+
+color is { "brown", "blue" }.
+species is? { "dolphin", "fish" }.
+species is? "bear" :- color is "brown".
+
+`}/>
+
+When evaluating the first rule, the color must be blue or brown: no other possibility
+is allowed when dealing with a closed rule. When evaluating the second rule, however,
+there are three possibilities: the species is dolphin, the species is fish, and the
+species might be determined later by some other chain of reasoning.
+And indeed, the third rule allows us to derive that the species is potentially "bear"
+if the color is "brown".
+
+The program has five total solutions:
+
+- `color is "brown"`, `species is "dolphin"`
+- `color is "brown"`, `species is "fish"`
+- `color is "blue"`, `species is "dolphin"`
+- `color is "blue"`, `species is "fish"`
+- `color is "brown"`, `species is "bear"`
+
+If we'd made the conclusion of the last rule `species is { "bear" }` --- or,
+equivalently, `species is "bear"` --- it would require that when the color is brown, the
+species is bear, invalidating the brown+dolphin and brown+fish solutions. By leaving
+the third rule open, it didn't invalidate solutions where a different chain of
+reasoning had assigned a different species.
+
+[Explore this example](https://dusa.rocks/#jsonz=ZYy7DcMwDAVXeWBaJQO4yQhewI0lMbAAmRT0QQrDu4dOkSZ43d3DHdRpIi0s5ChqGDvLRW6YjaGOzIi8q7Re155UFlvQrBWp4YDPgx181bfgfCzSCofEzeTTbNRctiQOr9S2P-95rZju-OW-GTvR-QE)
+
+### Open rules don't provide extra information
+
+When Dusa considers the "question mark path" of a derivation, it does **not** treat
+the attribute as if it has some value that's not yet determined; instead, it treats
+the open rule as if it hasn't ever fired. To see why this matters, consider the
+following program:
+
+<Dusa predicates={['a', 'b']} code={`
+
+a is? { 1, 2 }.
+b :- a is _.
+a is? 3 :- b.
+
+`}/>
+
+Procedurally, Dusa must follow three chains of logic. In the first chain of logic,
+Dusa derives `a is 1` as a fact, uses that to further derive `b`, and then considers
+the third rule, which opens up the possibility that `a is 3`, but this cannot be
+derived as it would conflict with the fact `a is 1`. In the second chain of logic,
+Dusa does the same thing, but for `a is 2`.
+
+In the final chain, if we acted like `a is ?` was true for an as-yet-unknown value,
+we'd be able to use that fact to derive `b` with the second rule and then `a is 3`
+with the third rule. That is **not** how Dusa works. In actuality, the third chain of
+reasoning will be rejected, because no subsequent reasoning will derive any knowledge
+about the value assigned to the attribute `a`.
+

@@ -1,27 +1,13 @@
-import { BUILT_IN_MAP, BUILT_IN_PRED } from './dusa-builtins.js';
 import { Issue, ParserResponse, StreamParser } from '../parsing/parser.js';
 import { SourceLocation, SourcePosition } from '../parsing/source-location.js';
 import { StringStream } from '../parsing/string-stream.js';
 
 type StateRoot =
   | {
-      type: 'Normal' | 'Beginning' | 'Builtin3';
-      defaults: typeof BUILT_IN_MAP;
-    }
-  | {
-      type: 'Builtin1';
-      hashloc: SourceLocation;
-      defaults: typeof BUILT_IN_MAP;
-    }
-  | {
-      type: 'Builtin2';
-      hashloc: SourceLocation;
-      defaults: typeof BUILT_IN_MAP;
-      builtin: BUILT_IN_PRED;
+      type: 'Normal';
     }
   | {
       type: 'InString';
-      defaults: typeof BUILT_IN_MAP;
       start: SourcePosition;
       end: SourcePosition;
       collected: string;
@@ -53,16 +39,10 @@ export type Token =
   | { loc: SourceLocation; type: 'is?' }
   | { loc: SourceLocation; type: 'in' }
   | { loc: SourceLocation; type: 'const'; value: string }
-  | {
-      loc: SourceLocation;
-      type: 'builtin';
-      value: string;
-      builtin: BUILT_IN_PRED;
-    }
   | { loc: SourceLocation; type: 'var'; value: string }
   | { loc: SourceLocation; type: 'wildcard'; value: string }
   | { loc: SourceLocation; type: 'triv' }
-  | { loc: SourceLocation; type: 'int'; value: number }
+  | { loc: SourceLocation; type: 'int'; value: bigint }
   | { loc: SourceLocation; type: 'string'; value: string }
   | { loc: SourceLocation; type: 'hashdirective'; value: string };
 
@@ -86,7 +66,7 @@ function issue(stream: StringStream, msg: string): Issue {
 }
 
 export const dusaTokenizer: StreamParser<ParserState, Token> = {
-  startState: { type: 'Beginning', defaults: BUILT_IN_MAP },
+  startState: { type: 'Normal' },
   advance: (stream, state): ParserResponse<ParserState, Token> => {
     let tok: string | null;
 
@@ -94,7 +74,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
       if (state.type === 'InString') {
         console.log();
         return {
-          state: { type: 'Normal', defaults: state.defaults },
+          state: { type: 'Normal' },
           tag: 'invalid',
           issues: [
             {
@@ -121,95 +101,10 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
     }
 
     switch (state.type) {
-      case 'Beginning':
-        if ((tok = stream.eat('#'))) {
-          tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
-          if (!tok) {
-            stream.eat(/^.*$/);
-            return {
-              state: state,
-              issues: [
-                issue(
-                  stream,
-                  `Expect # to be followed by a constant (directive) or space (comment)`,
-                ),
-              ],
-              tag: 'invalid',
-            };
-          }
-
-          if (tok === 'builtin') {
-            return {
-              state: { ...state, type: 'Builtin1', hashloc: stream.matchedLocation() },
-              tag: 'meta',
-            };
-          }
-
-          return {
-            state: { ...state, type: 'Normal' },
-            tag: 'meta',
-            tree: { type: 'hashdirective', value: tok, loc: stream.matchedLocation() },
-          };
-        }
-
-        return { state: { ...state, type: 'Normal' } };
-
-      case 'Builtin1':
-        tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
-        if (!Object.keys(BUILT_IN_MAP).some((name) => name === tok)) {
-          return {
-            state: { type: 'Normal', defaults: state.defaults },
-            issues: [
-              {
-                type: 'Issue',
-                msg: `Expected token following #builtin to be one of ${Object.keys(
-                  BUILT_IN_MAP,
-                ).join(', ')}`,
-                severity: 'error',
-                loc: { start: state.hashloc.start, end: stream.matchedLocation().end },
-              },
-            ],
-            tag: 'invalid',
-          };
-        }
-
-        return {
-          state: { ...state, type: 'Builtin2', builtin: tok as keyof typeof BUILT_IN_MAP },
-          tag: 'meta',
-        };
-
-      case 'Builtin2':
-        tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
-        if (tok === null || !tok.match(CONST_TOKEN)) {
-          return {
-            state: { type: 'Normal', defaults: state.defaults },
-            issues: [
-              {
-                type: 'Issue',
-                msg: `Expected constant following #builtin ${state.builtin}`,
-                severity: 'error',
-                loc: { start: state.hashloc.start, end: stream.matchedLocation().end },
-              },
-            ],
-            tag: 'invalid',
-          };
-        }
-
-        return {
-          state: { type: 'Builtin3', defaults: { ...state.defaults, [state.builtin]: tok } },
-          tag: 'macroName',
-        };
-
-      case 'Builtin3':
-        return {
-          state: { ...state, type: 'Beginning' },
-          tag: stream.eat('.') ? 'punctuation' : undefined,
-        };
-
       case 'InString':
         if ((tok = stream.eat('"'))) {
           return {
-            state: { type: 'Normal', defaults: state.defaults },
+            state: { type: 'Normal' },
             tag: 'string',
             tree: {
               type: 'string',
@@ -326,7 +221,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
             };
           }
           return {
-            state: { type: 'Normal', defaults: state.defaults },
+            state: { type: 'Normal' },
             tag: 'invalid',
             issues: [
               {
@@ -344,22 +239,29 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
       case 'Normal':
         if ((tok = stream.eat('#'))) {
           tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN);
+          if (!tok) {
+            stream.eat(/^.*$/);
+            return {
+              state: state,
+              issues: [
+                issue(
+                  stream,
+                  `The symbol '#' should be followed by a constant (directive) or space (comment).`,
+                ),
+              ],
+              tag: 'invalid',
+            };
+          }
+
           return {
-            state,
-            issues: [
-              {
-                type: 'Issue',
-                msg: `A hash command like '#${tok}' can only appear at the beginning of a declaration`,
-                severity: 'error',
-                loc: stream.matchedLocation(),
-              },
-            ],
-            tag: 'invalid',
+            state: { ...state, type: 'Normal' },
+            tag: 'meta',
+            tree: { type: 'hashdirective', value: tok, loc: stream.matchedLocation() },
           };
         }
 
         if (stream.eat(TRIV_TOKEN)) {
-          return { state, tag: 'literal', tree: { type: 'triv', loc: stream.matchedLocation() } };
+          return { state, tag: 'unit', tree: { type: 'triv', loc: stream.matchedLocation() } };
         }
 
         if (stream.eat('"')) {
@@ -378,19 +280,9 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
         for (const p of punct) {
           if (stream.eat(p)) {
             return {
-              state: p === '.' ? { ...state, type: 'Beginning' } : state,
+              state: state,
               tag: 'punctuation',
-              issues:
-                p === '?'
-                  ? [
-                      {
-                        type: 'Issue',
-                        msg: "Standalone question marks for open rules are deprecated and will be removed in a future version: use 'is?' instead",
-                        severity: 'warning',
-                        loc: stream.matchedLocation(),
-                      },
-                    ]
-                  : undefined,
+              issues: [],
               tree: { type: p, loc: stream.matchedLocation() },
             };
           }
@@ -418,44 +310,28 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
           if (tok.match(VAR_TOKEN)) {
             return {
               state,
-              tag: 'variableName.special',
+              tag: 'variableName',
               tree: { type: 'var', value: tok, loc: stream.matchedLocation() },
             };
           }
           if (tok.match(INT_TOKEN)) {
             return {
               state,
-              tag: 'literal',
-              tree: { type: 'int', value: parseInt(tok), loc: stream.matchedLocation() },
+              tag: 'integer',
+              tree: { type: 'int', value: BigInt(tok), loc: stream.matchedLocation() },
             };
           }
           if (tok.match(CONST_TOKEN)) {
-            for (const [builtin, key] of Object.entries(state.defaults)) {
-              if (tok === key) {
-                return {
-                  state,
-                  tag: 'macroName',
-                  tree: {
-                    type: 'builtin',
-                    value: tok,
-                    builtin: builtin as keyof typeof state.defaults,
-                    loc: stream.matchedLocation(),
-                  },
-                };
-              }
-            }
-
             return {
               state,
-              tag: 'variableName',
+              tag: 'literal',
               tree: { type: 'const', value: tok, loc: stream.matchedLocation() },
             };
           }
-
           if (tok.match(WILDCARD_TOKEN)) {
             return {
               state,
-              tag: 'variableName.local',
+              tag: 'variableName',
               tree: { type: 'wildcard', value: tok, loc: stream.matchedLocation() },
             };
           }
@@ -478,7 +354,7 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
     if (state.type === 'InString') {
       console.log();
       return {
-        state: { type: 'Normal', defaults: state.defaults },
+        state: { type: 'Normal' },
         tag: 'invalid',
         issues: [
           {

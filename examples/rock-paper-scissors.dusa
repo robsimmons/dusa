@@ -1,0 +1,40 @@
+# Rock, paper, scissors
+
+# We can play the regular version...
+outcome rock crushes scissors.
+outcome scissors cuts paper.
+outcome paper covers rock.
+
+# ...or choose to play the expanded variant
+variant is { normal, expanded }.
+outcome rock crushes lizard :- variant is expanded.
+outcome lizard poisons spock :- variant is expanded.
+outcome spock smashes scissors :- variant is expanded.
+outcome scissors decapitates lizard :- variant is expanded.
+outcome lizard eats paper :- variant is expanded.
+outcome paper disproves spock :- variant is expanded.
+outcome spock vaporizes rock :- variant is expanded.
+
+player player1.
+player player2.
+move Move :- outcome Move _ _.
+
+#builtin INT_PLUS plus.
+round 1.
+plays P N is? Move :- round N, player P, move Move.
+
+# If the players make the same move, we go to the next round
+round (plus Round 1) :-
+  plays player1 Round is Move,
+  plays player2 Round is Move.
+
+# If the players make different moves, outcomes tells us who won.
+# The "wins" and "round" constants are just a cheap hack to make
+# the result look like a sentence without string concatenation.
+eventually Winner "wins in round" Round "when" Move1 Defeats Move2 :-
+  outcome Move1 Defeats Move2,
+  plays Winner Round is Move1,
+  plays _ Round is Move2.
+
+# Only return games where there are three or more rounds
+#demand round 3.

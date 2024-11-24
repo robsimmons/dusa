@@ -1,5 +1,6 @@
 import { Issue } from '../parsing/parser.js';
 import { SourceLocation } from '../parsing/source-location.js';
+import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { ParsedPattern, Pattern, freeVars, termToString } from './terms.js';
 
 export interface ParsedProposition {
@@ -19,21 +20,25 @@ export interface ParsedTermComparison {
 
 export type ParsedPremise = ParsedProposition | ParsedTermComparison;
 
-export interface Conclusion {
+export type Conclusion = {
   name: string;
   args: Pattern[];
-  values: null | Pattern[];
-  exhaustive: boolean;
   loc?: SourceLocation;
-}
+} & (
+  | { type: 'datalog' }
+  | { type: 'open'; choices: Pattern[] }
+  | { type: 'closed'; choices: Pattern[] }
+);
 
-export interface ParsedConclusion {
+export type ParsedConclusion = {
   name: string;
   args: ParsedPattern[];
-  values: null | ParsedPattern[];
-  exhaustive: boolean;
   loc: SourceLocation;
-}
+} & (
+  | { type: 'datalog' }
+  | { type: 'open'; choices: ParsedPattern[] }
+  | { type: 'closed'; choices: ParsedPattern[] }
+);
 
 export type ParsedDeclaration =
   | { type: 'Forbid'; premises: ParsedPremise[]; loc: SourceLocation }
@@ -43,30 +48,45 @@ export type ParsedDeclaration =
       premises: ParsedPremise[];
       conclusion: ParsedConclusion;
       loc: SourceLocation;
-      deprecatedQuestionMark: SourceLocation | undefined;
     };
+
+export type ParsedBuiltin = {
+  type: 'Builtin';
+  builtin: BUILT_IN_PRED;
+  name: string;
+  loc: SourceLocation;
+};
+
+export type ParsedTopLevel = ParsedBuiltin | ParsedDeclaration;
 
 export function propToString(p: ParsedProposition) {
   const args = p.args.map((arg) => ` ${termToString(arg)}`).join('');
-  const value = p.value === null || p.value.type === 'triv' ? '' : ` is ${termToString(p.value)}`;
+  const value =
+    p.value === null || p.value.type === 'trivial' ? '' : ` is ${termToString(p.value)}`;
   return `${p.name}${args}${value}`;
 }
 
-export function headToString(head: ParsedConclusion | Conclusion) {
+export function headToString(
+  head: { name: string; args: Pattern[] } & (
+    | { type: 'datalog' }
+    | { type: 'open'; choices: Pattern[] }
+    | { type: 'closed'; choices: Pattern[] }
+  ),
+): string {
   const args = head.args.map((arg) => ` ${termToString(arg)}`).join('');
-  if (head.values === null) {
-    return `${head.name}${args}`;
-  } else if (head.values.length !== 1) {
-    return `${head.name}${args} ${head.exhaustive ? 'is' : 'is?'} { ${head.values
-      .map((term) => termToString(term, false))
-      .join(', ')} }`;
-  } else if (head.values[0].type === 'triv' && head.exhaustive) {
-    return `${head.name}${args}`;
-  } else {
-    return `${head.name}${args} ${head.exhaustive ? 'is' : 'is?'} ${termToString(
-      head.values[0],
-      false,
-    )}`;
+  const base = `${head.name}${args}`;
+  switch (head.type) {
+    case 'datalog': {
+      return base;
+    }
+    case 'open':
+    case 'closed': {
+      const is = head.type === 'open' ? 'is?' : 'is';
+      if (head.choices.length === 1) {
+        return `${base} ${is} ${termToString(head.choices[0])}`;
+      }
+      return `${base} ${is} { ${head.choices.map((choice) => termToString(choice, false)).join(', ')} }`;
+    }
   }
 }
 
@@ -107,12 +127,14 @@ export function freeVarsPremise(premise: ParsedPremise) {
   }
 }
 
-export function declToString(decl: ParsedDeclaration): string {
+export function declToString(decl: ParsedTopLevel): string {
   switch (decl.type) {
     case 'Forbid':
       return `#forbid ${decl.premises.map(premiseToString).join(', ')}.`;
     case 'Demand':
       return `#demand ${decl.premises.map(premiseToString).join(', ')}.`;
+    case 'Builtin':
+      return `#builtin ${decl.builtin} ${decl.name}`;
     case 'Rule':
       if (decl.premises.length === 0) {
         return `${headToString(decl.conclusion)}.`;
@@ -142,7 +164,6 @@ export function* visitSubterms(...terms: ParsedPattern[]): IterableIterator<Pars
   for (const term of terms) {
     yield term;
     switch (term.type) {
-      case 'special':
       case 'const':
         for (const subterm of term.args) {
           yield* visitSubterms(subterm);
@@ -167,14 +188,42 @@ export function* visitTermsInPremises(...premises: ParsedPremise[]) {
   }
 }
 
+export function* visitTermsInDecl(decl: ParsedDeclaration) {
+  if (decl.type === 'Rule') {
+    for (const term of decl.conclusion.args) {
+      yield* visitSubterms(term);
+    }
+    switch (decl.conclusion.type) {
+      case 'datalog':
+        break;
+      case 'open':
+      case 'closed':
+        for (const term of decl.conclusion.choices) {
+          yield* visitSubterms(term);
+        }
+        break;
+    }
+  }
+  if (decl.type === 'Demand' || decl.type === 'Forbid' || decl.type === 'Rule') {
+    yield* visitTermsInPremises(...decl.premises);
+  }
+}
+
 export function* visitTermsinProgram(decls: (Issue | ParsedDeclaration)[]) {
   for (const decl of decls) {
     if (decl.type === 'Rule') {
       for (const term of decl.conclusion.args) {
         yield* visitSubterms(term);
       }
-      for (const term of decl.conclusion.values ?? []) {
-        yield* visitSubterms(term);
+      switch (decl.conclusion.type) {
+        case 'datalog':
+          break;
+        case 'open':
+        case 'closed':
+          for (const term of decl.conclusion.choices) {
+            yield* visitSubterms(term);
+          }
+          break;
       }
     }
     if (decl.type === 'Demand' || decl.type === 'Forbid' || decl.type === 'Rule') {

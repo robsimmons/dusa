@@ -1,0 +1,113 @@
+---
+title: Choices
+---
+
+import Dusa from '../../../../components/Dusa.astro';
+
+[Functional facts](/docs/language/facts/) are a key part of how Dusa works: if
+a solution in Dusa contains a fact like `color 3 8 is "red"` then we know it
+can't  contain a fact like `color 3 8 is "black"`, because an attribute like 
+`color 3 8`  is only allowed to "map" to at most one value.
+
+Dusa allows programmers to write programs with multiple solutions by saying 
+that it's possible to choose multiple attributes for a single value. Choices 
+can be _open_ or _closed_. 
+
+## Closed choices
+
+A closed choice lists an attribute, the keyword `is` and one or more values: 
+if there is more than one value, the values are surrounded by curly braces and
+separated by commas.
+
+In any solution,
+the attribute _must_ have one of the listed values.
+
+<Dusa predicates={['color']} code={`
+
+color 1 4 is { "black", "red" }.
+color 2 1 is { "black", "red" }.
+color 3 8 is { "black", "red" }.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=jcqxCoMwFIXhVzkcVxG0HcTV17iLJhdaGnMl0Uny7mLBtXT7-fkObhxoq0bW9Ob2ReN1KozBsnqkPWiGe5llxQRnwZJEid9AiyfeGQeEc5jcR1hDmNQLUZpbdWj_UA_0PxTLCQ)
+
+These three closed rules mean that the program has 2 to the power of 3
+solutions. 
+
+Whenever we write a simple fact about a functional proposition in a program, 
+like `color 4 7 is "red"`, that's actually describing a closed rule with just 
+one choice: we could equivalently write `color 4 7 is { "red" }`.
+
+### Closed choices describe intersections
+
+This program has two solutions: one just containing `a is "blue"` and one just
+containing `a is "orange"`:
+
+<Dusa predicates={['a']} code={`
+
+a is { "blue", "orange", "red" }.
+a is { "blue", "orange", "green" }.
+
+`}/>
+
+The rules of forward chaining logic programming say that every rule that can 
+fire must fire, and this program has two rules that can fire. If we imagine 
+considering the first choice first, there are three potential solutions: the 
+first just contains `a is "blue"`, the second just contains `a is "orange"`, 
+and the third just contains `a is "red"`.
+
+- In the first potential solution, where `a is "blue"`, there's only one valid 
+  option for the second choice: choosing blue. Choosing orange or green will 
+  just invalidate the potential solution. 
+- Analogously, in the second potential solution where `a is "orange"`, there's
+  only one valid way to make the second choice.
+- In the third potential solution, where `a is "red"`, there's no way to make 
+  a consistent choice, so this potential solution must be invalidated.
+
+## Open choices
+
+An open choice lists an attribute the keyword `is?`, and one or more values: 
+if there is more than one value, the values are surrounded by curly braces and
+separated by commas.
+
+In any solution, the attribute _must_ have some value, and that attribute 
+_can_ be any of the listed values... but it doesn't have to be! Open choices
+are very chill.
+
+### Open rules describe unions
+
+The following programs all have exactly 3 solutions: `a is 1`, `a is 2`, and 
+`a is 3`.
+
+**Program 1**
+
+<Dusa predicates={['a']} code={`
+
+a is? { 1, 2, 3 }.
+
+`}/>
+
+**Program 2**
+
+<Dusa predicates={'a'} code={`
+
+a is? 1.
+a is? 2.
+a is? 3.
+
+`}/>
+
+**Program 3**
+
+<Dusa predicates={'a'} code={`
+
+a is? { 1, 2 }.
+a is? { 2, 3 }.
+
+`}/>
+
+Because open choices don't preclude other consistent assignments, the possible
+assignments are the union of the different assignments proposed by different
+open rules.
+

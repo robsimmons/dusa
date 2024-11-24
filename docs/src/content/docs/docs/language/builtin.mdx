@@ -1,0 +1,144 @@
+---
+title: Built-in relations
+---
+
+import Dusa from '../../../../components/Dusa.astro';
+
+On their own, built-in numbers and strings act no different than other
+uninterpreted constants, but they can be manipulated in special ways.
+
+## Equality and inequality comparisons
+
+It's possible to compare integers by writing premises of the form `t1 >= t2`,
+`t1 > t2`, `t1 <= t2`, or `t1 < t2`. These premises will only succeed if
+both terms are numbers or both terms are strings.
+
+<Dusa predicates={['p', 'q']} code={`
+
+p 1.
+p 3.
+p 8.
+p "p".
+p "q".
+p "z".
+p (pair 3 1).
+p nothing.
+
+q X Y :- p X, p Y, X < Y.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSgreOalFpYm5mSWVMbkxeQVKBjqgUhjMGkBJmOUCmKUoKxCOKsKytIoSMwsUjBWMNQEc_PySzIy89L1QIYVKkQoRCpY6SoUKEToAIlIHaCAjUKknlItAA)
+
+On the other hand, equality premises `t1 == t2` and inequality premises
+`t1 != t2` can compare any two terms: `1 != "p"` is true, so this example will
+derive `q 1 "p"` and `q "p" 1`.
+
+<Dusa predicates={['p', 'q', 'r']} code={`
+
+p 1.
+p "n".
+p "z".
+p (pair 3 1).
+
+q X Y :- p X, p Y, X != Y.
+r X Y :- p X, p Y, X == Y.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSgreOalFpYm5mSWVMbkxeQVKBjqgcgYpbwYJSirCsrSKEjMLFIwVjDU1AMpLVSIUIhUsNJVKFCI0AESkTpAAUVbhUigbBE2OVuInFItAA)
+
+A special and powerful way of using inequality uses wildcards to allow you to
+check whether a known term _doesn't_ match some pattern, so this program
+will derive only the facts `q 1`, `q "n"`, and `q "z"`.
+
+<Dusa predicates={['p', 'q']} code={`
+
+p 1.
+p "n".
+p "z".
+p (pair 3 1).
+p (pair "n" 1).
+
+q X :- p X, X != pair _ _.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSgreOalFpYm5mSWVMbkxeQVKBjqgcgYpbwYJSirCsrSKEjMLFIwVjDUROKCFUKEYvIKFSIUrHQVChQidIAsRVsFsJJ4hXg9pVoA)
+
+## Other built-in relations
+
+Other built-in functionality for manipulating strings and numbers can be
+accessed by writing `#builtin` declarations. For every number `n >= 0`,
+the `NAT_SUCC` relation relates the number `n` to the number `n+1`. For every
+set of integers `n` and `m`, the `INT_MINUS` relation relates the numbers `n`
+and `m` to the number `n-m`.
+
+<Dusa builtins={['minus','s']} predicates={['p', 'q', 'r']} code={`
+
+#builtin INT_MINUS minus
+#builtin NAT_SUCC s
+
+p 4.
+p 1.
+
+q Z :- p X, p Y, minus X Y is Z.
+r Z :- p X, s X is Z.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSgrOCUWZyYrJJVm5pRk5hXH5MXkKUM5Cp5-IfG-nn6hwQq5mXmlxUgyfo4h8cGhzs4KYA0FCiZ6INJQD8QrVIhSsNJVKFCI0AESkToQzQoRCpEKmcUKUUA1RUgqQBJQYaVaAA)
+
+Some builtins can be run _backwards_: if you know the value of the relation, 
+then you can use the relation to learn a premise. This means that `INT_MINUS`
+is redundant with `INT_PLUS`, because instead of writing `minus X Y is Z` when
+you know `X` and `Y` but not `Z`, you could write `plus Y Z is X`. For the 
+`STRING_CONCAT` builtin, this allows for some simple string manipulation:
+
+<Dusa builtins={['concat']} predicates={['p', 'q', 'r']} code={`
+
+#builtin STRING_CONCAT concat
+
+p "bananana".
+p Y :- p X, concat Y "na" is X.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=LcqxCsIwGMTxVzm-rrUP0E06iEuF2qFCQJK0SFAvoUlwEN9dI-W23_3fkqQVHxZKLbO3-bmwSIUhk443mOweyTHCaHt_6XWOiorVxjiPw7E_XLtT3-1HWE-rUwkClBjN_5Q0BS5odwiY6i37gZLywkVMjXy-)
+
+Some builtins can also be given a variable number of arguments.
+
+<Dusa builtins={['plus']} predicates={['p', 'q', 'r']} code={`
+
+#builtin INT_PLUS plus
+
+p 100.
+p 20.
+p 9.
+q (plus X Y Z) :- p X, p Y, p Z.
+r (plus X Y) :- p X, p Y.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSgrhCUWZSYm5aQq5JXmJqUWKeSnKSQWpYPli2PyYvKUk0ozc0oy8xQ8_ULiA3xCgxUKckrBMgUKhgYGeiDaCEJZAslCBQ2QvEKEQqRClKaCla5CgUKEDpCIBBFRQBVFCBUo8npKtQA)
+
+## All built-in identifiers
+
+- `BOOLEAN_TRUE` - takes no arguments, returns the Boolean constant `true`
+- `BOOLEAN_FALSE` - takes no arguments, returns the Boolean constant `false`
+- `NAT_ZERO` - takes no arguments, returns the integer `0` (which you could 
+  also just write as `0`)
+- `NAT_SUCC` - takes one argument, relates nonnegative integers to their
+  successors. Can be run backwards: works if either the argument or value 
+  is known ahead of time.
+- `INT_PLUS` - takes any positive number of arguments and relates integers to
+  their sum. Can be run backwards: works if either all arguments are known,
+  or if the value and all but one argument are known.
+- `INT_MINUS` - takes exactly two arguments and relates integers to their
+  difference. Can be run backwards: works if either all arguments are known,
+  or if the value and all but one argument are known.
+- `INT_TIMES` - takes any positive number of arguments and relates integers to
+  their product. Cannot be run backwards.
+- `STRING_CONCAT` - takes any positive number of arguments and relates strings
+  to their concatenation. Can be run backwards: works if either all arguments
+  are known, or if the value and all but one argument are known.

@@ -1,0 +1,42 @@
+# CKY Parsing
+#builtin INT_PLUS plus
+#builtin STRING_CONCAT concat
+
+token 1 is "mary".
+token 2 is "saw".
+token 3 is "bob".
+token 4 is "with". 
+token 5 is "binoculars".  
+
+word "binoculars" noun.  
+word "bob" noun.
+word "mary" noun.
+word "saw" noun.
+word "saw" verb.
+word "with" prep.
+
+unary  nounPh noun.          # noun phrase <- noun
+binary senten nounPh verbPh. # senten <- noun phrase + verb phrase
+binary verbPh verb   nounPh. # verb phrase <- verb + noun phrase
+binary verbPh verbPh prepPh. # etc.
+binary prepPh prep   nounPh.
+binary nounPh nounPh prepPh.
+
+parse X I (plus 1 I) Tok :-
+  token I is Tok, 
+  word Tok X.
+
+# Unary rules are like X <- Y
+parse X I J Str :- 
+  unary X Y, 
+  parse Y I J Str.
+
+# Binary rules are like X <- Y Z
+parse X I K (concat "(" StrY " " StrZ ")") :-
+  binary X Y Z,
+  parse Y I J StrY,
+  parse Z J K StrZ.
+
+# (mary ((saw bob) (with binoculars))) - mary has the binoculars
+# (mary (saw (bob (with binoculars)))) - bob has the binoculars
+goal Str :- parse senten 1 6 Str.

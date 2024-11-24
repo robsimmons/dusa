@@ -1,15 +1,19 @@
 *.test.js
+isolate*
 
 /.builds
 /.github
+/.vscode
 /coverage
 /dist
 /docs
+/examples
 /public
 /src
 
-/.eslintrc.cjs
+/.prettierignore
 /.prettierrc
+/eslint.config.js
 /index.html
 /tsconfig*.json
 /vite.config.ts

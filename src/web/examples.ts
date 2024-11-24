@@ -152,18 +152,20 @@ eventually Winner "wins in round" Round "when" Move1 Defeats Move2 :-
 
 export const GRAPH_GENERATION_EXAMPLE = `
 # Generating graphs
-#builtin NAT_SUCC s
+#builtin INT_MINUS minus
 
 vertex 6.
-vertex N :- vertex (s N).
+vertex (minus N 1) :- vertex N, N > 0.
 
+# For each potential edge, we mark it present or absent
+# The relation is symmetric: edge X Y == edge Y X
 edge X Y is { extant, absent } :- vertex X, vertex Y, X != Y.
 edge X Y is Z :- edge Y X is Z.
 
-reachable N N :- vertex N.
-reachable Start Y :- reachable Start X, edge X Y is extant.
+path N N :- vertex N.
+path X Z :- path X Y, edge Y Z is extant.
 
-#demand reachable 0 1.
-#demand reachable 5 6.
-#forbid reachable 0 6.
+#demand path 0 1.
+#demand path 5 6.
+#forbid path 0 6.
 `.trim();

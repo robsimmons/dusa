@@ -1,0 +1,54 @@
+---
+import { spanHighlight } from './js/tokenizer-highlighter';
+import { dusaTokenizer } from './js/dusa-tokenizer';
+
+function trimSlightly(code: string): string {
+  const code2 =
+    code[0] === '\n' && code[1] === '\n' ? code.slice(2) : code[0] === '\n' ? code.slice(1) : code;
+  return code2[code2.length - 2] === '\n' && code2[code2.length - 1] === '\n'
+    ? code2.slice(0, code2.length - 2)
+    : code2[code.length - 1] === '\n'
+      ? code2.slice(0, code2.length - 1)
+      : code2;
+}
+
+function htmlEscape(code: string) {
+  return code.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+const highlightedCode = spanHighlight(
+  dusaTokenizer(
+    (Astro.props.predicates ?? []),
+    (Astro.props.builtins ?? []),
+  ),
+  trimSlightly(Astro.props.code ?? ''),
+)
+  .map((line) => {
+    const htmlLine = line.map(({ tag, contents }) => {
+      if (tag) {
+        return `<span class="tok-${tag}">${htmlEscape(contents)}</span>`;
+      } else {
+        return htmlEscape(contents);     
+      } 
+    });
+    return `${htmlLine.join('')}`;
+  })
+  .join('\n');
+---
+
+<div class="container">
+  <pre class="dusa" set:html={highlightedCode} />
+</div>
+
+<style>
+  .container {
+    background-color: var(--editor-background);
+    color: var(--editor-text);
+  }
+
+  .container pre {
+    font-family: var(--sl-font-mono);
+    line-height: 1.4;
+    font-weight: 600;
+  }
+</style>

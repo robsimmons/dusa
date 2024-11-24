@@ -1,64 +1,117 @@
-import { Data, expose, hide } from './data.js';
-import { DataMap } from './datamap.js';
+import { Data } from './data.js';
+import {
+  AVL as Tree,
+  lookup as lookupTree,
+  insert as insertTree,
+  remove as removeTree,
+  choose as chooseTree,
+  Ref,
+} from './avl.js';
+import {
+  Trie,
+  lookup as lookupTrie,
+  insert as insertTrie,
+  remove as removeTrie,
+  TrieNode,
+} from './trie.js';
 
 export class AttributeMap<T> {
-  map: DataMap<T>;
+  private tree: Tree<string, TrieNode<Data, T>>;
+  private _size: number;
 
-  private constructor(map: DataMap<T>) {
-    this.map = map;
+  protected constructor(tree: Tree<string, TrieNode<Data, T>>, size: number) {
+    this.tree = tree;
+    this._size = size;
   }
 
-  static new<T>(): AttributeMap<T> {
-    return new AttributeMap(DataMap.new());
+  get size() {
+    return this._size;
   }
 
-  set(name: string, args: Data[], value: T) {
-    return new AttributeMap(this.map.set(hide({ type: 'const', name, args }), value));
+  static empty<T>(): AttributeMap<T> {
+    return new AttributeMap(null, 0);
   }
 
   get(name: string, args: Data[]): T | null {
-    return this.map.get(hide({ type: 'const', name, args }));
+    const trie = lookupTree(this.tree, name);
+    const leaf = lookupTrie(trie, args, args.length);
+    if (leaf === null || leaf.children !== null) return null;
+    return leaf.value;
   }
 
-  remove(name: string, args: Data[]): [T, AttributeMap<T>] | null {
-    const result = this.map.remove(hide({ type: 'const', name, args }));
-    if (result === null) return null;
-    return [result[0], new AttributeMap(result[1])];
-  }
-
-  entries(): [string, Data[], T][] {
-    const accum: [string, Data[], T][] = [];
-    for (const [data, value] of this.map.entries()) {
-      const view = expose(data);
-      if (view.type !== 'const') throw new Error('Invariant for AttributeMap');
-      accum.push([view.name, view.args, value]);
+  set(
+    name: string,
+    args: Data[],
+    value: T,
+    limit: number | null = null,
+  ): [AttributeMap<T>, T | null] {
+    const ref: Ref<TrieNode<Data, T>> = { current: null };
+    const trie = lookupTree(this.tree, name);
+    const newTrie = insertTrie(trie, args, 0, limit ?? args.length, value, ref);
+    if (ref.current && ref.current.children) throw new Error('Attribute.set invariant');
+    const newTree = insertTree(this.tree, name, newTrie, null);
+    if (ref.current === null) {
+      return [new AttributeMap(newTree, this._size + 1), null];
+    } else {
+      return [new AttributeMap(newTree, this._size), ref.current.value];
     }
-    return accum;
   }
 
-  get length() {
-    return this.map.length;
+  remove(name: string, args: Data[], limit: number | null = null): null | [AttributeMap<T>, T] {
+    const trie = lookupTree(this.tree, name);
+    const ref: Ref<TrieNode<Data, T>> = { current: null };
+    const newTrie = removeTrie(trie, args, 0, limit ?? args.length, ref);
+    if (ref.current === null) return null;
+    if (ref.current.children) throw new Error('Attribute.remove invariant');
+
+    let newTree: Tree<string, TrieNode<Data, T>>;
+    if (newTrie === null) {
+      newTree = removeTree(this.tree, name, null);
+    } else {
+      newTree = insertTree(this.tree, name, newTrie, null);
+    }
+
+    return [new AttributeMap(newTree, this._size - 1), ref.current.value];
   }
 
-  every(test: (name: string, args: Data[], value: T) => boolean): boolean {
-    return this.map.every((data, value) => {
-      const view = expose(data);
-      if (view.type !== 'const') throw new Error('Invariant for AttributeMap');
-      return test(view.name, view.args, value);
-    });
+  /**
+   * Quickly return a single element, or null if one exists
+   */
+  example(): null | { name: string; args: Data[]; value: T } {
+    if (this.tree === null) return null;
+    const name = this.tree.key;
+    let trie = this.tree.value;
+    const args: Data[] = [];
+    while (trie !== null && trie.children !== null) {
+      const { key: arg, value: subTrie } = trie.children;
+      args.push(arg);
+      trie = subTrie;
+    }
+    return { name, args, value: trie!.value };
   }
 
-  popFirst(): [string, Data[], T, AttributeMap<T>] {
-    const [data, value, map] = this.map.popFirst();
-    const view = expose(data);
-    if (view.type !== 'const') throw new Error('Invariant for AttributeMap');
-    return [view.name, view.args, value, new AttributeMap(map)];
+  /**
+   * Return an element if one exists, with some chance that any element will
+   * be selected
+   */
+  choose(): null | { name: string; args: Data[]; value: T } {
+    if (this.tree === null) return null;
+    const [name, trie_] = chooseTree(this.tree)!;
+    let trie = trie_;
+    const args: Data[] = [];
+    while (trie !== null && trie.children !== null) {
+      const [arg, subTrie] = chooseTree(trie.children)!;
+      args.push(arg);
+      trie = subTrie;
+    }
+    return { name, args, value: trie!.value };
   }
 
-  popRandom(): [string, Data[], T, AttributeMap<T>] {
-    const [data, value, map] = this.map.popRandom();
-    const view = expose(data);
-    if (view.type !== 'const') throw new Error('Invariant for AttributeMap');
-    return [view.name, view.args, value, new AttributeMap(map)];
+  /**
+   * Abstraction-boundary-violating access to the underlying trie; necessary
+   * for how the Database type currently performs visits.
+   */
+  getTrie(name: string): Trie<Data, T> {
+    return lookupTree(this.tree, name);
   }
 }

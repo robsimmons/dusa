@@ -1,406 +1,368 @@
 import { AttributeMap } from '../datastructures/attributemap.js';
-import PQ from '../datastructures/binqueue.js';
-import { Data, dataToString } from '../datastructures/data.js';
-import { TrieMap } from '../datastructures/datamap.js';
-import {
-  IndexInsertionRule,
-  IndexedBinaryRule,
-  IndexedConclusion,
-  IndexedProgram,
-} from '../language/indexize.js';
-import { runBuiltinBackward, runBuiltinForward } from './builtin.js';
-import { Substitution, apply, equal, match } from './dataterm.js';
+import { cons, List } from '../datastructures/conslist.js';
+import { Data, DataSet, HashCons } from '../datastructures/data.js';
+import { Constraint, Database } from '../datastructures/database.js';
+import { apply, match } from './dataterm.js';
+import { Program, Conclusion } from './program.js';
+import { runInstructions } from './stackmachine.js';
 
-type Prefix = { type: 'prefix'; name: string; shared: Data[]; passed: Data[] };
-type NewFact = { type: 'fact'; name: string; args: Data[]; value: Data };
-type Index = { type: 'index'; name: string; shared: Data[]; introduced: Data[] };
+type Intermediate = { type: 'intermediate'; name: string; args: Data[] };
+type NewFact = { type: 'fact'; name: string; args: Data[] };
+export type AgendaMember = Intermediate | NewFact;
 
-type Listy<T> = null | { data: T; next: Listy<T> };
-function listyToString<T>(listy: Listy<T>): T[] {
-  const result: T[] = [];
-  for (let node = listy; node !== null; node = node.next) {
-    result.push(node.data);
-  }
-  return result;
+/**
+ * The semi-naive, tuple-at-a-time forward-chaining algorithm for
+ * finite-choice logic programming can be described in terms of a database D
+ * (a map from attributes to constraints) and a chart C containing the
+ * immediate consequences of D. The chart can be interpreted as a (non-empty)
+ * choice set or as a map from attributes to (non-empty) sets of pairwise
+ * incompatible constraints, and it is always the case that `{D[a]} <= C[a]`.
+ *
+ * The database D is represented by `state.explored`. For all attributes `a`:
+ *  - If `D[a] = noneOf {}`, then `!state.explored`.
+ *  - Otherwise, `state.explored[a] = D[a]`.
+ *
+ * The chart C is represented by the combination of `state.explored` and
+ * `state.frontier`. For all attributes `a`:
+ *  - If `{D[a]} = C[a]`, then `!state.explored`.
+ *  - Otherwise, `{D[a]} < C[a]` by invariant and
+ *    `{D[a]} \/ state.frontier[a] = C[a]`.
+ *
+ * The agenda A contains exactly the attributes where `{D[a]} < C[a]`. For all
+ * `a ∈ A`:
+ *  - If `C[a] = { just v }`, then `a` is in `state.agenda`.
+ *  - Otherwise, `a` is in `state.deferred`.
+ */
+export interface SearchState {
+  explored: Database;
+  frontier: AttributeMap<{ values: DataSet; open: boolean }>;
+  agenda: List<AgendaMember>;
+  deferred: AttributeMap<true>;
+  demands: AttributeMap<true>;
 }
 
-type QueueMember = Prefix | Index | NewFact;
+export const empty = DataSet.empty();
+const noConstraint: Constraint = { type: 'noneOf', noneOf: empty };
+const noChoices = { values: empty, open: true };
+const datalogChoice = { values: DataSet.singleton(HashCons.TRIVIAL), open: false };
 
-export interface Database {
-  factValues: TrieMap<Data, { type: 'is'; value: Data } | { type: 'is not'; value: Data[] }>;
-  prefixes: AttributeMap<Listy<Data[]>>;
-  indexes: AttributeMap<Listy<Data[]>>;
-  queue: PQ<QueueMember>;
-  deferredChoices: AttributeMap<{ values: Data[]; exhaustive: boolean }>;
-  remainingDemands: AttributeMap<true>;
-}
-
-export function makeInitialDb(program: IndexedProgram): Database {
-  const prefixes = program.seeds.reduce(
-    (prefixes, seed) => prefixes.set(seed, [], { data: [], next: null }),
-    AttributeMap.new<Listy<Data[]>>(),
-  );
+export function createSearchState(prog: Program): SearchState {
   return {
-    factValues: TrieMap.new(),
-    prefixes,
-    indexes: AttributeMap.new(),
-    queue: program.seeds.reduce(
-      (q, seed) => q.push(0, { type: 'prefix', name: seed, shared: [], passed: [] }),
-      PQ.new<QueueMember>(),
+    explored: Database.empty(),
+    frontier: prog.seeds.reduce<AttributeMap<{ values: DataSet; open: boolean }>>(
+      (frontier, seed) => frontier.set(seed, [], datalogChoice)[0],
+      AttributeMap.empty(),
     ),
-    deferredChoices: AttributeMap.new(),
-    remainingDemands: [...program.demands].reduce(
-      (demands, demand) => demands.set(demand, [], true),
-      AttributeMap.new<true>(),
+    agenda: prog.seeds.reduce<List<AgendaMember>>(
+      (agenda, seed) => cons(agenda, { type: 'fact', name: seed, args: [] }),
+      null,
+    ),
+    deferred: AttributeMap.empty(),
+    demands: prog.demands.reduce<AttributeMap<true>>(
+      (demands, pred) => demands.set(pred, [], true)[0],
+      AttributeMap.empty(),
     ),
   };
 }
 
-/* A decision will always take the form "this attribute takes one of these values", or
- * "this attribute takes one of these values, or maybe some other values."
- *
- * Given a database, we can prune any possibilities that are inconsistent with respect to that
- * database, ideally getting a single possibility that we can then use to continue reasoning.
- */
-function prune(pred: string, args: Data[], values: Data[], exhaustive: boolean, db: Database) {
-  const knownValue = db.factValues.get(pred, args);
+export type Conflict =
+  | {
+      type: 'incompatible';
+      name: string;
+      args: Data[];
+      old: Data;
+      new: Data[];
+    }
+  | { type: 'forbid'; name: string }
+  | { type: 'demand'; name: string };
 
-  if (knownValue?.type === 'is') {
-    // Each choice is redundant or is immediately contradictory
-    // Check for contradiction with the provided options
-    if (exhaustive && !values.some((value) => equal(value, knownValue.value))) {
-      return { values: [], exhaustive: true };
+/** Return Conflict or imperatively update `state` */
+export function learnImmediateConsequences(
+  prog: Program,
+  state: SearchState,
+  attribute: AgendaMember,
+): null | Conflict {
+  // The popped agenda member is an attribute `a` where `C[a] = { just value }`
+  // In two steps, set `D[a] = { just value }`.
+
+  // Step 1: remove `a` from `state.frontier`.
+  const [frontier, leaf] = state.frontier.remove(attribute.name, attribute.args)!;
+  state.frontier = frontier;
+  if (!leaf || leaf.open) throw new Error('learnImmediateConsequences invariant');
+  const [value] = leaf.values.getSingleton()!;
+  const factArgs = [...attribute.args, value]; // The full fact is the args + the value
+
+  // Step 2: add `a` to `state.explored`.
+  const [explored] = state.explored.set(attribute.name, attribute.args, {
+    type: 'just',
+    just: value,
+  });
+  state.explored = explored;
+
+  // Now we've (probably) broken our central invariant: the chart C might no
+  // longer contain all the immediate consequences of the database D.
+  //
+  // The rest of the function restores this invariant by adding all immediate
+  // consequences of the `D` combined with `p(a) is value` into the chart.
+  if (attribute.type === 'fact') {
+    for (const { args, conclusion } of prog.predUnary[attribute.name] ?? []) {
+      const subst: Data[] = [];
+      if (args.every((arg, i) => match(prog.data, subst, arg, factArgs[i]))) {
+        const conflict = assertConclusion(prog, state, subst, [], 0, [], 0, conclusion);
+        if (conflict) return conflict;
+      }
+    }
+    for (const { inName, inVars, conclusion } of prog.predBinary[attribute.name] ?? []) {
+      for (const passed of state.explored.visit(inName, factArgs, inVars.shared, inVars.passed)) {
+        const conflict = assertConclusion(
+          prog,
+          state,
+          factArgs,
+          passed,
+          0,
+          factArgs,
+          inVars.shared,
+          conclusion,
+        );
+        if (conflict) return conflict;
+      }
+    }
+  } else {
+    if (prog.forbids[attribute.name]) return { type: 'forbid', name: attribute.name };
+    state.demands = state.demands.remove(attribute.name, [])?.[0] ?? state.demands;
+    for (const { inVars, premise, conclusion } of prog.intermediates[attribute.name] ?? []) {
+      for (const introduced of state.explored.visit(
+        premise.name,
+        factArgs,
+        inVars.shared,
+        premise.introduced,
+      )) {
+        const conflict = assertConclusion(
+          prog,
+          state,
+          factArgs,
+          factArgs,
+          inVars.shared,
+          introduced,
+          0,
+          conclusion,
+        );
+        if (conflict) return conflict;
+      }
     }
 
-    // No contradiction, so just continue, nothing was learned
-    return { values: [knownValue.value], exhaustive: true };
+    for (const { inVars, instructions, conclusion, runForFailure } of prog.subprograms[
+      attribute.name
+    ] ?? []) {
+      const success = runInstructions(prog, factArgs, inVars, instructions);
+      if ((runForFailure && !success) || (!runForFailure && success)) {
+        const conflict = assertConclusion(
+          prog,
+          state,
+          [],
+          factArgs,
+          0,
+          success ?? [],
+          0,
+          conclusion,
+        );
+        if (conflict) return conflict;
+      }
+    }
   }
 
-  if (knownValue?.type === 'is not') {
-    values = values.filter(
-      (value) => !knownValue.value.some((excludedValue) => equal(excludedValue, value)),
-    );
-  }
-
-  return { values, exhaustive };
+  return null;
 }
 
-/** Imperative: modifies the current database */
-export function insertFact(name: string, args: Data[], value: Data, db: Database): boolean {
-  const existingFact = db.factValues.get(name, args);
-  if (existingFact?.type === 'is not') {
-    if (existingFact.value.some((excluded) => equal(excluded, value))) {
-      return false;
-    }
-  } else if (existingFact?.type === 'is') {
-    if (!equal(existingFact.value, value)) {
-      return false;
-    }
-  }
-
-  db.queue = db.queue.push(0, { type: 'fact', name, args, value });
-  db.factValues = db.factValues.set(name, args, { type: 'is', value }).result;
-  return true;
-}
-
-function stepConclusion(rule: IndexedConclusion, inArgs: Data[], db: Database): boolean {
-  const substitution: Substitution = {};
-  for (const [index, v] of rule.inVars.entries()) {
-    substitution[v] = inArgs[index];
-  }
-  const args = rule.args.map((arg) => apply(substitution, arg));
-  let { values, exhaustive } = prune(
-    rule.name,
-    args,
-    rule.values.map((value) => apply(substitution, value)),
-    rule.exhaustive,
-    db,
-  );
-
-  // Merge the conclusion with any existing deferred values
-  const [deferredChoice, deferredChoices] = db.deferredChoices.remove(rule.name, args) ?? [
-    null,
-    db.deferredChoices,
-  ];
-  if (deferredChoice !== null) {
-    if (exhaustive && deferredChoice.exhaustive) {
-      // Intersect values
-      values = values.filter((v1) => deferredChoice.values.some((v2) => equal(v1, v2)));
-    } else if (exhaustive) {
-      // Ignore deferred values
-    } else if (deferredChoice.exhaustive) {
-      // Ignore values in this conclusion
-      values = deferredChoice.values;
-    } else {
-      // Union values
-      values = deferredChoice.values.concat(
-        values.filter((v1) => !deferredChoice.values.some((v2) => equal(v1, v2))),
-      );
-    }
-
-    exhaustive = exhaustive || deferredChoice.exhaustive;
-  }
-
-  // Hey kids, what time is it?
-  if (exhaustive && values.length === 0) {
-    // Time to give up
-    return false;
-  }
-  if (exhaustive && values.length === 1) {
-    // Time to assert a fact
-    db.deferredChoices = deferredChoices;
-    return insertFact(rule.name, args, values[0], db);
-  }
-  // Time to defer some choices
-  db.deferredChoices = deferredChoices.set(rule.name, args, { values, exhaustive });
-  return true;
-}
-
-function stepFact(rules: IndexInsertionRule[], args: Data[], value: Data, db: Database): void {
-  for (const rule of rules) {
-    let substitution: Substitution | null = match({}, rule.value, value);
-    for (const [index, pattern] of rule.args.entries()) {
-      if (substitution === null) break;
-      substitution = match(substitution, pattern, args[index]);
-    }
-    if (substitution !== null) {
-      const shared = rule.shared.map((v) => substitution![v]);
-      const introduced = rule.introduced.map((v) => substitution![v]);
-      const known = db.indexes.get(rule.indexName, shared);
-      db.indexes = db.indexes.set(rule.indexName, shared, { data: introduced, next: known });
-      db.queue = db.queue.push(0, { type: 'index', name: rule.indexName, shared, introduced });
-    }
-  }
-}
-
-function nextPrefix(
-  rule: IndexedBinaryRule,
+/** Return Conflict or imperatively update `state` to assert the conclusion */
+export function assertConclusion(
+  prog: Program,
+  state: SearchState,
   shared: Data[],
   passed: Data[],
+  passedOffset: number,
   introduced: Data[],
-): Prefix {
-  const lookup = ([location, index]: ['shared' | 'passed' | 'introduced', number]) =>
-    location === 'shared'
-      ? shared[index]
-      : location === 'passed'
-        ? passed[index]
-        : introduced[index];
+  introducedOffset: number,
+  conclusion: Conclusion,
+): null | Conflict {
+  const args: Data[] = conclusion.args.map((arg) =>
+    apply(prog.data, shared, arg, passed, passedOffset, introduced, introducedOffset),
+  );
+  const exploredValue = state.explored.get(conclusion.name, args) ?? noConstraint;
 
-  return {
-    type: 'prefix',
-    name: rule.outName,
-    shared: rule.outShared.map(lookup),
-    passed: rule.outPassed.map(lookup),
-  };
-}
+  switch (conclusion.type) {
+    /**** ASSERT OPEN CONCLUSION: `a is? { t1, ..., tn }` ****/
+    case 'open': {
+      // An open rule has no effect if `D[a] = just v`
+      if (exploredValue.type === 'just') return null;
 
-function extendDbWithPrefixes(candidatePrefixList: Prefix[], db: Database): void {
-  for (const prefix of candidatePrefixList) {
-    if (db.prefixes.get(prefix.name, prefix.shared.concat(prefix.passed)) === null) {
-      const known = { data: prefix.passed, next: db.prefixes.get(prefix.name, prefix.shared) };
-      db.prefixes = db.prefixes
-        .set(prefix.name, prefix.shared.concat(prefix.passed), { data: [], next: null })
-        .set(prefix.name, prefix.shared, known);
-      db.queue = db.queue.push(0, prefix);
-    }
-  }
-}
+      // An open rule also has no effect if `D[a] = noneOf X` but `C[a]` is
+      // closed (that is, if `C[a] = { just v1, just v2, ..., just vn }`)
+      const frontierChoices = state.frontier.get(conclusion.name, args) ?? noChoices;
+      if (!frontierChoices.open) return null;
 
-function stepPrefix(rule: IndexedBinaryRule, shared: Data[], passed: Data[], db: Database): void {
-  const newPrefixes: Prefix[] = [];
-
-  if (rule.type === 'IndexLookup') {
-    for (
-      let introduced = db.indexes.get(rule.indexName, shared);
-      introduced !== null;
-      introduced = introduced.next
-    ) {
-      newPrefixes.push(nextPrefix(rule, shared, passed, introduced.data));
-    }
-  } else {
-    const substitution: Substitution = {};
-    for (const [index, v] of rule.shared.entries()) {
-      substitution[v] = shared[index];
-    }
-    if (rule.matchPosition === null) {
-      const args = rule.args.map((arg) => apply(substitution, arg));
-      const result = runBuiltinForward(rule.name, args);
-      if (result !== null) {
-        const outputSubst = match(substitution, rule.value, result);
-        if (outputSubst !== null) {
-          const introduced = rule.introduced.map((v) => outputSubst[v]);
-          newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
+      // We now know:
+      //  - `D[a] = noneOf X`
+      //  - `C[a] = { just v1, just v2, ..., just vn, noneOf Y }`
+      //  - `Y = { v1, v2, ..., vn } ∪ X`
+      //  - `state.frontier[a] = { open: true, values: { v1, v2, ... vn } }`
+      //
+      // We need to update `state.frontier[a].values` with all the open rule's
+      // conclusions.
+      const choices = conclusion.choices.map((choice) =>
+        apply(prog.data, shared, choice, passed, passedOffset, introduced, introducedOffset),
+      );
+      let addsNewFrontierChoices = false;
+      let newFrontierChoices = frontierChoices.values;
+      for (const choice of choices) {
+        if (!exploredValue.noneOf.has(choice)) {
+          addsNewFrontierChoices = true;
+          newFrontierChoices = newFrontierChoices.add(choice);
         }
       }
-    } else {
-      const prefixArgs: Data[] = [];
-      const postfixArgs: Data[] = [];
-      let i = 0;
-      for (; i < rule.matchPosition; i++) {
-        prefixArgs.push(apply(substitution, rule.args[i]));
+
+      // An open rule *also* has no effect if all of the open rule's
+      // conclusions are already included in the rejection set X (where
+      // D[a] = noneOf X)
+      if (!addsNewFrontierChoices) return null;
+
+      const [frontier, isAlreadyInFrontier] = state.frontier.set(conclusion.name, args, {
+        open: true,
+        values: newFrontierChoices,
+      });
+      state.frontier = frontier;
+
+      // Finally, add a to the agenda if it wasn't there already.
+      if (!isAlreadyInFrontier) {
+        state.deferred = state.deferred.set(conclusion.name, args, true)[0];
       }
-      const matchedPosition = rule.args[i++];
-      for (; i < rule.args.length; i++) {
-        postfixArgs.push(apply(substitution, rule.args[i]));
-      }
-      for (const outputSubst of runBuiltinBackward(
-        rule.name,
-        prefixArgs,
-        matchedPosition,
-        postfixArgs,
-        apply(substitution, rule.value),
-        substitution,
-      )) {
-        const introduced = rule.introduced.map((v) => outputSubst[v]);
-        newPrefixes.push(nextPrefix(rule, shared, passed, introduced));
-      }
+      return null;
     }
-  }
-  extendDbWithPrefixes(newPrefixes, db);
-}
 
-function stepIndex(
-  rule: IndexedBinaryRule,
-  shared: Data[],
-  introduced: Data[],
-  db: Database,
-): void {
-  const newPrefixes: Prefix[] = [];
+    /**** ASSERT CLOSED CONCLUSION: `a is { t1, ..., tn }` ****/
+    case 'closed': {
+      let choices = conclusion.choices.map((choice) =>
+        apply(prog.data, shared, choice, passed, passedOffset, introduced, introducedOffset),
+      );
 
-  for (let passed = db.prefixes.get(rule.inName, shared); passed !== null; passed = passed.next) {
-    newPrefixes.push(nextPrefix(rule, shared, passed.data, introduced));
-  }
-
-  extendDbWithPrefixes(newPrefixes, db);
-}
-
-/** Functional: does not modify the provided database */
-export function stepDb(program: IndexedProgram, db: Database): Database | null {
-  const [current, rest] = db.queue.pop();
-  db = { ...db, queue: rest };
-  if (current.type === 'index') {
-    stepIndex(program.indexToRule[current.name], current.shared, current.introduced, db);
-    return db;
-  }
-  if (current.type === 'fact') {
-    stepFact(program.factToRules[current.name] || [], current.args, current.value, db);
-    return db;
-  } else if (program.forbids.has(current.name)) {
-    return null;
-  } else if (program.demands.has(current.name)) {
-    db.remainingDemands = db.remainingDemands.remove(current.name, [])?.[1] ?? db.remainingDemands;
-    return db;
-  } else if (program.prefixToRule[current.name]) {
-    stepPrefix(program.prefixToRule[current.name], current.shared, current.passed, db);
-    return db;
-  } else if (program.prefixToConclusion[current.name]) {
-    const conclusionIsConsistent = stepConclusion(
-      program.prefixToConclusion[current.name],
-      current.passed,
-      db,
-    );
-    return conclusionIsConsistent ? db : null;
-  } else {
-    throw new Error(`Unable to look up rule $${current.name}prefix`);
-  }
-}
-
-export function listFacts(
-  db: Database,
-): IterableIterator<{ name: string; args: Data[]; value: Data }> {
-  function* iterator() {
-    for (const { name, keys, value } of db.factValues.entries()) {
-      if (value.type === 'is') {
-        yield { name, args: keys, value: value.value };
+      // If `D[a] = just v`, signal failure if `v` is not among the choices in
+      // the conclusion
+      if (exploredValue.type === 'just') {
+        if (choices.some((choice) => choice === exploredValue.just)) return null;
+        return {
+          type: 'incompatible',
+          name: conclusion.name,
+          args,
+          old: exploredValue.just,
+          new: choices,
+        };
       }
-    }
-  }
 
-  return iterator();
-}
+      // Filter choices that are inconsistent with D[a].
+      choices = choices.filter((choice) => !exploredValue.noneOf.has(choice));
+      if (choices.length === 0)
+        return {
+          type: 'incompatible',
+          name: conclusion.name,
+          args,
+          old: exploredValue.noneOf.example()!,
+          new: choices,
+        };
 
-export function* lookup(
-  db: Database,
-  name: string,
-  args: Data[],
-): IterableIterator<{ args: Data[]; value: Data }> {
-  const arity = db.factValues.arity(name);
-  if (arity !== null && arity < args.length) {
-    throw new TypeError(
-      `${name} takes ${arity} argument${arity === 1 ? '' : 's'}, but ${args.length} were given`,
-    );
-  }
-  for (const { keys, value } of db.factValues.lookup(name, args)) {
-    if (value.type === 'is') {
-      yield { args: keys, value: value.value };
-    }
-  }
-}
+      const frontierChoices = state.frontier.get(conclusion.name, args) ?? noChoices;
+      if (frontierChoices.open) {
+        // `C[a] = { just v1, just v2, ..., just vn, noneOf X }`
+        // We will completely ignore the existing value of `C[a]`
+        const [frontier, isAlreadyInFrontier] = state.frontier.set(conclusion.name, args, {
+          open: false,
+          values: choices.reduce((set, choice) => set.add(choice), empty),
+        });
+        state.frontier = frontier;
 
-export function get(db: Database, name: string, args: Data[]): undefined | Data {
-  const arity = db.factValues.arity(name);
-  if (arity === null) return undefined;
-  if (args.length !== arity) {
-    throw new TypeError(
-      `${name} takes ${arity} argument${arity === 1 ? '' : 's'}, but ${args.length} were given`,
-    );
-  }
-  for (const { value } of db.factValues.lookup(name, args)) {
-    if (value.type === 'is') return value.value;
-  }
-  return undefined;
-}
-
-function argsetToString(args: Data[]) {
-  return `[ ${args.map((v) => dataToString(v)).join(', ')} ]`;
-}
-
-export function queueToString(db: Database) {
-  return db.queue
-    .toList()
-    .map((item) => {
-      if (item.type === 'prefix') {
-        return `$${item.name}prefix ${argsetToString(item.shared)} ${argsetToString(
-          item.passed,
-        )}\n`;
-      } else if (item.type === 'index') {
-        return `$${item.name}index ${argsetToString(item.shared)} ${argsetToString(
-          item.introduced,
-        )}\n`;
+        // Unless `a` was, and remains, on the deferred agenda, we have to fix
+        // the agenda
+        if (!isAlreadyInFrontier) {
+          if (choices.length === 1) {
+            state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
+          } else {
+            state.deferred = state.deferred.set(conclusion.name, args, true)[0];
+          }
+        } else if (choices.length === 1) {
+          state.deferred = state.deferred.remove(conclusion.name, args)![0];
+          state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
+        }
+        return null;
       } else {
-        return `${item.name}${item.args.map((v) => ` ${dataToString(v)}`)} is ${dataToString(
-          item.value,
-        )}\n`;
-      }
-    })
-    .join('');
-}
+        // C[a] = { just v1, just v2, ..., just vn }
+        // We will intersect these options with choices
+        const maybeUniqueFrontierChoice = frontierChoices.values.getSingleton();
 
-/** Warning: VERY inefficient */
-export function dbToString(db: Database) {
-  return `Queue: 
-${queueToString(db)}
-Facts known:
-${[...db.factValues.entries()]
-  .map(({ name, keys, value }) =>
-    value.type === 'is'
-      ? `${name}${keys.map((arg) => ` ${dataToString(arg)}`).join('')} is ${dataToString(
-          value.value,
-        )}\n`
-      : `${name}${keys.map((arg) => ` ${dataToString(arg)}`).join('')} is none of ${value.value
-          .map((v) => dataToString(v))
-          .join(', ')}\n`,
-  )
-  .sort()
-  .join('')}
-Prefixes known:
-${db.prefixes
-  .entries()
-  .flatMap(([prefix, keys, valuess]) =>
-    listyToString(valuess).map(
-      (values) => `$${prefix}prefix ${argsetToString(keys)} ${argsetToString(values)}\n`,
-    ),
-  )
-  .sort()
-  .join('')}`;
+        // If `C[a] = { just v }`, signal failure if `v` is not among the
+        // choices in the conclusion
+        if (maybeUniqueFrontierChoice !== null) {
+          const [uniqueFrontierChoice] = maybeUniqueFrontierChoice;
+          if (choices.some((choice) => choice === uniqueFrontierChoice)) return null;
+          return {
+            type: 'incompatible',
+            name: conclusion.name,
+            args,
+            old: uniqueFrontierChoice,
+            new: choices,
+          };
+        }
+
+        // At this point, we know that `a` is on the deferred agenda
+        const intersection = choices.reduce<DataSet>(
+          (intersection, choice) =>
+            frontierChoices.values.has(choice) ? intersection.add(choice) : intersection,
+          empty,
+        );
+
+        // If C[a] = {}, signal failure
+        if (intersection.size === 0) {
+          return {
+            type: 'incompatible',
+            name: conclusion.name,
+            args,
+            old: frontierChoices.values.example()!,
+            new: choices,
+          };
+        }
+
+        // Update the frontier
+        state.frontier = state.frontier.set(conclusion.name, args, {
+          open: false,
+          values: intersection,
+        })[0];
+
+        // If `a` can be moved from the deferred agenda to the active agenda,
+        // do so!
+        if (intersection.size === 1) {
+          // We can remove this from the deferred agenda!
+          state.deferred = state.deferred.remove(conclusion.name, args)![0];
+          state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
+        }
+
+        return null;
+      }
+    }
+
+    /**** ASSERT DATALOG CONCLUSION ****/
+    case 'datalog': {
+      if (exploredValue.type === 'just') return null;
+      if (state.frontier.get(conclusion.name, args)) return null;
+      state.frontier = state.frontier.set(conclusion.name, args, datalogChoice)[0];
+      state.agenda = cons(state.agenda, { type: 'fact', name: conclusion.name, args });
+      return null;
+    }
+
+    /**** ASSERT INTERMEDIATE CONCLUSION ****/
+    case 'intermediate': {
+      if (exploredValue.type === 'just') return null;
+      if (state.frontier.get(conclusion.name, args)) return null;
+      state.frontier = state.frontier.set(conclusion.name, args, datalogChoice)[0];
+      state.agenda = cons(state.agenda, { type: 'intermediate', name: conclusion.name, args });
+      return null;
+    }
+  }
 }
