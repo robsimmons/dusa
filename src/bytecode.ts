@@ -157,6 +157,7 @@ export type RuleN<Int> = UnaryRuleN<Int> | JoinRuleN<Int> | RunRuleN<Int> | RunF
  *   `arity`
  * - `const t: S |-> S,[t]`
  * - `equal: S,[s],[t] |-> S` -- fails unless `t == s`
+ * - `fail: S |-/->` -- always fails
  * - `dup: S,[t] |-> S,[t],[t]`
  * - `gt: S,[n],[m] |-> S` -- fails unless `n` and `m` are both integers or
  *   are both strings, and unless `n > m` (for strings, this depends on
@@ -175,6 +176,9 @@ export type RuleN<Int> = UnaryRuleN<Int> | JoinRuleN<Int> | RunRuleN<Int> | RunF
  *   are not both strings, or if `t` is not a prefix of `s`
  * - `s_ends: S,[s],[t] |-> S,[r]` where `s == r++t` -- fails if `s` and `t`
  *   are not both strings, or if `t` is not a postfix of `s`
+ * - `nondet_s_concat: .,[s] |-/-> .` -- must be a final instruction, finds
+ *   every way to match the pattern against memory to match the string s,
+ *   possibly performing multiple loads.
  *
  * The VM can always assume the stack will contain the required number of
  * elements, and it's undefined what happens if that's not the case.
@@ -184,15 +188,9 @@ export type InstructionN<N> =
   | { type: 'load'; ref: number }
   | { type: 'build'; const: string; arity: number }
   | { type: 'explode'; const: string; arity: number }
-  | {
-      type: 'const';
-      const:
-        | { type: 'trivial' }
-        | { type: 'int'; value: N }
-        | { type: 'bool'; value: boolean }
-        | { type: 'string'; value: string };
-    }
+  | { type: 'const'; const: ConstN<N> }
   | { type: 'equal' }
+  | { type: 'fail' }
   | { type: 'dup' }
   | { type: 'gt' }
   | { type: 'geq' }
@@ -201,10 +199,18 @@ export type InstructionN<N> =
   | { type: 'i_mul' }
   | { type: 's_concat' }
   | { type: 's_starts' }
-  | { type: 's_ends' };
+  | { type: 's_ends' }
+  | { type: 'nondet_s_concat'; pattern: (number | ConstN<N>)[] };
+
+export type ConstN<N> =
+  | { type: 'trivial' }
+  | { type: 'int'; value: N }
+  | { type: 'bool'; value: boolean }
+  | { type: 'string'; value: string };
 
 export type Pattern = PatternN<bigint>;
 export type Instruction = InstructionN<bigint>;
+export type Const = ConstN<bigint>;
 export type Conclusion = ConclusionN<bigint>;
 export type Rule = RuleN<bigint>;
 export type Program = ProgramN<bigint>;

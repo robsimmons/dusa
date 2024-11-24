@@ -137,6 +137,16 @@ function ingestInstruction(instruction: InstructionInput): Instruction {
           return { type: 'const', const: instruction.const };
       }
     }
+    case 'nondet_s_concat': {
+      return {
+        type: 'nondet_s_concat',
+        pattern: instruction.pattern.map((ref) =>
+          typeof ref !== 'number' && ref.type === 'int'
+            ? { type: 'int', value: BigInt(ref.value) }
+            : ref,
+        ),
+      };
+    }
     default: {
       return instruction;
     }

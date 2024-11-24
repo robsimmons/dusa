@@ -139,7 +139,9 @@ function checkRelationsAndBuiltinsInPattern(
         if (builtin) {
           const builtinMode = builtinModes[builtin];
           const hasCorrectArity =
-            builtinMode === 'forward_only' || builtinMode === 'reversible'
+            builtinMode === 'forward_only' ||
+            builtinMode === 'reversible' ||
+            builtinMode === 'fully_reversible'
               ? term.args.length > 0
               : builtinMode.some(
                   ({ args, value }) =>
@@ -341,7 +343,7 @@ function checkBuiltin(
     value === null ? '+' : theseVarsGroundThisPattern(previouslyGroundVars, value) ? '+' : '-';
 
   const mode = builtinModes[builtin];
-  if (mode === 'forward_only') {
+  if (mode === 'forward_only' || mode === 'reversible' || mode === 'fully_reversible') {
     if (args.length === 0) {
       return [
         mkErr(
@@ -350,40 +352,43 @@ function checkBuiltin(
         ),
       ];
     }
-    if (argsMode.filter((m) => m === '-').length === 0) return [];
-    return [
-      mkErr(
-        `All arguments to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) must be bound by previous premises.`,
-        loc,
-      ),
-    ];
-  } else if (mode === 'reversible') {
-    if (args.length === 0) {
-      return [
-        mkErr(
-          `There must be at least one argument for '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}).`,
-          loc,
-        ),
-      ];
+    if (argsMode.every((m) => m === '+')) return [];
+    switch (mode) {
+      case 'forward_only': {
+        return [
+          mkErr(
+            `All arguments to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) must be bound by previous premises.`,
+            loc,
+          ),
+        ];
+      }
+      case 'reversible': {
+        if (argsMode.filter((m) => m === '-').length === 1 && valueMode === '+') return [];
+        if (valueMode !== '+') {
+          return [
+            mkErr(
+              `When arguments to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) are not all bound by previous premises, the conclusion must be bound by previous premises. That isn't the case here.`,
+              loc,
+            ),
+          ];
+        }
+        return [
+          mkErr(
+            `At most one argument to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) can contain variables not bound by previous premises.`,
+            loc,
+          ),
+        ];
+      }
+      case 'fully_reversible': {
+        if (valueMode === '+') return [];
+        return [
+          mkErr(
+            `When arguments to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) are not all bound by previous premises, the conclusion must be bound by previous premises. That isn't the case here.`,
+            loc,
+          ),
+        ];
+      }
     }
-    if (argsMode.filter((m) => m === '-').length === 0) {
-      return [];
-    }
-    if (argsMode.filter((m) => m === '-').length === 1 && valueMode === '+') return [];
-    if (valueMode !== '+') {
-      return [
-        mkErr(
-          `When arguments to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) are not all bound by previous premises, the conclusion must be bound by previous premises. That isn't the case here.`,
-          loc,
-        ),
-      ];
-    }
-    return [
-      mkErr(
-        `At most one argument to '${revBuiltinLookup(builtins, builtin)}' (builtin ${builtin}) can contain variables not bound by previous premises.`,
-        loc,
-      ),
-    ];
   } else {
     for (const { args, value } of mode) {
       if (

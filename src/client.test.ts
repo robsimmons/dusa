@@ -137,6 +137,33 @@ test('Builtin STRING_CONCAT', () => {
   ).toStrictEqual(['']);
 });
 
+test('Builtin STRING_CONCAT, full reverse', () => {
+  expect(
+    solutions(new Dusa('#builtin STRING_CONCAT concat\nres X Y :- concat X Y is "abc".')),
+  ).toStrictEqual(['res "" "abc", res "a" "bc", res "ab" "c", res "abc" ""']);
+
+  expect(
+    solutions(new Dusa('#builtin STRING_CONCAT concat\nres X :- concat X a X is "abc".')),
+  ).toStrictEqual(['']);
+
+  expect(
+    solutions(
+      new Dusa(`
+      #builtin STRING_CONCAT concat
+      speaks "says".
+      speaks "exclaims".
+      speaks 4.
+
+      saying "frog says hello".
+      saying "horse beats hoofs".
+      saying "timmy exclaims yay".
+
+      res X Y :- saying S, speaks Verb, concat X " " Verb " " Y is S.
+    `),
+    ),
+  ).toStrictEqual(['res "frog" "hello", res "timmy" "yay"']);
+});
+
 test('Builtin INT_MINUS (issue #29)', () => {
   expect(
     solutions(new Dusa('#builtin INT_MINUS minus.\ny 4.\nx N :- y M, minus N 1 is M.'), 'x'),

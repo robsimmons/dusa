@@ -106,6 +106,18 @@ p Y :- p X, concat Y "na" is X.
 
 [Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=LcqxCsIwGMTxVzm-rrUP0E06iEuF2qFCQJK0SFAvoUlwEN9dI-W23_3fkqQVHxZKLbO3-bmwSIUhk443mOweyTHCaHt_6XWOiorVxjiPw7E_XLtT3-1HWE-rUwkClBjN_5Q0BS5odwiY6i37gZLywkVMjXy-)
 
+The `STRING_CONCAT` function can even be run backwards with multiple unknown
+values.
+
+<Dusa builtins={['concat']} predicates={['p', 'q', 'r']} code={`
+
+#builtin STRING_CONCAT concat
+p Prefix Postfix :- concat Prefix "na" Postfix is "bananana".
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=PYnLCsIwEAB_Zdle1Q_oTQqKl1pqjwuSxBUW4qbkIRXx321FZQ4DM0_MWGMYWXGFl-DKjXUpFeyK9w-IfOeYxHoGntiVLEFpprJFfBaF09Af2v25ObbNdgAX1JlMOkIX-SoTdCHlxfX6-36DUA3h_0uaizX6gXBDiq83)
+
 Some builtins can also be given a variable number of arguments.
 
 <Dusa builtins={['plus']} predicates={['p', 'q', 'r']} code={`
@@ -141,4 +153,4 @@ r (plus X Y) :- p X, p Y.
   their product. Cannot be run backwards.
 - `STRING_CONCAT` - takes any positive number of arguments and relates strings
   to their concatenation. Can be run backwards: works if either all arguments
-  are known, or if the value and all but one argument are known.
+  are known, or if the value is known.
