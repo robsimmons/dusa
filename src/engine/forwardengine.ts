@@ -154,19 +154,26 @@ export function learnImmediateConsequences(
     for (const { inVars, instructions, conclusion, runForFailure } of prog.subprograms[
       attribute.name
     ] ?? []) {
-      const success = runInstructions(prog, factArgs, inVars, instructions);
-      if ((runForFailure && !success) || (!runForFailure && success)) {
-        const conflict = assertConclusion(
-          prog,
-          state,
-          [],
-          factArgs,
-          0,
-          success ?? [],
-          0,
-          conclusion,
-        );
-        if (conflict) return conflict;
+      if (runForFailure) {
+        const iter = runInstructions(prog, factArgs, inVars, instructions).next();
+        if (iter.done) {
+          const conflict = assertConclusion(prog, state, [], factArgs, 0, [], 0, conclusion);
+          if (conflict) return conflict;
+        }
+      } else {
+        for (const success of runInstructions(prog, factArgs, inVars, instructions)) {
+          const conflict = assertConclusion(
+            prog,
+            state,
+            [],
+            factArgs,
+            0,
+            success ?? [],
+            0,
+            conclusion,
+          );
+          if (conflict) return conflict;
+        }
       }
     }
   }

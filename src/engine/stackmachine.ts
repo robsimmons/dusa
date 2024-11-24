@@ -1,9 +1,9 @@
 import { Program } from './program.js';
-import { Data, DataView } from '../datastructures/data.js';
+import { Data, DataView, HashCons } from '../datastructures/data.js';
 import { Instruction } from '../bytecode.js';
 
 /** Stack machine running a sequence of Instruction statements */
-export function runInstructions(
+export function* runInstructions(
   prog: Program,
   memory: Data[],
   limit: number,
@@ -119,7 +119,107 @@ export function runInstructions(
         stack.push({ type: 'string', value: a.value.slice(0, a.value.length - b.value.length) });
         break;
       }
+      case 'fail': {
+        return null;
+      }
+      case 'nondet_s_concat': {
+        const a = stack.pop()!;
+        if (a.type !== 'string') return null;
+
+        const knownLimit = limit + newMem.length;
+        const segments: (number | string)[] = [];
+        for (const pat of instr.pattern) {
+          let constantSegment: DataView;
+          if (typeof pat === 'number') {
+            if (pat < limit) {
+              constantSegment = prog.data.expose(memory[pat]);
+            } else if (pat < knownLimit) {
+              constantSegment = prog.data.expose(newMem[pat]);
+            } else {
+              segments.push(pat - knownLimit);
+              continue;
+            }
+          } else {
+            constantSegment = pat;
+          }
+
+          if (constantSegment.type === 'string') {
+            segments.push(constantSegment.value);
+          } else {
+            // Non-string pattern, fail immediately
+            return null;
+          }
+        }
+
+        for (const result of nondeterministicStringMatcher(prog.data, newMem, segments, a.value)) {
+          yield result;
+        }
+        return null;
+      }
     }
   }
-  return newMem;
+
+  yield newMem;
+  return null;
+}
+
+/**
+ * @param mem
+ * @param segments - nonempty list of segments
+ * @param str - string to match
+ */
+export function* nondeterministicStringMatcher(
+  data: HashCons,
+  mem: Data[],
+  segments: (number | string)[],
+  str: string,
+): Generator<Data[]> {
+  if (segments.length <= 1) {
+    if (segments[0] === 0) {
+      mem.push(data.hide({ type: 'string', value: str }));
+      yield mem;
+      mem.pop();
+    } else if (segments[0] === str) {
+      yield mem;
+    }
+  } else {
+    // Optimization: can we end early?
+    const minLength = segments.reduce<number>(
+      (accum, seg) => (typeof seg === 'number' ? accum : seg.length + accum),
+      0,
+    );
+    if (minLength > str.length) return;
+
+    const seg = segments[0];
+    if (typeof seg === 'number') {
+      // assert: seg === 0
+      for (let i = 0; i <= str.length; i++) {
+        const here = str.slice(0, i);
+        const there = str.slice(i);
+        mem.push(data.hide({ type: 'string', value: here }));
+        for (const result of nondeterministicStringMatcher(
+          data,
+          mem,
+          segments
+            .slice(1)
+            .map((seg) => (seg === 0 ? here : typeof seg === 'number' ? seg - 1 : seg)),
+          there,
+        )) {
+          yield result;
+        }
+        mem.pop();
+      }
+    } else {
+      if (str.startsWith(seg)) {
+        for (const result of nondeterministicStringMatcher(
+          data,
+          mem,
+          segments.slice(1),
+          str.slice(seg.length),
+        )) {
+          yield result;
+        }
+      }
+    }
+  }
 }

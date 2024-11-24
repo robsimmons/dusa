@@ -11,7 +11,11 @@ export const BUILT_IN_MAP = {
 
 export type BUILT_IN_PRED = keyof typeof BUILT_IN_MAP;
 
-type Mode = 'forward_only' | 'reversible' | { args: ('+' | '-')[]; value: '+' | '-' }[];
+type Mode =
+  | 'forward_only'
+  | 'reversible'
+  | 'fully_reversible'
+  | { args: ('+' | '-')[]; value: '+' | '-' }[];
 
 /** Modes have an order: if a position accepts '-', it must also accept '+' */
 export const builtinModes: { [key in BUILT_IN_PRED]: Mode } = {
@@ -29,7 +33,7 @@ export const builtinModes: { [key in BUILT_IN_PRED]: Mode } = {
     { args: ['-', '+'], value: '+' },
   ],
   INT_TIMES: 'forward_only',
-  STRING_CONCAT: 'reversible',
+  STRING_CONCAT: 'fully_reversible',
 };
 
 export function isBuiltIn(s: string): s is BUILT_IN_PRED {

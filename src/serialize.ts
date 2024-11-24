@@ -1,4 +1,4 @@
-import { ConclusionN, PatternN, ProgramN, RuleN } from './bytecode.js';
+import { ConclusionN, InstructionN, PatternN, ProgramN, RuleN } from './bytecode.js';
 import { Term } from './termoutput.js';
 
 const MAX_INT = BigInt(Number.MAX_SAFE_INTEGER);
@@ -84,7 +84,7 @@ function ruleToJSON(rule: RuleN<bigint>): RuleN<string | number> {
         inName: rule.inName,
         inVars: rule.inVars,
         conclusion: conclusionToJSON(rule.conclusion),
-        instructions: rule.instructions.map((instr) => {
+        instructions: rule.instructions.map<InstructionN<string | number>>((instr) => {
           switch (instr.type) {
             case 'const': {
               switch (instr.const.type) {
@@ -104,6 +104,16 @@ function ruleToJSON(rule: RuleN<bigint>): RuleN<string | number> {
             }
             default: {
               return instr;
+            }
+            case 'nondet_s_concat': {
+              return {
+                type: instr.type,
+                pattern: instr.pattern.map((pat) =>
+                  typeof pat !== 'number' && pat.type === 'int'
+                    ? { type: 'int', value: bigintToJSON(pat.value) }
+                    : pat,
+                ),
+              };
             }
           }
         }),

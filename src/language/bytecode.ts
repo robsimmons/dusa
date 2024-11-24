@@ -4,6 +4,7 @@ import {
   Rule as BytecodeRule,
   Conclusion as BytecodeConclusion,
   Instruction,
+  Const,
 } from '../bytecode.js';
 import {
   BinarizedProgram,
@@ -153,6 +154,33 @@ function matchShape(t: Shape, next: number): { instrs: Instruction[]; next: numb
   }
 }
 
+function getRefForShape(
+  t: Shape,
+  next: number,
+): { instrs: Instruction[]; ref: Const | number; next: number } {
+  switch (t.type) {
+    case 'trivial':
+    case 'int':
+    case 'bool':
+    case 'string': {
+      return { instrs: [], ref: t, next };
+    }
+    case 'var': {
+      if (t.ref === next) {
+        return { instrs: [], ref: next, next: next + 1 };
+      } else {
+        return { instrs: [], ref: t.ref, next: next };
+      }
+    }
+    case 'const': {
+      // XXX WARNING: This only works so long as getRefForShape is only called
+      // in service of functions that will _always_ fail if given
+      // uninterpreted functions as arguments.
+      return { instrs: [{ type: 'fail' }], ref: 0, next };
+    }
+  }
+}
+
 function match(a: Shape, b: Shape, next: number): { instrs: Instruction[]; next: number } {
   const matchA = matchShape(a, next);
   const matchB = matchShape(b, next);
@@ -253,6 +281,19 @@ function generateBuiltinRuleWithValue(
     }
     case 'STRING_CONCAT': {
       const a = args.map((arg) => matchShape(arg, next));
+      if (a.filter((a) => a.next !== next).length > 1) {
+        // This is a nondeterministic backwards match!
+        const instrs: Instruction[] = [];
+        const refs: (number | Const)[] = [];
+        for (const arg of args) {
+          const result = getRefForShape(arg, next);
+          instrs.push(...result.instrs);
+          refs.push(result.ref);
+          next = result.next;
+        }
+        return [...instrs, ...pushShape(value), { type: 'nondet_s_concat', pattern: refs }];
+      }
+      // This is a regular, deterministic, match.
       const unknownIndex = a.findIndex((a) => a.next !== next);
       if (unknownIndex === -1) {
         return [
