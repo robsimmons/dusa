@@ -48,11 +48,11 @@ export type Token =
 
 export type ParserState = StateRoot;
 
-const META_ID_TOKEN = /^[A-Za-z_][A-Za-z0-9_]*/;
+const META_ID_TOKEN = /^[A-Za-z_][A-Za-z0-9_']*/;
 const META_NUM_TOKEN = /^[+-]?[0-9][A-Za-z0-9_]*/;
 const CONST_TOKEN = /^[a-z][a-zA-Z0-9_]*$/;
-const WILDCARD_TOKEN = /^_[a-zA-Z0-9_]*$/;
-const VAR_TOKEN = /^[A-Z][a-zA-Z0-9_]*$/;
+const WILDCARD_TOKEN = /^_[a-zA-Z0-9_']*$/;
+const VAR_TOKEN = /^[A-Z][a-zA-Z0-9_']*$/;
 const INT_TOKEN = /^-?(0|[1-9][0-9]*)$/;
 const TRIV_TOKEN = /^\(\)/;
 

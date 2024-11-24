@@ -32,6 +32,8 @@ test('Basic operation', () => {
   expect(dusa.solution?.get('a')).toStrictEqual({ name: 'tt' });
   dusa.assert({ name: 'a', value: 'ff' });
   expect(dusa.solution).toBeNull();
+
+  expect(() => new Dusa("a is '.")).toThrow();
 });
 
 test('Exhaustive choices', () => {
@@ -166,6 +168,6 @@ test('Builtin STRING_CONCAT, full reverse', () => {
 
 test('Builtin INT_MINUS (issue #29)', () => {
   expect(
-    solutions(new Dusa('#builtin INT_MINUS minus.\ny 4.\nx N :- y M, minus N 1 is M.'), 'x'),
+    solutions(new Dusa("#builtin INT_MINUS minus.\ny 4.\nx N :- y N', minus N 1 is N'."), 'x'),
   ).toStrictEqual(['x 5']);
 });
