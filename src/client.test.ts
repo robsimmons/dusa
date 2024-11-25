@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { Dusa, termToString, compareTerms } from './client.js';
+import { Dusa, termToString, compareTerms, DusaError } from './client.js';
 
 function solutions(dusa: Dusa, pred: string = 'res') {
   const sols: string[] = [];
@@ -12,6 +12,18 @@ function solutions(dusa: Dusa, pred: string = 'res') {
     );
   }
   return sols.toSorted(new Intl.Collator('en').compare);
+}
+
+function runForDusaError(program: string) {
+  try {
+    new Dusa(program);
+  } catch (e) {
+    if (e instanceof DusaError) {
+      return e.issues.map(({ msg }) => msg);
+    } else {
+      return null;
+    }
+  }
 }
 
 let dusa: Dusa;
@@ -32,10 +44,39 @@ test('Basic operation', () => {
   expect(dusa.solution?.get('a')).toStrictEqual({ name: 'tt' });
   dusa.assert({ name: 'a', value: 'ff' });
   expect(dusa.solution).toBeNull();
+
+  expect(runForDusaError("a is '.")).toStrictEqual(["Unexpected symbol '''"]);
+  expect(runForDusaError('a is ".')).toStrictEqual(['End of string not found at end of input']);
+  expect(runForDusaError('a is ".\n')).toStrictEqual(['End of string not found at end of line']);
+});
+
+test('String escapes', () => {
+  expect(
+    solutions(new Dusa('res "\\0\\b\\f\\n\\r\\t\\v\\\'\\"\\\\\\x12\\u{12}\\u{2601}".')),
+  ).toStrictEqual(['res "\\x00\\x08\\x0c\\n\\x0d\\x09\\x0b\'\\"\\\\\\x12\\x12\\u{2601}"']);
+
+  expect(runForDusaError('a is "\\u{d901}".\n')).toStrictEqual([
+    'Cannot encode lone surrogate \\u{d901}',
+  ]);
+  expect(runForDusaError('a is "\\u{999999999}".\n')).toStrictEqual([
+    'Bad Unicode code point \\u{999999999}',
+  ]);
+  expect(runForDusaError('a is "\\q".\n')).toStrictEqual(['Invalid escape sequence \\q']);
+  expect(runForDusaError('a is "\\\n')).toStrictEqual(['Backslash not supported at end of line']);
+});
+
+test('Parse errors', () => {
+  expect(runForDusaError("a'")).toStrictEqual(["Invalid identifier 'a''"]);
+  expect(runForDusaError('a')).toStrictEqual([
+    "Expected to find ':-', but instead reached the end of input.",
+  ]);
+  expect(runForDusaError('a is {}.')).toStrictEqual([
+    'Expected to find a term here, but no term found.',
+  ]);
 });
 
 test('Exhaustive choices', () => {
-  dusa = new Dusa('p a is { tt, ff }.\np b is { tt, ff }.');
+  dusa = new Dusa('  p a is { tt, ff }.\n  p b is { tt, ff }.');
   expect(dusa.solution).not.toBeNull();
   expect([...dusa].length).toBe(4);
   expect(solutions(dusa, 'p')).toStrictEqual([
