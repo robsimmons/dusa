@@ -125,116 +125,111 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
           };
         }
 
-        if (stream.eat('\\')) {
-          if (
-            (tok = stream.eat(/^([0bfnrtv'"\\]|x[0-9a-fA-F][0-9a-fA-F]|u\{[0-9a-fA-F]{1,6}\})/))
-          ) {
-            switch (tok[0]) {
-              case '0':
-                tok = '\0';
+        stream.eat('\\'); // Expected to always return non-null
+        if ((tok = stream.eat(/^([0bfnrtv'"\\]|x[0-9a-fA-F][0-9a-fA-F]|u\{[0-9a-fA-F]+\})/))) {
+          switch (tok[0]) {
+            case '0':
+              tok = '\0';
+              break;
+            case 'b':
+              tok = '\b';
+              break;
+            case 'f':
+              tok = '\f';
+              break;
+            case 'n':
+              tok = '\n';
+              break;
+            case 'r':
+              tok = '\r';
+              break;
+            case 't':
+              tok = '\t';
+              break;
+            case 'v':
+              tok = '\v';
+              break;
+            case "'":
+              tok = "'";
+              break;
+            case '"':
+              tok = '"';
+              break;
+            case '\\':
+              tok = '\\';
+              break;
+            case 'x':
+              tok = String.fromCharCode(parseInt(tok.slice(1), 16));
+              break;
+            default: {
+              // case 'u'
+              const charCode = parseInt(tok.slice(2, tok.length - 1), 16);
+              if (0xd800 <= charCode && charCode < 0xe000) {
+                return {
+                  state,
+                  issues: [
+                    {
+                      type: 'Issue',
+                      msg: `Cannot encode lone surrogate \\${tok}`,
+                      severity: 'error',
+                      loc: stream.matchedLocation(),
+                    },
+                  ],
+                };
+              }
+              if (charCode > 0x10ffff) {
+                return {
+                  state,
+                  issues: [
+                    {
+                      type: 'Issue',
+                      msg: `Bad Unicode code point \\${tok}`,
+                      severity: 'error',
+                      loc: stream.matchedLocation(),
+                    },
+                  ],
+                };
+              } else {
+                tok = String.fromCodePoint(charCode);
                 break;
-              case 'b':
-                tok = '\b';
-                break;
-              case 'f':
-                tok = '\f';
-                break;
-              case 'n':
-                tok = '\n';
-                break;
-              case 'r':
-                tok = '\r';
-                break;
-              case 't':
-                tok = '\t';
-                break;
-              case 'v':
-                tok = '\v';
-                break;
-              case "'":
-                tok = "'";
-                break;
-              case '"':
-                tok = '"';
-                break;
-              case '\\':
-                tok = '\\';
-                break;
-              case 'x':
-                tok = String.fromCharCode(parseInt(tok.slice(1), 16));
-                break;
-              default: {
-                // case 'u'
-                const charCode = parseInt(tok.slice(2, tok.length - 1), 16);
-                if (0xd800 <= charCode && charCode < 0xe000) {
-                  return {
-                    state,
-                    issues: [
-                      {
-                        type: 'Issue',
-                        msg: `Cannot encode lone surrogate ${tok}`,
-                        severity: 'error',
-                        loc: stream.matchedLocation(),
-                      },
-                    ],
-                  };
-                }
-                if (charCode > 0x10ffff) {
-                  return {
-                    state,
-                    issues: [
-                      {
-                        type: 'Issue',
-                        msg: `Bad Unicode code point ${tok}`,
-                        severity: 'error',
-                        loc: stream.matchedLocation(),
-                      },
-                    ],
-                  };
-                } else {
-                  tok = String.fromCodePoint(charCode);
-                  break;
-                }
               }
             }
-            return {
-              state: {
-                ...state,
-                collected: state.collected + tok,
-                end: stream.matchedLocation().end,
-              },
-              tag: 'escape',
-            };
-          }
-          if ((tok = stream.eat(/^./))) {
-            return {
-              state,
-              tag: 'invalid',
-              issues: [
-                {
-                  type: 'Issue',
-                  msg: `Invalid escape sequence \\${tok}`,
-                  severity: 'error',
-                  loc: stream.matchedLocation(),
-                },
-              ],
-            };
           }
           return {
-            state: { type: 'Normal' },
+            state: {
+              ...state,
+              collected: state.collected + tok,
+              end: stream.matchedLocation().end,
+            },
+            tag: 'escape',
+          };
+        }
+        if ((tok = stream.eat(/^./))) {
+          return {
+            state,
             tag: 'invalid',
             issues: [
               {
                 type: 'Issue',
-                msg: 'Backslash not supported at end of line',
+                msg: `Invalid escape sequence \\${tok}`,
                 severity: 'error',
                 loc: stream.matchedLocation(),
               },
             ],
           };
         }
-
-        throw new Error('Expected-to-be-unimpossible state in string parsing reached');
+        return {
+          state: { type: 'Normal' },
+          tag: 'invalid',
+          issues: [
+            {
+              type: 'Issue',
+              msg: 'Backslash not supported at end of line',
+              severity: 'error',
+              loc: stream.matchedLocation(),
+            },
+          ],
+        };
 
       case 'Normal':
         if ((tok = stream.eat('#'))) {
@@ -286,10 +281,6 @@ export const dusaTokenizer: StreamParser<ParserState, Token> = {
               tree: { type: p, loc: stream.matchedLocation() },
             };
           }
-        }
-
-        if (stream.eat(/^\s+/)) {
-          return { state };
         }
 
         if ((tok = stream.eat(META_ID_TOKEN) ?? stream.eat(META_NUM_TOKEN))) {

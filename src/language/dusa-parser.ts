@@ -89,13 +89,15 @@ function mkStream<T>(xs: T[]): ImperativeStream<T> {
 
 function force(t: ImperativeStream<Token>, type: string): Token {
   const tok = t.next();
-  if (tok === null)
+  if (tok === null) {
     throw new DusaSyntaxError(`Expected to find '${type}', but instead reached the end of input.`);
-  if (tok.type !== type)
+  }
+  if (tok.type !== type) {
     throw new DusaSyntaxError(
       `Expected to find '${type}', but instead found '${tok.type}'.`,
       tok.loc,
     );
+  }
   return tok;
 }
 
