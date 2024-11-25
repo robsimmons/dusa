@@ -20,10 +20,9 @@ function runForDusaError(program: string) {
   } catch (e) {
     if (e instanceof DusaError) {
       return e.issues.map(({ msg }) => msg);
-    } else {
-      return null;
     }
   }
+  return null;
 }
 
 let dusa: Dusa;
