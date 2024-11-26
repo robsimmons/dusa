@@ -24,6 +24,6 @@ the first implementation of finite-choice logic programming.
   [Finite-Choice Logic Programming](https://popl25.sigplan.org/details/POPL-2025-popl-research-papers/13/Finite-Choice-Logic-Programming)
   by Martens, Simmons, and Michael Arntzenius may be of interest.
 
-The easiest way to use Dusa is in our [https://dusa.rocks/](web editor).
+The easiest way to use Dusa is in our [web editor](https://dusa.rocks/).
 Dusa is also available as a command-line utility and JavaScript API via the
 [Node package manager](https://www.npmjs.com/package/dusa).
