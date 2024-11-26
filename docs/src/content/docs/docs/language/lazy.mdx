@@ -1,0 +1,80 @@
+---
+title: Lazy predicates (experimental)
+---
+
+import Dusa from '../../../../components/Dusa.astro';
+
+**WARNING: this is an unusually experimental feature and is likely to break in
+future releases.**
+
+Lazy predicates allow a limited form of "backward-chaining," or 
+"Prolog-style," or "top-down" logic programming in Dusa. Normally, a program
+like this one will never terminate, because you can always generate new
+`nat` facts once you start generating them:
+
+<Dusa predicates={['nat']} code={`
+
+nat z.
+nat (s N) :- nat N.
+
+`}/>
+
+However, by making `nat` a "lazy" predicate, we only derive the `nat` facts
+that we absolutely need to run other parts of our program.
+
+<Dusa predicates={['nat', 'p', 'q']} code={`
+
+#lazy nat
+nat z.
+nat (s N) :- nat N.
+
+p (s (s z)).
+p "hello".
+p 4.
+
+q X :- p X, nat X.
+
+`}/>
+
+[Explore this example](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSjnJFZVKuQllsTkAQmFKj0IrVGs4KepYKULklHwAwrG5BWABIGoSlNTD8SLUcpIzcnJj1EC80zAagoVIkCaChQidMA6I4CiSrUA)
+
+Dusa implements lazy predicates by applying a program transformation called
+the "magic sets" or "demand" transformation. It's helpful to have a bit of a
+mental model of how this transformation actually works. The program above is
+transformed into (more or less) this program by the demand transformation:
+
+<Dusa predicates={['nat', 'p', 'q']} code={`
+
+#lazy nat
+nat z :- demand_nat z.
+nat (s N) :- demand_nat (s N), nat N.
+demand_nat N :- demand_nat (s N).
+
+p (s (s z)).
+p "hello".
+p 4.
+
+q X :- p X, nat X.
+demand_nat X :- p X.
+
+`}/>
+
+## Inputs and outputs
+
+The simple lazy transformation currently implemented treats the arguments to
+a lazy predicate as "inputs", which means that whenever they appear in a
+premise they have to be bound by previous premises. The exception is the value
+of a functional predicate, which is treated as an output. That allows for the
+writing of (some) Prolog-style logic programs that compute values, like this:
+
+<Dusa predicates={['plus']} code={`
+
+#lazy plus
+plus z N is N.
+plus (s N) M is (s P) :- plus N M is P.
+
+#demand plus (s (s (s (s z)))) (s (s (s z))) is N.
+
+`}/>
+
+[Explore this example](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSjnJFZVKhTklBbH5IFIhSoFP4XMYgU_PShfo1jBT1PBFySmUawQoKlgpQtWruAHEQzQi8mLyVNOSc1NzEtRgGmBoypNTU1NVC7EeKVaAA)

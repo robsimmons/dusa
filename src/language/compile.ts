@@ -52,7 +52,7 @@ export function compile(
     name: decl.type === 'Rule' ? nextName(decl.conclusion.name) : nextName(decl.type),
   }));
 
-  if (debug) {
+  if (true) {
     console.log(`Form 1: flattened program
 ${flatProgramToString(named)}`);
   }
