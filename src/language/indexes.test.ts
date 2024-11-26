@@ -95,7 +95,7 @@ a X :- p _ X.
 b X :- b X, p _ X.`);
   expect(binarizedProgramToString(program)).toStrictEqual(`rules:
 $p-1 #1 :- p #0 #1.
-a X :- p _ X.
+a X :- p #1 X.
 @b-1-1 X :- b X.
 b X :- @b-1-1 X, $p-1 X.`);
 });

@@ -78,7 +78,7 @@ test('Test full parses', () => {
       {
         type: 'Issue',
         severity: 'error',
-        msg: "Unexpected directive 'void'. Valid directives are #builtin, #demand, and #forbid.",
+        msg: "Unexpected directive 'void'. Valid directives are #builtin, #demand, #forbid, and #lazy.",
         loc: { start: { column: 1, line: 1, index: 0 }, end: { line: 1, column: 6, index: 5 } },
       },
     ],

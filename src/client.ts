@@ -80,12 +80,12 @@ export class Dusa {
       if (parsed.errors !== null) {
         throw new DusaError(parsed.errors);
       }
-      const { errors, arities, builtins } = check(parsed.document);
+      const { errors, arities, builtins, lazy } = check(parsed.document);
       if (errors.length !== 0) {
         throw new DusaError(errors);
       }
 
-      bytecodeProgram = compile(builtins, arities, parsed.document);
+      bytecodeProgram = compile(builtins, arities, lazy, parsed.document);
     } else {
       bytecodeProgram = source;
     }
@@ -161,12 +161,12 @@ export class Dusa {
     if (parsed.errors !== null) {
       throw new DusaError(parsed.errors);
     }
-    const { errors, arities, builtins } = check(parsed.document);
+    const { errors, arities, builtins, lazy } = check(parsed.document);
     if (errors.length !== 0) {
       throw new DusaError(errors);
     }
 
-    const bytecodeProgram = compile(builtins, arities, parsed.document);
+    const bytecodeProgram = compile(builtins, arities, lazy, parsed.document);
     return bytecodeToJSON(bytecodeProgram);
   }
 }

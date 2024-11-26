@@ -7,7 +7,7 @@ function solutions(dusa: Dusa, pred: string = 'res') {
     sols.push(
       [...sol.lookup(pred)]
         .toSorted(compareTerms)
-        .map((args) => `${pred}${args.map((arg) => ` ${termToString(arg)}`).join('')}`)
+        .map((args) => `${pred}${args.map((arg) => ` ${termToString(arg, true)}`).join('')}`)
         .join(', '),
     );
   }
@@ -119,7 +119,7 @@ test('Sorting', () => {
     `#builtin BOOLEAN_TRUE tt. #builtin BOOLEAN_FALSE tt. p (). p 3. p "Hello". p "Goodbye". p a. p (a 1). p (a "two"). p tt. p ff.`,
   );
   expect(solutions(dusa, 'p')).toStrictEqual([
-    'p (), p bool#false, p "Goodbye", p "Hello", p 3, p a "two", p a 1, p a, p ff',
+    'p (), p bool#false, p "Goodbye", p "Hello", p 3, p (a "two"), p (a 1), p a, p ff',
   ]);
 });
 
@@ -208,4 +208,22 @@ test('Builtin INT_MINUS (issue #29)', () => {
   expect(
     solutions(new Dusa("#builtin INT_MINUS minus.\ny 4.\nx N :- y N', minus N 1 is N'."), 'x'),
   ).toStrictEqual(['x 5']);
+});
+
+test('Lazy execution', () => {
+  expect(
+    solutions(
+      new Dusa(`
+      #lazy lt
+      lt z (s N).
+      lt (s N) (s M) :- lt N M.
+
+      p (s (s (s z))).
+      p (s z).
+      p z.
+
+      res X Y :- p X, p Y, lt X Y.
+    `),
+    ),
+  ).toStrictEqual(['res (s z) (s (s (s z))), res z (s (s (s z))), res z (s z)']);
 });

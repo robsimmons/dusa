@@ -2,13 +2,18 @@ import { test, expect } from 'vitest';
 import { parse } from './dusa-parser.js';
 import { flatDeclToString, flatProgramToString, flattenDecls } from './flatten.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
+import { transformLazy } from './lazy.js';
 
-function flatten(preds: ([string] | [string, BUILT_IN_PRED])[], source: string) {
+function flatten(
+  preds: ([string] | [string, BUILT_IN_PRED])[],
+  source: string,
+  lazy: string[] = [],
+) {
   const parsed = parse(source);
   if (parsed.errors !== null) return [`${parsed.errors.length} error(s) at parsing`];
-  const flattened = flattenDecls(
-    new Map(preds as [string, BUILT_IN_PRED | undefined][]),
-    parsed.document,
+  const flattened = transformLazy(
+    new Set(lazy),
+    flattenDecls(new Map(preds as [string, BUILT_IN_PRED | undefined][]), parsed.document),
   );
   return flattened.map(flatDeclToString);
 }
@@ -83,5 +88,20 @@ test('Program flattening', () => {
   expect(flatten([['s'], ['p']], 's 2 is 3. p 3 :- N == 3, 3 == s 2.')).toStrictEqual([
     's 2 is 3.',
     'p 3 :- N == 3, s 2 is #1, 3 == #1.',
+  ]);
+});
+
+test('Lazy flattening', () => {
+  expect(
+    flatten(
+      [['lt']],
+      `lt z N.
+       lt (s N) (s M) :- lt N M.`,
+      ['lt'],
+    ),
+  ).toStrictEqual([
+    'lt z N :- $lazy$demand$lt z N.',
+    'lt (s N) (s M) :- $lazy$demand$lt (s N) (s M), lt N M.',
+    '$lazy$demand$lt N M :- $lazy$demand$lt (s N) (s M).',
   ]);
 });

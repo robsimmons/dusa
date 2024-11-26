@@ -57,7 +57,13 @@ export type ParsedBuiltin = {
   loc: SourceLocation;
 };
 
-export type ParsedTopLevel = ParsedBuiltin | ParsedDeclaration;
+export type ParsedLazy = {
+  type: 'Lazy';
+  name: string;
+  loc: SourceLocation;
+};
+
+export type ParsedTopLevel = ParsedBuiltin | ParsedLazy | ParsedDeclaration;
 
 export function propToString(p: ParsedProposition) {
   const args = p.args.map((arg) => ` ${termToString(arg)}`).join('');
@@ -135,6 +141,8 @@ export function declToString(decl: ParsedTopLevel): string {
       return `#demand ${decl.premises.map(premiseToString).join(', ')}.`;
     case 'Builtin':
       return `#builtin ${decl.builtin} ${decl.name}`;
+    case 'Lazy':
+      return `#lazy ${decl.name}`;
     case 'Rule':
       if (decl.premises.length === 0) {
         return `${headToString(decl.conclusion)}.`;

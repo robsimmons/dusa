@@ -91,6 +91,7 @@ function generateRule(rule: BinarizedRule): BytecodeRule {
 export function generateBytecode(
   program: BinarizedProgram,
   aritiesMap: Map<string, { args: number; value: boolean }>,
+  lazySet: Set<string>,
 ): BytecodeProgram {
   const arities: { [pred: string]: { args: number; value: boolean } } = {};
   for (const [pred, arity] of aritiesMap.entries()) {
@@ -102,6 +103,7 @@ export function generateBytecode(
     demands: program.demands,
     rules: program.rules.map(generateRule),
     arities,
+    lazy: [...lazySet],
   };
 }
 
