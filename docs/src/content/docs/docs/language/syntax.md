@@ -19,6 +19,7 @@ treated like whitespace.
 
     <program>         ::= <declaration> <program> | ""
     <declaration>     ::= "#builtin" <builtin> <identifier> [ "." ]
+                       |  "#lazy" <identifier> ["."]
                        |  "#demand" <premises> "."
                        |  "#forbid" <premises> "."
                        |  <conclusion> [ ":-" <premises> ] "."
@@ -32,7 +33,7 @@ treated like whitespace.
                        |  <attribute> "is" <term-or-choices>
                        |  <attribute> "is?" <term-or-choices>
     <term-or-choices> ::= <term> | "{" <choice-options> "}"
-    <choice-options>  ::= <term> | <term> "," <conc-options>
+    <choice-options>  ::= <term> | <term> "," <choice-options>
 
     <attribute>       ::= <identifier> | <identifier> <arguments>
     <arguments>       ::= <atomic-term> | <atomic-term> <arguments>
