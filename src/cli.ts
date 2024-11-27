@@ -1,4 +1,12 @@
-import { compareTerms, Dusa, DusaError, DusaRuntimeError, InputFact, InputTerm, Term } from './client.js';
+import {
+  compareTerms,
+  Dusa,
+  DusaError,
+  DusaRuntimeError,
+  InputFact,
+  InputTerm,
+  Term,
+} from './client.js';
 
 import { parseArgs, ParseArgsConfig } from 'util';
 import { readFileSync } from 'fs';
