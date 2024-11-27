@@ -13,6 +13,7 @@ dist-ssr
 *.local
 coverage
 lib/
+dusa.umd.js
 
 # Editor directories and files
 .vscode/*

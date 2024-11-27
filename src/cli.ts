@@ -1,13 +1,4 @@
-import {
-  compareTerms,
-  Dusa,
-  DusaError,
-  DusaRuntimeError,
-  InputFact,
-  InputTerm,
-  Term,
-  termToJson,
-} from './client.js';
+import { compareTerms, Dusa, DusaError, DusaRuntimeError, InputFact, InputTerm, Term } from './client.js';
 
 import { parseArgs, ParseArgsConfig } from 'util';
 import { readFileSync } from 'fs';
@@ -299,9 +290,7 @@ export function runDusaCli(
     if (verbose >= 2) log(`Answer: ${num_solutions}`);
     const answer: { [pred: string]: Term[][] | number } = {};
     for (const pred of [...count, ...query]) {
-      answer[pred] = [
-        ...solution.value.lookup(pred).map((terms) => terms.map(termToJson)),
-      ].toSorted(compareTerms);
+      answer[pred] = [...solution.value.lookup(pred)].toSorted(compareTerms);
       if (count.includes(pred)) {
         answer[pred] = answer[pred].length;
       }
