@@ -1,6 +1,5 @@
-import { Fact as OutputFact } from '../termoutput.js';
 import { ProgramN } from '../bytecode.js';
-import { Dusa, DusaIterator } from '../client.js';
+import { Dusa, DusaIterator, BigFact as OutputFact } from '../client.js';
 
 export type WorkerQuery = {
   type: 'list';
@@ -62,7 +61,7 @@ function loop(): true {
         state = 'done';
         return true;
       } else {
-        post({ type: 'solution', facts: next.value.facts() });
+        post({ type: 'solution', facts: next.value.factsBig() });
       }
     }
   } catch (e) {

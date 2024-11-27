@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { Dusa, termToString, compareTerms, DusaError } from './client.js';
+import { compareTerms, termToString, Dusa, DusaError } from './client.js';
 
 function solutions(dusa: Dusa, pred: string = 'res') {
   const sols: string[] = [];
