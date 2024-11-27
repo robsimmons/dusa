@@ -107,6 +107,6 @@ function* visitor(
 }
 
 // eslint-disable-next-line require-yield
-export function* nullIterator<T>(): Generator<T> {
+function* nullIterator<T>(): Generator<T> {
   return;
 }

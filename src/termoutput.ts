@@ -117,7 +117,6 @@ export function compareTerm(t1: Term | BigTerm, t2: Term | BigTerm): number {
   if (typeof t2 === 'bigint' || typeof t2 === 'number') return 1;
 
   if (t1.name !== null) {
-    console.log(t1);
     if (t2.name === null) return -1;
     const c = new Intl.Collator('en').compare(t1.name, t2.name);
     if (c !== 0) return c;
