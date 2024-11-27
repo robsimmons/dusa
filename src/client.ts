@@ -1,5 +1,5 @@
 import { ProgramN as BytecodeProgramN } from './bytecode.js';
-import { Data, HashCons } from './datastructures/data.js';
+import { Data } from './datastructures/data.js';
 import { Database } from './datastructures/database.js';
 import {
   ascendToRoot,
@@ -18,7 +18,10 @@ import { parse } from './language/dusa-parser.js';
 import { Issue } from './parsing/parser.js';
 import { bytecodeToJSON } from './serialize.js';
 import {
+  BigFact,
+  BigTerm,
   compareTerms,
+  dataToBigTerm,
   dataToTerm,
   Fact,
   InputFact,
@@ -29,9 +32,8 @@ import {
 
 export type { ProgramN as BytecodeProgramN } from './bytecode.js';
 export type { Issue } from './parsing/parser.js';
-export type { InputFact, InputTerm, Fact, Term } from './termoutput.js';
+export type { InputFact, InputTerm, Fact, BigFact, BigTerm, Term } from './termoutput.js';
 export { compareTerm, compareTerms, termToString } from './termoutput.js';
-export { termToJson } from './serialize.js';
 
 export class DusaError extends Error {
   issues: Issue[];
@@ -47,30 +49,91 @@ export class DusaRuntimeError extends Error {
   }
 }
 
+export interface DusaSolution {
+  get(name: string, ...args: InputTerm[]): Term | undefined;
+  getBig(name: string, ...args: InputTerm[]): BigTerm | undefined;
+  has(name: string, ...args: InputTerm[]): boolean;
+  lookup(name: string, ...args: InputTerm[]): Generator<Term[]>;
+  lookupBig(name: string, ...args: InputTerm[]): Generator<BigTerm[]>;
+  facts(): Fact[];
+  factsBig(): BigFact[];
+}
+
+export interface DusaIterator extends Iterator<DusaSolution> {
+  /**
+   * Takes at most `limit` steps of the choice engine's `step` function,
+   * stopping early if a solution is reached or if no more steps can be taken.
+   *
+   * Returns true iff next() can return without doing any work.
+   */
+  advance(limit?: number): boolean;
+
+  /**
+   * Information about the progress towards solutions.
+   */
+  stats(): { deductions: number; rejected: number; choices: number; nonPos: number };
+
+  /**
+   * Run the iterator all the way to the end
+   */
+  all(): DusaSolution[];
+}
+
 export class Dusa {
   private prog: InternalProgram;
   private state: SearchState | null;
-  private cachedSolution: null | 'conflict' | DusaSolution = null;
+  private cachedSolution: 'unknown' | null | DusaSolution = 'unknown';
 
   get relations(): string[] {
     return [...Object.keys(this.prog.arities)];
   }
 
-  get solution() {
-    if (this.cachedSolution === null) {
-      const solution = this[Symbol.iterator]().next();
-      if (!solution.done) {
-        this.cachedSolution = solution.value;
-      } else {
-        this.cachedSolution = 'conflict';
-      }
+  [Symbol.iterator]() {
+    return new DusaIteratorImpl(this.prog, this.state);
+  }
+
+  /**
+   * Returns an iterator to enumerate solutions with a for-if statement.
+   *
+   * The `solve()` method and the `[Symbol.iterator]()` do the same thing; if
+   * you want to enumerate the solutions with a `for...of` loop, just use the
+   * `dusa` object directly instead of calling `solve()`.
+   *
+   *     const dusa = new Dusa(`num is { 1, 2, 18, 22 }.`);
+   *     console.log(dusa.solve().next().value.get('num)); // 1, 2, 18, or 22
+   *     for (const solution of dusa) {
+   *         console.log(solution.get('num')); // in some order: 1, 2, 18, 22
+   *     }
+   */
+  solve(): DusaIterator {
+    return new DusaIteratorImpl(this.prog, this.state);
+  }
+
+  /**
+   * Get a single arbitrary solution for the program, or null if we can be
+   * sure that no solutions exist. This is equivalent to calling sample() once
+   * and remembering the DusaSolution that it returns.
+   */
+  get solution(): DusaSolution | null {
+    if (this.cachedSolution === 'unknown') {
+      this.cachedSolution = this.sample();
     }
-    if (this.cachedSolution === 'conflict') return null;
     return this.cachedSolution;
   }
 
-  [Symbol.iterator]() {
-    return new DusaIteratorImpl(this.prog, this.state);
+  /**
+   * Get an arbitrary solution for the program, or null if we can be sure no
+   * solutions exist.
+   */
+  sample(): DusaSolution | null {
+    const sample = this.solve().next();
+    if (sample.done) return null;
+    return sample.value;
+  }
+
+  get solutions(): DusaIterator {
+    console.warn(`Dusa.solutions is deprecated, use Dusa.solve() instead`);
+    return this.solve();
   }
 
   constructor(source: string | BytecodeProgramN<bigint | string | number>) {
@@ -132,7 +195,7 @@ export class Dusa {
   assert(...facts: InputFact[]) {
     if (this.state === null) return;
     this.state = { ...this.state };
-    this.cachedSolution = null;
+    this.cachedSolution = 'unknown';
     let conflict = null;
     for (const fact of facts) {
       const { name, args, value } = this.inputFact(fact);
@@ -171,13 +234,6 @@ export class Dusa {
   }
 }
 
-export interface DusaSolution {
-  get(name: string, ...args: InputTerm[]): Term | undefined;
-  has(name: string, ...args: InputTerm[]): boolean;
-  lookup(name: string, ...args: InputTerm[]): Generator<Term[]>;
-  facts(): Fact[];
-}
-
 class DusaSolutionImpl implements DusaSolution {
   private solution: Database;
   private prog: InternalProgram;
@@ -186,7 +242,7 @@ class DusaSolutionImpl implements DusaSolution {
     this.solution = solution;
   }
 
-  get(name: string, ...args: InputTerm[]) {
+  private getImpl(name: string, ...args: InputTerm[]) {
     const arity = this.prog.arities[name];
     if (!arity) return undefined;
     if (!arity.value) {
@@ -204,7 +260,19 @@ class DusaSolutionImpl implements DusaSolution {
       args.map((arg) => termToData(this.prog.data, arg)),
     );
     if (constraint === null) return undefined;
-    return dataToTerm(this.prog.data, (constraint as { just: Data }).just);
+    return (constraint as { just: Data }).just;
+  }
+
+  get(name: string, ...args: InputTerm[]) {
+    const result = this.getImpl(name, ...args);
+    if (result === undefined) return undefined;
+    return dataToTerm(this.prog.data, result);
+  }
+
+  getBig(name: string, ...args: InputTerm[]) {
+    const result = this.getImpl(name, ...args);
+    if (result === undefined) return undefined;
+    return dataToBigTerm(this.prog.data, result);
   }
 
   has(name: string, ...args: InputTerm[]) {
@@ -223,59 +291,62 @@ class DusaSolutionImpl implements DusaSolution {
     );
   }
 
-  lookup(name: string, ...args: InputTerm[]) {
-    function* loop(
-      data: HashCons,
-      arity: undefined | { args: number; value: boolean },
-      solution: Database,
-    ) {
-      if (!arity) return;
-      const depth = (arity.value ? arity.args + 1 : arity.args) - args.length;
-      for (const result of solution.visit(
-        name,
-        args.map((arg) => termToData(data, arg)),
-        args.length,
-        depth,
-      )) {
-        yield result.map((arg) => dataToTerm(data, arg));
-      }
+  *lookupImpl(name: string, args: InputTerm[]): Generator<Data[]> {
+    const arity = this.prog.arities[name];
+    if (!arity) return;
+    const depth = (arity.value ? arity.args + 1 : arity.args) - args.length;
+    yield* this.solution.visit(
+      name,
+      args.map((arg) => termToData(this.prog.data, arg)),
+      args.length,
+      depth,
+    );
+  }
+
+  *lookup(name: string, ...args: InputTerm[]) {
+    for (const result of this.lookupImpl(name, args)) {
+      yield result.map((arg) => dataToTerm(this.prog.data, arg));
     }
-    return loop(this.prog.data, this.prog.arities[name], this.solution);
+  }
+
+  *lookupBig(name: string, ...args: InputTerm[]) {
+    for (const result of this.lookupImpl(name, args)) {
+      yield result.map((arg) => dataToBigTerm(this.prog.data, arg));
+    }
+  }
+
+  factsImpl() {
+    return [...Object.entries(this.prog.arities)]
+      .toSorted((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0))
+      .map(([pred, arity]) => {
+        return { pred, rows: [...this.lookupImpl(pred, [])], hasValue: arity.value };
+      });
   }
 
   facts(): Fact[] {
-    return [...Object.entries(this.prog.arities)]
-      .toSorted((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0))
-      .flatMap(([pred, arity]): Fact[] => {
-        const rows = [...this.lookup(pred)].toSorted(compareTerms);
-        if (arity.value) {
-          return rows.map((args) => {
-            const value = args.pop()!;
-            return { name: pred, args, value };
-          });
-        } else {
-          return rows.map((args) => ({ name: pred, args, value: null }));
-        }
-      });
+    return this.factsImpl().flatMap<Fact>(({ pred, rows, hasValue }) => {
+      return rows
+        .map((row) => row.map((tm) => dataToTerm(this.prog.data, tm)))
+        .toSorted(compareTerms)
+        .map((args) =>
+          hasValue ? { name: pred, args, value: args.pop()! } : { name: pred, args },
+        );
+    });
+  }
+
+  factsBig(): BigFact[] {
+    return this.factsImpl().flatMap<BigFact>(({ pred, rows, hasValue }) => {
+      return rows
+        .map((row) => row.map((tm) => dataToBigTerm(this.prog.data, tm)))
+        .toSorted(compareTerms)
+        .map((args) =>
+          hasValue ? { name: pred, args, value: args.pop()! } : { name: pred, args },
+        );
+    });
   }
 }
 
-export interface DusaIterator extends Iterator<DusaSolution> {
-  /**
-   * Takes at most `limit` steps of the choice engine's `step` function,
-   * stopping early if a solution is reached or if no more steps can be taken.
-   *
-   * Returns true iff next() can return without doing any work.
-   */
-  advance(limit?: number): boolean;
-
-  /**
-   * Information about the progress towards solutions.
-   */
-  stats(): { deductions: number; rejected: number; choices: number; nonPos: number };
-}
-
-class DusaIteratorImpl implements Iterator<DusaSolution> {
+class DusaIteratorImpl implements DusaIterator {
   private state:
     | { type: 'parent'; state: SearchState }
     | { type: 'tree'; path: ChoiceZipper; tree: ChoiceTree | null };
@@ -300,6 +371,16 @@ class DusaIteratorImpl implements Iterator<DusaSolution> {
       choices: this.stats_.choices,
       nonPos: this.nNonPos,
     };
+  }
+
+  all() {
+    const results: DusaSolution[] = [];
+    let next: IteratorResult<DusaSolution> = this.next();
+    for (;;) {
+      if (next.done) return results;
+      results.push(next.value);
+      next = this.next();
+    }
   }
 
   stepState(

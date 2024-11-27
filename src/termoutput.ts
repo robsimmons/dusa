@@ -2,7 +2,7 @@ import { Data, escapeString, HashCons } from './datastructures/data.js';
 
 export type Term =
   | null // Trivial type ()
-  | bigint // Natural numbers and integers
+  | number // Natural numbers and integers
   | string // Strings
   | boolean
   | { name: null; value: number } // JSON refs
@@ -10,8 +10,21 @@ export type Term =
 export interface Fact {
   name: string;
   args: Term[];
-  value: Term;
+  value?: Term;
 }
+export type BigTerm =
+  | null // Trivial type ()
+  | bigint // Natural numbers and integers
+  | string // Strings
+  | boolean
+  | { name: null; value: number } // JSON refs
+  | { name: string; args?: [BigTerm, ...BigTerm[]] };
+export interface BigFact {
+  name: string;
+  args: BigTerm[];
+  value?: BigTerm;
+}
+
 export type InputTerm =
   | null
   | number
@@ -29,12 +42,23 @@ export interface InputFact {
 export function dataToTerm(data: HashCons, t: Data): Term {
   const view = data.expose(t);
   if (view.type === 'trivial') return null;
-  if (view.type === 'int') return view.value;
+  if (view.type === 'int') return Number(view.value);
   if (view.type === 'bool') return view.value;
   if (view.type === 'string') return view.value;
   if (view.type === 'ref') return { name: null, value: view.value };
   if (view.args.length === 0) return { name: view.name };
   const args = view.args.map((arg) => dataToTerm(data, arg)) as [Term, ...Term[]];
+  return { name: view.name, args };
+}
+export function dataToBigTerm(data: HashCons, t: Data): BigTerm {
+  const view = data.expose(t);
+  if (view.type === 'trivial') return null;
+  if (view.type === 'int') return view.value;
+  if (view.type === 'bool') return view.value;
+  if (view.type === 'string') return view.value;
+  if (view.type === 'ref') return { name: null, value: view.value };
+  if (view.args.length === 0) return { name: view.name };
+  const args = view.args.map((arg) => dataToBigTerm(data, arg)) as [BigTerm, ...BigTerm[]];
   return { name: view.name, args };
 }
 
@@ -54,11 +78,11 @@ export function termToData(data: HashCons, t: InputTerm): Data {
   return data.hide({ type: 'int', value: BigInt(t) });
 }
 
-export function termToString(tm: Term, parens = false): string {
+export function termToString(tm: BigTerm | Term, parens = false): string {
   if (tm === null) return '()';
   if (typeof tm === 'boolean') return `bool#${tm}`;
   if (typeof tm === 'string') return `"${escapeString(tm)}"`;
-  if (typeof tm === 'bigint') return `${tm}`;
+  if (typeof tm === 'bigint' || typeof tm === 'number') return `${tm}`;
   if (tm.name === null) return `ref#${tm.value}`;
   if (!tm.args) return tm.name;
   const tmStr = `${tm.name} ${tm.args.map((arg) => termToString(arg, true)).join('')}`;
@@ -66,7 +90,7 @@ export function termToString(tm: Term, parens = false): string {
   return `(${tmStr})`;
 }
 
-export function compareTerms(t: Term[], s: Term[]): number {
+export function compareTerms(t: (Term | BigTerm)[], s: (Term | BigTerm)[]): number {
   for (let i = 0; i < Math.min(t.length, s.length); i++) {
     const c = compareTerm(t[i], s[i]);
     if (c !== 0) return c;
@@ -74,7 +98,7 @@ export function compareTerms(t: Term[], s: Term[]): number {
   return s.length - t.length;
 }
 
-export function compareTerm(t1: Term, t2: Term): number {
+export function compareTerm(t1: Term | BigTerm, t2: Term | BigTerm): number {
   if (t1 === null) return t2 === null ? 0 : -1;
   if (t2 === null) return 1;
   if (typeof t1 === 'boolean') {
