@@ -7,7 +7,7 @@ function solutions(dusa: Dusa, pred: string = 'res') {
     sols.push(
       [...sol.lookup(pred)]
         .toSorted(compareTerms)
-        .map((args) => `${pred}${args.map((arg) => ` ${termToString(arg)}`).join('')}`)
+        .map((args) => `${pred}${args.map((arg) => ` ${termToString(arg, true)}`).join('')}`)
         .join(', '),
     );
   }
@@ -119,7 +119,7 @@ test('Sorting', () => {
     `#builtin BOOLEAN_TRUE tt. #builtin BOOLEAN_FALSE tt. p (). p 3. p "Hello". p "Goodbye". p a. p (a 1). p (a "two"). p tt. p ff.`,
   );
   expect(solutions(dusa, 'p')).toStrictEqual([
-    'p (), p bool#false, p "Goodbye", p "Hello", p 3, p a "two", p a 1, p a, p ff',
+    'p (), p bool#false, p "Goodbye", p "Hello", p 3, p (a "two"), p (a 1), p a, p ff',
   ]);
 });
 
