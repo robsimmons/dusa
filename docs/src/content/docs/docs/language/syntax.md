@@ -32,7 +32,7 @@ treated like whitespace.
                        |  <attribute> "is" <term-or-choices>
                        |  <attribute> "is?" <term-or-choices>
     <term-or-choices> ::= <term> | "{" <choice-options> "}"
-    <choice-options>  ::= <term> | <term> "," <conc-options>
+    <choice-options>  ::= <term> | <term> "," <choice-options>
 
     <attribute>       ::= <identifier> | <identifier> <arguments>
     <arguments>       ::= <atomic-term> | <atomic-term> <arguments>
