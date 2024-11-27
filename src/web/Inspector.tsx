@@ -2,7 +2,7 @@ import { DOCUMENT } from 'sketchzone';
 import React from 'react';
 import type { WorkerStats, AppToWorkerMsg, WorkerToAppMsg } from './worker.js';
 import { Dusa, DusaError, type Issue } from '../client.js';
-import type { Fact, Term } from '../termoutput.js';
+import type { BigFact, BigTerm } from '../termoutput.js';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -21,7 +21,7 @@ interface Props {
 
 const ICON_SIZE = '24px';
 
-function Term({ term }: { term: Term }) {
+function Term({ term }: { term: BigTerm }) {
   if (term === null) return '()';
   if (typeof term === 'string') return `"${escapeString(term)}"`;
   if (typeof term === 'bigint') return `${term}`;
@@ -42,7 +42,7 @@ function Term({ term }: { term: Term }) {
   );
 }
 
-function Solution({ facts }: { facts: Fact[] }) {
+function Solution({ facts }: { facts: BigFact[] }) {
   return (
     <ul>
       {facts.map((fact, i) => (
@@ -54,7 +54,7 @@ function Solution({ facts }: { facts: Fact[] }) {
               <Term key={i} term={term} />
             </span>
           ))}
-          {fact.value !== null && (
+          {fact.value !== undefined && (
             <>
               {' '}
               is <Term term={fact.value} />
@@ -77,7 +77,7 @@ export default function Inspector({ doc, visible }: Props) {
 
   // solutionIndex === solutions.length means we're "following" the latest state
   const [solutionIndex, setSolutionIndex] = React.useState<number | null>(null);
-  const [solutions, setSolutions] = React.useState<Fact[][]>([]);
+  const [solutions, setSolutions] = React.useState<BigFact[][]>([]);
   const [state, setState] = React.useState<'running' | 'paused' | 'done'>('running');
 
   React.useEffect(() => {

@@ -10,7 +10,7 @@ export type Term =
 export interface Fact {
   name: string;
   args: Term[];
-  value: Term;
+  value?: Term;
 }
 export type BigTerm =
   | null // Trivial type ()
@@ -22,7 +22,7 @@ export type BigTerm =
 export interface BigFact {
   name: string;
   args: BigTerm[];
-  value: BigTerm;
+  value?: BigTerm;
 }
 
 export type InputTerm =

@@ -18,6 +18,7 @@ import { parse } from './language/dusa-parser.js';
 import { Issue } from './parsing/parser.js';
 import { bytecodeToJSON } from './serialize.js';
 import {
+  BigFact,
   BigTerm,
   compareTerms,
   dataToBigTerm,
@@ -31,7 +32,7 @@ import {
 
 export type { ProgramN as BytecodeProgramN } from './bytecode.js';
 export type { Issue } from './parsing/parser.js';
-export type { InputFact, InputTerm, Fact, Term } from './termoutput.js';
+export type { InputFact, InputTerm, Fact, BigFact, BigTerm, Term } from './termoutput.js';
 export { compareTerm, compareTerms, termToString } from './termoutput.js';
 
 export class DusaError extends Error {
@@ -55,6 +56,7 @@ export interface DusaSolution {
   lookup(name: string, ...args: InputTerm[]): Generator<Term[]>;
   lookupBig(name: string, ...args: InputTerm[]): Generator<BigTerm[]>;
   facts(): Fact[];
+  factsBig(): BigFact[];
 }
 
 export interface DusaIterator extends Iterator<DusaSolution> {
@@ -309,20 +311,34 @@ class DusaSolutionImpl implements DusaSolution {
     }
   }
 
-  facts(): Fact[] {
+  factsImpl() {
     return [...Object.entries(this.prog.arities)]
       .toSorted((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0))
-      .flatMap(([pred, arity]): Fact[] => {
-        const rows = [...this.lookup(pred)].toSorted(compareTerms);
-        if (arity.value) {
-          return rows.map((args) => {
-            const value = args.pop()!;
-            return { name: pred, args, value };
-          });
-        } else {
-          return rows.map((args) => ({ name: pred, args, value: null }));
-        }
+      .map(([pred, arity]) => {
+        return { pred, rows: [...this.lookupImpl(pred, [])], hasValue: arity.value };
       });
+  }
+
+  facts(): Fact[] {
+    return this.factsImpl().flatMap<Fact>(({ pred, rows, hasValue }) => {
+      return rows
+        .map((row) => row.map((tm) => dataToTerm(this.prog.data, tm)))
+        .toSorted(compareTerms)
+        .map((args) =>
+          hasValue ? { name: pred, args, value: args.pop()! } : { name: pred, args },
+        );
+    });
+  }
+
+  factsBig(): BigFact[] {
+    return this.factsImpl().flatMap<BigFact>(({ pred, rows, hasValue }) => {
+      return rows
+        .map((row) => row.map((tm) => dataToBigTerm(this.prog.data, tm)))
+        .toSorted(compareTerms)
+        .map((args) =>
+          hasValue ? { name: pred, args, value: args.pop()! } : { name: pred, args },
+        );
+    });
   }
 }
 
