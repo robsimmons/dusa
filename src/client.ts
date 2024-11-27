@@ -88,16 +88,24 @@ export class Dusa {
     return [...Object.keys(this.prog.arities)];
   }
 
+  [Symbol.iterator]() {
+    return new DusaIteratorImpl(this.prog, this.state);
+  }
+
   /**
-   * Every instance is [iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol),
-   * so it's possible to enumerate solutions with a for-if statement.
+   * Returns an iterator to enumerate solutions with a for-if statement.
    *
-   *     const dusa = new Dusa(`a is { 1, 2, 18, 22 }.`);
+   * The `solve()` method and the `[Symbol.iterator]()` do the same thing; if
+   * you want to enumerate the solutions with a `for...of` loop, just use the
+   * `dusa` object directly instead of calling `solve()`.
+   *
+   *     const dusa = new Dusa(`num is { 1, 2, 18, 22 }.`);
+   *     console.log(dusa.solve().next().value.get('num)); // 1, 2, 18, or 22
    *     for (const solution of dusa) {
-   *
+   *         console.log(solution.get('num')); // in some order: 1, 2, 18, 22
    *     }
    */
-  [Symbol.iterator]() {
+  solve(): DusaIterator {
     return new DusaIteratorImpl(this.prog, this.state);
   }
 
@@ -118,18 +126,14 @@ export class Dusa {
    * solutions exist.
    */
   sample(): DusaSolution | null {
-    const sample = this[Symbol.iterator]().next();
-    if (!sample.done) return null;
+    const sample = this.solve().next();
+    if (sample.done) return null;
     return sample.value;
   }
 
   get solutions(): DusaIterator {
     console.warn(`Dusa.solutions is deprecated, use Dusa.solve() instead`);
-    return this[Symbol.iterator]();
-  }
-
-  solve(): DusaIterator {
-    return this[Symbol.iterator]();
+    return this.solve();
   }
 
   constructor(source: string | BytecodeProgramN<bigint | string | number>) {
@@ -191,7 +195,7 @@ export class Dusa {
   assert(...facts: InputFact[]) {
     if (this.state === null) return;
     this.state = { ...this.state };
-    this.cachedSolution = null;
+    this.cachedSolution = 'unknown';
     let conflict = null;
     for (const fact of facts) {
       const { name, args, value } = this.inputFact(fact);
