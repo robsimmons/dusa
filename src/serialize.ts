@@ -128,6 +128,7 @@ export function bytecodeToJSON(prog: ProgramN<bigint>): ProgramN<string | number
     forbids: prog.forbids,
     demands: prog.demands,
     arities: prog.arities,
+    lazy: prog.lazy,
     rules: prog.rules.map(ruleToJSON),
   };
 }

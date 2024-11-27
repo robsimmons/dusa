@@ -262,9 +262,28 @@ export function parseDecl(t: ImperativeStream<Token>): ParsedTopLevel | null {
           end: trailingPeriod === null ? constTok.loc.end : trailingPeriod.loc.end,
         },
       };
+    } else if (tok.value === 'lazy') {
+      const predicate = chomp(t, 'const') as null | {
+        loc: SourceLocation;
+        type: 'var';
+        value: string;
+      };
+      if (predicate === null) {
+        throw new DusaSyntaxError(`#lazy must be followed by the name of a predicate.`, tok.loc);
+      }
+      const trailingPeriod = chomp(t, '.');
+
+      return {
+        type: 'Lazy',
+        name: predicate.value,
+        loc: {
+          start: tok.loc.start,
+          end: trailingPeriod === null ? predicate.loc.end : trailingPeriod.loc.end,
+        },
+      };
     } else {
       throw new DusaSyntaxError(
-        `Unexpected directive '${tok.value}'. Valid directives are #builtin, #demand, and #forbid.`,
+        `Unexpected directive '${tok.value}'. Valid directives are #builtin, #demand, #forbid, and #lazy.`,
         tok.loc,
       );
     }

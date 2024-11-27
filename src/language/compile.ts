@@ -8,6 +8,7 @@ import { generateBytecode } from './bytecode.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { flattenDecls, flatProgramToString } from './flatten.js';
 import { generateIndices } from './indexes.js';
+import { transformLazy } from './lazy.js';
 import { ParsedDeclaration, ParsedTopLevel } from './syntax.js';
 
 export function indexToRuleName(index: number): string {
@@ -21,6 +22,7 @@ export function indexToRuleName(index: number): string {
 export function compile(
   builtins: Map<string, BUILT_IN_PRED>,
   arities: Map<string, { args: number; value: boolean }>,
+  lazy: Set<string>,
   program: ParsedTopLevel[],
   debug = false,
 ): Program {
@@ -45,7 +47,7 @@ export function compile(
       return `${str}-${count}`;
     }
   }
-  const named = flattened.map((decl) => ({
+  const named = transformLazy(lazy, flattened).map((decl) => ({
     decl,
     name: decl.type === 'Rule' ? nextName(decl.conclusion.name) : nextName(decl.type),
   }));
@@ -67,5 +69,5 @@ ${binarizedProgramToString(binarized)}`);
 ${binarizedProgramToString(indexed)}`);
   }
 
-  return generateBytecode(indexed, arities);
+  return generateBytecode(indexed, arities, lazy);
 }

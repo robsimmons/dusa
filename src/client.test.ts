@@ -209,3 +209,21 @@ test('Builtin INT_MINUS (issue #29)', () => {
     solutions(new Dusa("#builtin INT_MINUS minus.\ny 4.\nx N :- y N', minus N 1 is N'."), 'x'),
   ).toStrictEqual(['x 5']);
 });
+
+test('Lazy execution', () => {
+  expect(
+    solutions(
+      new Dusa(`
+      #lazy lt
+      lt z (s N).
+      lt (s N) (s M) :- lt N M.
+
+      p (s (s (s z))).
+      p (s z).
+      p z.
+
+      res X Y :- p X, p Y, lt X Y.
+    `),
+    ),
+  ).toStrictEqual(['res (s z) (s (s (s z))), res z (s (s (s z))), res z (s z)']);
+});

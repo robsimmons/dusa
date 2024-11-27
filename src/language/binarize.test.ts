@@ -12,11 +12,12 @@ import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { check } from './check.js';
 import { ParsedDeclaration } from './syntax.js';
 import { Pattern } from './terms.js';
+import { transformLazy } from './lazy.js';
 
 export function srcToBinarized(source: string) {
   const parsed = parse(source);
   if (parsed.errors !== null) throw parsed.errors;
-  const { errors, arities, builtins } = check(parsed.document);
+  const { errors, arities, builtins, lazy } = check(parsed.document);
   if (errors.length !== 0) throw errors;
   const decls = parsed.document.filter((x): x is ParsedDeclaration => x.type !== 'Builtin');
   const flattened = flattenDecls(
@@ -37,7 +38,7 @@ export function srcToBinarized(source: string) {
       return `${str}-${count}`;
     }
   }
-  const named = flattened.map((decl) => ({
+  const named = transformLazy(lazy, flattened).map((decl) => ({
     decl,
     name: decl.type === 'Rule' ? nextName(decl.conclusion.name) : nextName(decl.type),
   }));

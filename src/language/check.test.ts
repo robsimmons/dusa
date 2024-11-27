@@ -24,12 +24,14 @@ test('Static checks', () => {
       ['b', { args: 2, value: true }],
       ['c', { args: 0, value: true }],
     ]),
+    lazy: new Set(),
     errors: [],
   });
 
   expect(runCheck('a.\na 4.')).toStrictEqual({
     builtins: new Map(),
     arities: new Map([['a', { args: 0, value: false }]]),
+    lazy: new Set(),
     errors: [
       {
         type: 'Issue',
@@ -43,6 +45,7 @@ test('Static checks', () => {
   expect(runCheck('a is 4.\na 4.')).toStrictEqual({
     builtins: new Map(),
     arities: new Map([['a', { args: 0, value: true }]]),
+    lazy: new Set(),
     errors: [
       {
         type: 'Issue',
@@ -59,6 +62,7 @@ test('Static checks', () => {
       ['a', { args: 0, value: false }],
       ['b', { args: 2, value: false }],
     ]),
+    lazy: new Set(),
     errors: [
       {
         type: 'Issue',
@@ -179,6 +183,7 @@ test('Error messages for patterns', () => {
       ['c', { args: 1, value: false }],
     ]),
     builtins: new Map([['plus', 'INT_PLUS']]),
+    lazy: new Set(),
     errors: [],
   });
   expect(runCheck('#builtin INT_PLUS plus\na :- c _, b (plus 1 X).')).toStrictEqual({
@@ -188,6 +193,7 @@ test('Error messages for patterns', () => {
       ['c', { args: 1, value: false }],
     ]),
     builtins: new Map([['plus', 'INT_PLUS']]),
+    lazy: new Set(),
     errors: [
       {
         type: 'Issue',
@@ -198,4 +204,69 @@ test('Error messages for patterns', () => {
     ],
   });
   expect(runForErrors('a 3.\nb (a X).'));
+});
+
+test('Lazy', () => {
+  expect(runCheck('lt z (s N). lt (s N) (s M) :- lt N M.')).toStrictEqual({
+    arities: new Map([['lt', { args: 2, value: false }]]),
+    builtins: new Map(),
+    lazy: new Set(),
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: "The variable 'N' can't be used in the conclusion of a rule without being used somewhere in a premise.",
+        loc: { start: { line: 1, column: 9, index: 8 }, end: { line: 1, column: 10, index: 9 } },
+      },
+    ],
+  });
+
+  expect(runCheck('#lazy lt\nlt z (s N).\nlt (s N) (s M) :- lt N M.')).toStrictEqual({
+    arities: new Map([['lt', { args: 2, value: false }]]),
+    builtins: new Map(),
+    lazy: new Set(['lt']),
+    errors: [],
+  });
+
+  expect(runCheck('#lazy s.\n#builtin NAT_SUCC s')).toStrictEqual({
+    arities: new Map(),
+    builtins: new Map([['s', 'NAT_SUCC']]),
+    lazy: new Set(['s']),
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: `Cannot declare 's' as a lazy predicate when it is declared elsewhere as a builtin.`,
+        loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 9, index: 8 } },
+      },
+    ],
+  });
+
+  expect(runCheck('lt 1 2 is { tt, ff }.\n#lazy lt')).toStrictEqual({
+    arities: new Map([['lt', { args: 2, value: true }]]),
+    builtins: new Map(),
+    lazy: new Set(['lt']),
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: "Lazily-computed relations can't use choices (lt is {...}) or open rules (lt is? ...).",
+        loc: { start: { line: 1, column: 1, index: 0 }, end: { line: 1, column: 21, index: 20 } },
+      },
+    ],
+  });
+
+  expect(runCheck('#lazy lt\nlt z (s N).\nlt (s N) (s M) :- lt N M2.')).toStrictEqual({
+    arities: new Map([['lt', { args: 2, value: false }]]),
+    builtins: new Map(),
+    lazy: new Set(['lt']),
+    errors: [
+      {
+        type: 'Issue',
+        severity: 'error',
+        msg: `The variable 'M2' is the input to a lazily-computed predicate, so must be bound by a previous premise.`,
+        loc: { start: { line: 3, column: 24, index: 44 }, end: { line: 3, column: 26, index: 46 } },
+      },
+    ],
+  });
 });

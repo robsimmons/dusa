@@ -4,6 +4,7 @@ import { BUILT_IN_PRED, builtinModes } from './dusa-builtins.js';
 import {
   ParsedBuiltin,
   ParsedDeclaration,
+  ParsedLazy,
   ParsedTopLevel,
   visitPropsInProgram,
   visitTermsInDecl,
@@ -416,6 +417,7 @@ export function check(program: ParsedTopLevel[]): {
   errors: Issue[];
   builtins: Map<string, BUILT_IN_PRED>;
   arities: Map<string, { args: number; value: boolean }>;
+  lazy: Set<string>;
 } {
   const builtins = new Map<string, BUILT_IN_PRED>(
     program
@@ -423,19 +425,60 @@ export function check(program: ParsedTopLevel[]): {
       .map<[string, BUILT_IN_PRED]>(({ name, builtin }) => [name, builtin]),
   );
 
-  const decls = program.filter((decl): decl is ParsedDeclaration => decl.type !== 'Builtin');
+  const lazy = new Set<string>(
+    program.filter((decl): decl is ParsedLazy => decl.type === 'Lazy').map(({ name }) => name),
+  );
+
+  const decls = program.filter(
+    (decl): decl is ParsedDeclaration => decl.type !== 'Builtin' && decl.type !== 'Lazy',
+  );
   const arities = checkPropositionArity(builtins, decls);
   if (arities.issues.length > 0) {
-    return { errors: arities.issues, builtins: builtins, arities: arities.arities };
+    return { errors: arities.issues, builtins: builtins, arities: arities.arities, lazy };
   }
 
   const errors: Issue[] = [];
+
+  for (const decl of program) {
+    if (decl.type === 'Lazy' && builtins.has(decl.name)) {
+      errors.push(
+        mkErr(
+          `Cannot declare '${decl.name}' as a lazy predicate when it is declared elsewhere as a builtin.`,
+          decl.loc,
+        ),
+      );
+    }
+  }
 
   checkDecl: for (const decl of decls) {
     const wildcardsInDeclIssues = checkForUniqueWildcardsInDecl(decl);
     errors.push(...wildcardsInDeclIssues);
     if (wildcardsInDeclIssues.length > 0) continue;
     const groundVars = new Map();
+
+    if (decl.type === 'Rule' && lazy.has(decl.conclusion.name)) {
+      if (
+        decl.conclusion.type === 'open' ||
+        (decl.conclusion.type === 'closed' && decl.conclusion.choices.length !== 1)
+      ) {
+        errors.push(
+          mkErr(
+            `Lazily-computed relations can't use choices (${decl.conclusion.name} is {...}) or open rules (${decl.conclusion.name} is? ...).`,
+            decl.conclusion.loc,
+          ),
+        );
+      }
+
+      /* Add lazy-head-bound variables */
+      for (const [v, loc] of getNewlyBoundVarsInPatterns(
+        builtins,
+        arities.arities,
+        groundVars,
+        decl.conclusion.args,
+      )) {
+        groundVars.set(v, loc);
+      }
+    }
 
     /* For each premise: call checkBuiltin if applicable, call
      * checkRelationsAndBuiltinsInPatterns, and then register any new
@@ -456,6 +499,22 @@ export function check(program: ParsedTopLevel[]): {
 
       switch (premise.type) {
         case 'Proposition': {
+          if (lazy.has(premise.name)) {
+            errors.push(
+              ...getNewlyBoundVarsInPatterns(
+                builtins,
+                arities.arities,
+                groundVars,
+                premise.args,
+              ).map(([str, loc]) =>
+                mkErr(
+                  `The variable '${str}' is the input to a lazily-computed predicate, so must be bound by a previous premise.`,
+                  loc,
+                ),
+              ),
+            );
+          }
+
           const builtin = builtins.get(premise.name);
           if (builtin === undefined) break;
           if (premise.value === null) {
@@ -583,14 +642,16 @@ export function check(program: ParsedTopLevel[]): {
           ),
         );
 
-        errors.push(
-          ...getWildcardsInPatterns(builtins, arities.arities, patterns).map((loc) =>
-            mkErr(`Wildcards can't be used in the conclusion of a rule.`, loc),
-          ),
-        );
+        if (!lazy.has(decl.conclusion.name)) {
+          errors.push(
+            ...getWildcardsInPatterns(builtins, arities.arities, patterns).map((loc) =>
+              mkErr(`Wildcards can't be used in the conclusion of a rule.`, loc),
+            ),
+          );
+        }
       }
     }
   }
 
-  return { errors, builtins, arities: arities.arities };
+  return { errors, builtins, arities: arities.arities, lazy };
 }

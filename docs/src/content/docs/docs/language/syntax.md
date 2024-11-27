@@ -19,6 +19,7 @@ treated like whitespace.
 
     <program>         ::= <declaration> <program> | ""
     <declaration>     ::= "#builtin" <builtin> <identifier> [ "." ]
+                       |  "#lazy" <identifier> ["."]
                        |  "#demand" <premises> "."
                        |  "#forbid" <premises> "."
                        |  <conclusion> [ ":-" <premises> ] "."

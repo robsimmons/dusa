@@ -207,7 +207,7 @@ export function flattenDecls(
   decls: ParsedTopLevel[],
 ): FlatDeclaration[] {
   return decls
-    .filter((decl): decl is ParsedDeclaration => decl.type !== 'Builtin')
+    .filter((decl): decl is ParsedDeclaration => decl.type !== 'Builtin' && decl.type !== 'Lazy')
     .map((decl) => flattenDecl(preds, decl));
 }
 

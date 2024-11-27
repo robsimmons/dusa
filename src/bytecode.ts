@@ -26,6 +26,7 @@ export interface ProgramN<Int> {
   demands: string[];
   rules: RuleN<Int>[];
   arities: { [pred: string]: { args: number; value: boolean } };
+  lazy: string[];
 }
 
 /**

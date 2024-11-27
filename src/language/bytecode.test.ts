@@ -9,6 +9,7 @@ function srcToBytecode(source: string) {
   return generateBytecode(
     makeIntermediatePredicatesMatchJoinOrder(generateIndices(binarized)),
     new Map(),
+    new Set(),
   );
 }
 
@@ -21,6 +22,7 @@ test('builtins and functional predicates', () => {
     demands: [],
     forbids: [],
     arities: {},
+    lazy: [],
     seeds: ['$seed'],
     rules: [
       {
@@ -73,6 +75,7 @@ test('builtins and functional predicates', () => {
     demands: [],
     forbids: [],
     arities: {},
+    lazy: [],
     seeds: ['$seed'],
     rules: [
       {

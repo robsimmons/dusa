@@ -54,6 +54,7 @@ export default defineConfig({
             { label: 'Terms and variables', link: '/docs/language/terms/' },
             { label: 'Constraints', link: '/docs/language/constraints/' },
             { label: 'Builtins', link: '/docs/language/builtin/' },
+            { label: 'Lazy predicates', link: '/docs/language/lazy/' },
             { label: 'Syntax specification', link: '/docs/language/syntax/' },
           ],
         },
