@@ -1,18 +1,11 @@
 import { test, expect } from 'vitest';
 import { Database } from '../datastructures/database.js';
-import { check } from '../language/check.js';
-import { compile } from '../language/compile.js';
-import { parse } from '../language/dusa-parser.js';
 import { execute } from './choiceengine.js';
 import { ingestBytecodeProgram, Program } from './program.js';
+import { Dusa } from '../client.js';
 
 function build(source: string) {
-  const parsed = parse(source);
-  if (parsed.errors !== null) throw parsed.errors;
-  const { errors, arities, builtins } = check(parsed.document);
-  if (errors.length !== 0) throw errors;
-  const bytecode = compile(builtins, arities, parsed.document);
-  return ingestBytecodeProgram(bytecode);
+  return ingestBytecodeProgram(Dusa.compile(source));
 }
 
 function simplify(prog: Program, db: Database, keys: [string, number][]) {

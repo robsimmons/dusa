@@ -27,7 +27,7 @@ export type FlatPremise =
       name: string;
       value: Pattern | null;
       args: Pattern[];
-      loc: SourceLocation;
+      loc?: SourceLocation;
     };
 
 export type FlatDeclaration =
@@ -50,9 +50,10 @@ function flattenPattern(
     case 'int':
     case 'bool':
     case 'string':
-    case 'wildcard':
     case 'var':
       return { before: [], pattern: parsedPattern };
+    case 'wildcard':
+      return { before: [], pattern: { type: 'var', name: `#${counter.current++}` } };
     case 'const': {
       const { before, args } = flattenPatterns(preds, counter, parsedPattern.args);
       if (!preds.has(parsedPattern.name)) {

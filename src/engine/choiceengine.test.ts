@@ -1,21 +1,14 @@
 import { test, expect } from 'vitest';
 import { ingestBytecodeProgram, Program } from './program.js';
-import { compile } from '../language/compile.js';
-import { parse } from '../language/dusa-parser.js';
-import { check } from '../language/check.js';
 import { ChoiceTree, ChoiceZipper, step } from './choiceengine.js';
 import { AgendaMember, createSearchState } from './forwardengine.js';
 import { Database } from '../datastructures/database.js';
 import { List } from '../datastructures/conslist.js';
 import { Data } from '../datastructures/data.js';
+import { Dusa } from '../client.js';
 
 function build(source: string) {
-  const parsed = parse(source);
-  if (parsed.errors !== null) throw parsed.errors;
-  const { errors, arities, builtins } = check(parsed.document);
-  if (errors.length !== 0) throw errors;
-  const bytecode = compile(builtins, arities, parsed.document);
-  return ingestBytecodeProgram(bytecode);
+  return ingestBytecodeProgram(Dusa.compile(source));
 }
 
 function simplify(
