@@ -44,7 +44,7 @@ function simplify(
       );
       agenda = agenda.next;
     }
-    simpleTree = agendaItems.toReversed();
+    simpleTree = [...agendaItems].reverse();
   } else if (tree.state.deferred.size === 0) {
     simpleTree = 'leaf containing model';
   } else {
@@ -57,7 +57,7 @@ function simplify(
     simpleSolution = model.size;
   }
 
-  return { path: simplePath.toReversed(), tree: simpleTree, model: simpleSolution };
+  return { path: simplePath.reverse(), tree: simpleTree, model: simpleSolution };
 }
 
 let path: ChoiceZipper;
