@@ -6,12 +6,12 @@ function solutions(dusa: Dusa, pred: string = 'res') {
   for (const sol of dusa) {
     sols.push(
       [...sol.lookup(pred)]
-        .toSorted(compareTerms)
+        .sort(compareTerms)
         .map((args) => `${pred}${args.map((arg) => ` ${termToString(arg, true)}`).join('')}`)
         .join(', '),
     );
   }
-  return sols.toSorted(new Intl.Collator('en').compare);
+  return sols.sort(new Intl.Collator('en').compare);
 }
 
 function runForDusaError(program: string) {

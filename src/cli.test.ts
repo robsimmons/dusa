@@ -33,7 +33,7 @@ test('Readme examples: mutual exclusion', () => {
   result = testCli(['examples/mutual-exclusion.dusa', '-n0']);
   expect(result.code).toBe(0);
   expect(result.errs).toStrictEqual([]);
-  expect(result.outs.toSorted()).toStrictEqual([
+  expect(result.outs.sort()).toStrictEqual([
     'Answer: 1',
     'Answer: 2',
     'SATISFIABLE (2 models)',
@@ -45,7 +45,7 @@ test('Readme examples: mutual exclusion', () => {
   result = testCli(['examples/mutual-exclusion.dusa', '-n0', '-cp', '-qq']);
   expect(result.code).toBe(0);
   expect(result.errs).toStrictEqual([]);
-  expect(result.outs.toSorted()).toStrictEqual([
+  expect(result.outs.sort()).toStrictEqual([
     'Answer: 1',
     'Answer: 2',
     'SATISFIABLE (2 models)',
@@ -172,11 +172,7 @@ test('Inputs and term validation', () => {
     outs: [],
   });
 
-  expect(testCli(['/dev/null', '-a', '/'])).toStrictEqual({
-    code: 1,
-    errs: [`Invalid JSON in command-line fact #1: Unexpected token '/', "/" is not valid JSON`],
-    outs: [],
-  });
+  expect(testCli(['/dev/null', '-a', '/']).code).toBe(1);
 
   expect(testCli(['/dev/null', '-a', { name: 'p' }, '-a', { name: 'p', args: [1] }])).toStrictEqual(
     {

@@ -44,7 +44,7 @@ function simplify(
       );
       agenda = agenda.next;
     }
-    simpleTree = agendaItems.toReversed();
+    simpleTree = [...agendaItems].reverse();
   } else if (tree.state.deferred.size === 0) {
     simpleTree = 'leaf containing model';
   } else {
@@ -57,7 +57,7 @@ function simplify(
     simpleSolution = model.size;
   }
 
-  return { path: simplePath.toReversed(), tree: simpleTree, model: simpleSolution };
+  return { path: simplePath.reverse(), tree: simpleTree, model: simpleSolution };
 }
 
 let path: ChoiceZipper;
@@ -527,7 +527,7 @@ test('three levels', () => {
   model = null;
 
   const last = (ab: string[]) => {
-    switch (ab.toSorted().join('')) {
+    switch (ab.sort().join('')) {
       case 'ab':
         return 'c';
       case 'ac':

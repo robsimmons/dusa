@@ -10,6 +10,7 @@ import {
 import { Pattern } from './terms.js';
 import { Pattern as Shape } from '../bytecode.js';
 import { patternsToShapes, shapesEqual, shapesToPatterns } from './shape.js';
+import { setDifference, setUnion, subsetEq } from '../util/polyfill.js';
 
 /**
  * An IndexMap contains partial information about the indices needed for each
@@ -86,15 +87,15 @@ function defaultIndices(pred: string, args: number): IndexSpec {
 function partitionIfPossible(ordering: Constraint, first: Set<number>, extensible: boolean) {
   if (first.size === 0) return ordering;
   for (let i = 0; i < ordering.length; i++) {
-    if (ordering[i].isSubsetOf(first)) {
-      if (ordering[i].isSupersetOf(first)) return ordering;
+    if (subsetEq(ordering[i], first)) {
+      if (subsetEq(first, ordering[i])) return ordering;
       continue;
     }
     // We've reached the smallest set in the order that's _not_ smaller than
     // first. if it's a superset of first, we can succeed by further
     // constraining the order. example: ordering is [[a], [a,b,c,d]] and first
     // is [a,d], we'll hit this condition on i = 1 and need to return [[a], [a,d], [a,b,c,d]]
-    if (ordering[i].isSupersetOf(first)) {
+    if (subsetEq(first, ordering[i])) {
       return [...ordering.slice(0, i), first, ...ordering.slice(i)];
     }
 
@@ -136,7 +137,7 @@ function refineIfPossible(index: IndexSpec, rule: JoinRule): IndexSpec | null {
     .filter((x): x is number => x !== -1);
 
   // used = shared or needed
-  const used = shared.union(new Set(needed));
+  const used = setUnion(shared, new Set(needed));
 
   if (!index.args.every((arg, i) => shapesEqual(arg, shapes[i]))) return null;
 
@@ -225,7 +226,7 @@ function finalizeIndices(pred: string, specs: IndexSpec[]) {
     const argVars: number[] = [];
     const order: Constraint = [];
     for (const varSet of indexSpec.order) {
-      for (const x of varSet.difference(new Set(argVars))) {
+      for (const x of setDifference(varSet, new Set(argVars))) {
         argVars.push(x);
         order.push(new Set(argVars));
       }

@@ -1,6 +1,6 @@
 {
   "name": "dusa",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "main": "lib/client.js",
   "unpkg": "./dusa.umd.js",
@@ -9,10 +9,6 @@
   "exports": {
     "require": "./lib/client.cjs",
     "import": "./lib/client.js"
-  },
-  "engine": {
-    "node": ">=22.0.0",
-    "npm": ">=v10.9.0"
   },
   "homepage": "https://dusa.rocks",
   "repository": {

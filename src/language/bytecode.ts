@@ -305,7 +305,7 @@ function generateBuiltinRuleWithValue(
         ];
       } else {
         const prefix = args.slice(0, unknownIndex);
-        const postfix = args.slice(unknownIndex + 1).toReversed();
+        const postfix = args.slice(unknownIndex + 1).reverse();
         return [
           ...pushShape(value),
           ...prefix.flatMap<Instruction>((arg) => [...pushShape(arg), { type: 's_starts' }]),

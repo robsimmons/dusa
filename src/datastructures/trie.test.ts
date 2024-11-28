@@ -47,9 +47,9 @@ test('tries data structure', () => {
   expect(lookup(t, ['s', 't', 'o', 'v', 'e'])).toBeNull();
   expect(lookup(t, ['a', 't', 'o', 'n', 'e'])).toBeNull();
   expect(lookup(t, ['s', 't', 'o', 'n', 'k'])).toBeNull();
-  expect([...visit(t, 0).map(({ keys }) => keys.join(''))]).toStrictEqual(['']);
-  expect([...visit(t, 3).map(({ keys }) => keys.join(''))]).toStrictEqual(['sta']);
-  expect([...visit(t, 5).map(({ keys }) => keys.join(''))]).toStrictEqual(['stare']);
+  expect([...visit(t, 0)].map(({ keys }) => keys.join(''))).toStrictEqual(['']);
+  expect([...visit(t, 3)].map(({ keys }) => keys.join(''))).toStrictEqual(['sta']);
+  expect([...visit(t, 5)].map(({ keys }) => keys.join(''))).toStrictEqual(['stare']);
 
   [t] = insert(t, ['s', 't', 'o', 'r', 'e'], 5);
   [t] = insert(t, ['s', 't', 'o', 'n', 'e'], 6);
@@ -77,13 +77,13 @@ test('tries data structure', () => {
   expect(lookup(t, ['s', 't', 'o', 'n', 'k'])).toBe(3);
   expect(r).toStrictEqual({ children: null, value: 6 });
 
-  expect([...visit(t, 0).map(({ keys }) => keys.join(''))]).toStrictEqual(['']);
-  expect([...visit(t, 1).map(({ keys }) => keys.join(''))]).toStrictEqual(['a', 's']);
-  expect([...visit(t, 2).map(({ keys }) => keys.join(''))]).toStrictEqual(['at', 'st']);
-  expect([...visit(t, 3).map(({ keys }) => keys.join(''))]).toStrictEqual(['ato', 'sta', 'sto']);
-  expect([
-    ...visit(t, 5).map(({ keys, value }) => [keys.join(''), value.children ?? value.value]),
-  ]).toStrictEqual([
+  expect([...visit(t, 0)].map(({ keys }) => keys.join(''))).toStrictEqual(['']);
+  expect([...visit(t, 1)].map(({ keys }) => keys.join(''))).toStrictEqual(['a', 's']);
+  expect([...visit(t, 2)].map(({ keys }) => keys.join(''))).toStrictEqual(['at', 'st']);
+  expect([...visit(t, 3)].map(({ keys }) => keys.join(''))).toStrictEqual(['ato', 'sta', 'sto']);
+  expect(
+    [...visit(t, 5)].map(({ keys, value }) => [keys.join(''), value.children ?? value.value]),
+  ).toStrictEqual([
     ['atone', 9],
     ['stare', 1],
     ['stone', 2],
