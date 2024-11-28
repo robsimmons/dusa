@@ -33,7 +33,7 @@ test('Readme examples: mutual exclusion', () => {
   result = testCli(['examples/mutual-exclusion.dusa', '-n0']);
   expect(result.code).toBe(0);
   expect(result.errs).toStrictEqual([]);
-  expect(result.outs.toSorted()).toStrictEqual([
+  expect(result.outs.sort()).toStrictEqual([
     'Answer: 1',
     'Answer: 2',
     'SATISFIABLE (2 models)',
@@ -45,7 +45,7 @@ test('Readme examples: mutual exclusion', () => {
   result = testCli(['examples/mutual-exclusion.dusa', '-n0', '-cp', '-qq']);
   expect(result.code).toBe(0);
   expect(result.errs).toStrictEqual([]);
-  expect(result.outs.toSorted()).toStrictEqual([
+  expect(result.outs.sort()).toStrictEqual([
     'Answer: 1',
     'Answer: 2',
     'SATISFIABLE (2 models)',

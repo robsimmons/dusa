@@ -156,12 +156,12 @@ test('insert random', () => {
       expect(lookup(t, A[j])).toBeNull();
     }
     expect(
-      [...iterator(t)].toSorted(([_kA, a], [_kB, b]) => a - b).map(([_, x]) => x),
+      [...iterator(t)].sort(([_kA, a], [_kB, b]) => a - b).map(([_, x]) => x),
     ).toStrictEqual(Array.from({ length: i }).map((_, n) => n));
     [t] = insert(t, key, i);
   }
 
-  expect([...visit(t)].map(({ value }) => value).toSorted((a, b) => a - b)).toStrictEqual(id);
+  expect([...visit(t)].map(({ value }) => value).sort((a, b) => a - b)).toStrictEqual(id);
   for (const [i, key] of A.entries()) {
     for (let j = 0; j < i; j++) {
       expect(lookup(t, A[j])).toBe(-j);
@@ -171,7 +171,7 @@ test('insert random', () => {
     }
     [t] = insert(t, key, -i);
   }
-  expect([...visit(t)].map(({ value }) => -value).toSorted((a, b) => a - b)).toStrictEqual(id);
+  expect([...visit(t)].map(({ value }) => -value).sort((a, b) => a - b)).toStrictEqual(id);
 
   for (let i = 0; i < LIMIT; i++) {
     const [key, value] = chooseAVL(t) ?? ['', 0];

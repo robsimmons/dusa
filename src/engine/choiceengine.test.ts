@@ -527,7 +527,7 @@ test('three levels', () => {
   model = null;
 
   const last = (ab: string[]) => {
-    switch (ab.toSorted().join('')) {
+    switch (ab.sort().join('')) {
       case 'ab':
         return 'c';
       case 'ac':

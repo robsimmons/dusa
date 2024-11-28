@@ -15,7 +15,7 @@ function simplify(prog: Program, db: Database, keys: [string, number][]) {
       facts.push(`${key}${args.map((arg) => ` ${prog.data.toString(arg, true)}`).join('')}`);
     }
   }
-  return facts.toSorted().join(', ');
+  return facts.sort().join(', ');
 }
 
 function testExecution(source: string, preds: [string, number][]) {
