@@ -20,11 +20,10 @@ function simplify(prog: Program, db: Database, keys: [string, number][]) {
 
 function testExecution(source: string, preds: [string, number][]) {
   const prog = build(source);
-  return [
-    ...execute(prog)
-      .filter((db) => db.size.neg === 0)
-      .map((db) => simplify(prog, db, preds)),
-  ].toSorted();
+  return [...execute(prog)]
+    .filter((db) => db.size.neg === 0)
+    .map((db) => simplify(prog, db, preds))
+    .sort();
 }
 
 test('Overlapping non-exhaustive choices', () => {

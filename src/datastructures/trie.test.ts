@@ -81,9 +81,9 @@ test('tries data structure', () => {
   expect([...visit(t, 1)].map(({ keys }) => keys.join(''))).toStrictEqual(['a', 's']);
   expect([...visit(t, 2)].map(({ keys }) => keys.join(''))).toStrictEqual(['at', 'st']);
   expect([...visit(t, 3)].map(({ keys }) => keys.join(''))).toStrictEqual(['ato', 'sta', 'sto']);
-  expect([
-    ...visit(t, 5).map(({ keys, value }) => [keys.join(''), value.children ?? value.value]),
-  ]).toStrictEqual([
+  expect(
+    [...visit(t, 5)].map(({ keys, value }) => [keys.join(''), value.children ?? value.value]),
+  ).toStrictEqual([
     ['atone', 9],
     ['stare', 1],
     ['stone', 2],
