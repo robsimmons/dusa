@@ -78,24 +78,24 @@ dusa.solution; // raises DusaError
 
 ### Getting all solutions with `solve()`
 
-The `solve()` function returns a standard 
+The `solve()` function returns a standard
 [JavaScript iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator)
 that will, upon successive calls to `next()`, return each solution for the
-Dusa program. The iterator works in an arbitrary order: this program will 
+Dusa program. The iterator works in an arbitrary order: this program will
 either print `"one"` and then `"two"` or else it will print `"two"` and then
 `"one"`.
 
 ```javascript
 const dusa = new Dusa(`name is { "one", "two" }.`);
 const iterator = dusa.solve();
-console.log(iterator.next().value?.get("name")); // "one" or "two"
-console.log(iterator.next().value?.get("name")); // "two" or "one"
-console.log(iterator.next().value?.get("name")); // undefined
+console.log(iterator.next().value?.get('name')); // "one" or "two"
+console.log(iterator.next().value?.get('name')); // "two" or "one"
+console.log(iterator.next().value?.get('name')); // undefined
 ```
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solutions_with_next)
 
-Dusa classes themselves are also `Iterable` — they implement the 
+Dusa classes themselves are also `Iterable` — they implement the
 `[Symbol.iterator]` method and so can be used in `for..of` loops:
 
 ```javascript
@@ -107,7 +107,7 @@ for (const solution of dusa) {
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solutions_enumerate)
 
-Each time you invoke the iterator `dusa` is accessed, search is re-run, 
+Each time you invoke the iterator `dusa` is accessed, search is re-run,
 potentially returning solutions in a different order.
 
 ## Modifying a Dusa instance
