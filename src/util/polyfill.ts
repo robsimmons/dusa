@@ -64,7 +64,7 @@ export function setIntersection<T>(a: Set<T>, b: Set<T>) {
  * Iterator.prototype.map is still not widely available in 2024 (no Safari
  * support, just a couple of months of Firefox support) and isn't included in
  * ES2022 lib.
- * 
+ *
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/map
  */
 export function* generatorMap<T, S>(gen: Generator<T>, map: (x: T) => S): Generator<S> {
