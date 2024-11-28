@@ -177,6 +177,20 @@ test('Builtin STRING_CONCAT', () => {
   ).toStrictEqual(['']);
 });
 
+test('Facts', () => {
+  expect(new Dusa('a. b 1. c 2 3. d e is "f". g (h i) is ().').solution?.facts()).toStrictEqual([
+    { name: 'a', args: [] },
+    { name: 'b', args: [1] },
+    { name: 'c', args: [2, 3] },
+    { name: 'd', args: [{ name: 'e' }], value: 'f' },
+    { name: 'g', args: [{ name: 'h', args: [{ name: 'i' }] }], value: null },
+  ]);
+
+  expect(new Dusa('a 1 () "3" four 5 is ().').solution?.factsBig()).toStrictEqual([
+    { name: 'a', args: [1n, null, '3', { name: 'four' }, 5n], value: null },
+  ]);
+});
+
 test('Builtin STRING_CONCAT, full reverse', () => {
   expect(
     solutions(new Dusa('#builtin STRING_CONCAT concat\nres X Y :- concat X Y is "abc".')),
