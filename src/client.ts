@@ -295,12 +295,14 @@ class DusaSolutionImpl implements DusaSolution {
     const arity = this.prog.arities[name];
     if (!arity) return;
     const depth = (arity.value ? arity.args + 1 : arity.args) - args.length;
-    yield* this.solution.visit(
-      name,
-      args.map((arg) => termToData(this.prog.data, arg)),
-      args.length,
-      depth,
-    );
+    yield* this.solution
+      .visit(
+        name,
+        args.map((arg) => termToData(this.prog.data, arg)),
+        args.length,
+        depth,
+      )
+      .map((tms) => tms.slice(0));
   }
 
   *lookup(name: string, ...args: InputTerm[]) {
