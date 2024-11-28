@@ -83,7 +83,7 @@ export function* runInstructions(
         if (a.type !== 'const' || a.name !== instr.const || a.args.length !== instr.arity) {
           return null;
         }
-        for (const t of a.args.toReversed()) {
+        for (const t of [...a.args].reverse()) {
           stack.push(prog.data.expose(t));
         }
         break;
@@ -93,7 +93,7 @@ export function* runInstructions(
         for (let i = 0; i < instr.arity; i++) {
           args.push(prog.data.hide(stack.pop()!));
         }
-        stack.push({ type: 'const', name: instr.const, args: args.toReversed() });
+        stack.push({ type: 'const', name: instr.const, args: [...args].reverse() });
         break;
       }
       case 's_concat': {

@@ -285,7 +285,7 @@ export function runDusaCli(
   const count = args.values.count as string[];
   const query =
     count.length === 0 && (args.values.query as string[]).length === 0
-      ? dusa.relations.toSorted()
+      ? dusa.relations.slice(0).sort()
       : (args.values.query as string[]);
 
   if (verbose >= 2) log('Solving...');
@@ -298,7 +298,7 @@ export function runDusaCli(
     if (verbose >= 2) log(`Answer: ${num_solutions}`);
     const answer: { [pred: string]: Term[][] | number } = {};
     for (const pred of [...count, ...query]) {
-      answer[pred] = [...solution.value.lookup(pred)].toSorted(compareTerms);
+      answer[pred] = [...solution.value.lookup(pred)].sort(compareTerms);
       if (count.includes(pred)) {
         answer[pred] = answer[pred].length;
       }

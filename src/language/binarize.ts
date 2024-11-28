@@ -1,3 +1,4 @@
+import { setDifference, setIntersection, setUnion } from '../util/polyfill.js';
 import { BUILT_IN_PRED } from './dusa-builtins.js';
 import { FlatDeclaration, FlatPremise } from './flatten.js';
 import { headToString, Conclusion as RawConclusion } from './syntax.js';
@@ -74,7 +75,7 @@ export function joinVars(rule: JoinRule) {
 export function usedPremiseVars(rule: JoinRule) {
   const premiseVars = freeVars(...rule.premise.args);
   const conclusionVars = freeVarsConclusion(rule.conclusion);
-  return joinVars(rule).union(premiseVars.intersection(conclusionVars));
+  return setUnion(joinVars(rule), setIntersection(premiseVars, conclusionVars));
 }
 
 function binopToString(binOp: 'Equality' | 'Inequality' | 'Gt' | 'Geq' | 'Lt' | 'Leq') {
@@ -229,8 +230,8 @@ function premisesAnnotated(
   }[] = [];
   for (const premise of premises) {
     const used = freeVarsPremise(premise);
-    premisesGround.push({ premise, freeVars: used, introduced: used.difference(ground) });
-    ground = ground.union(used);
+    premisesGround.push({ premise, freeVars: used, introduced: setDifference(used, ground) });
+    ground = setUnion(ground, used);
   }
 
   // live N X :- freeVar N X
@@ -241,16 +242,16 @@ function premisesAnnotated(
     inVars: string[];
     joinVars: string[];
   }[] = [];
-  for (const { premise, freeVars, introduced } of premisesGround.toReversed()) {
-    live = live.union(freeVars).difference(introduced);
+  for (const { premise, freeVars, introduced } of premisesGround.reverse()) {
+    live = setDifference(setUnion(live, freeVars), introduced);
     premisesAnnotated.push({
       premise,
       inVars: [...live],
-      joinVars: [...freeVars.intersection(live)],
+      joinVars: [...setIntersection(freeVars, live)],
     });
   }
 
-  return premisesAnnotated.toReversed();
+  return premisesAnnotated.reverse();
 }
 
 /**
@@ -404,7 +405,7 @@ export function binarize(decls: { name: string; decl: FlatDeclaration }[]): Bina
     }
 
     // Cosmetic: puts the rules in the program in a clearer order
-    rules.push(...newRules.toReversed());
+    rules.push(...newRules.reverse());
   }
 
   return { seeds: hasSeed ? ['$seed'] : [], rules, forbids, demands };
@@ -465,7 +466,7 @@ export function makeIntermediatePredicatesMatchJoinOrder(program: BinarizedProgr
       if (rule.type === 'Join') {
         const joinVars_ = joinVars(rule);
         const inVars = new Set(rule.inVars);
-        newOrdering = [...joinVars_, ...inVars.difference(joinVars_)];
+        newOrdering = [...joinVars_, ...setDifference(inVars, joinVars_)];
       } else {
         newOrdering = rule.inVars;
       }

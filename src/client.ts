@@ -29,6 +29,7 @@ import {
   Term,
   termToData,
 } from './termoutput.js';
+import { generatorMap } from './util/polyfill.js';
 
 export type { ProgramN as BytecodeProgramN } from './bytecode.js';
 export type { Issue } from './parsing/parser.js';
@@ -295,14 +296,15 @@ class DusaSolutionImpl implements DusaSolution {
     const arity = this.prog.arities[name];
     if (!arity) return;
     const depth = (arity.value ? arity.args + 1 : arity.args) - args.length;
-    yield* this.solution
-      .visit(
+    yield* generatorMap(
+      this.solution.visit(
         name,
         args.map((arg) => termToData(this.prog.data, arg)),
         args.length,
         depth,
-      )
-      .map((tms) => tms.slice(0));
+      ),
+      (tms) => tms.slice(0),
+    );
   }
 
   *lookup(name: string, ...args: InputTerm[]) {
@@ -319,7 +321,7 @@ class DusaSolutionImpl implements DusaSolution {
 
   factsImpl() {
     return [...Object.entries(this.prog.arities)]
-      .toSorted((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0))
+      .sort((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0))
       .map(([pred, arity]) => {
         return { pred, rows: [...this.lookupImpl(pred, [])], hasValue: arity.value };
       });
@@ -329,7 +331,7 @@ class DusaSolutionImpl implements DusaSolution {
     return this.factsImpl().flatMap<Fact>(({ pred, rows, hasValue }) => {
       return rows
         .map((row) => row.map((tm) => dataToTerm(this.prog.data, tm)))
-        .toSorted(compareTerms)
+        .sort(compareTerms)
         .map((args) =>
           hasValue ? { name: pred, args, value: args.pop()! } : { name: pred, args },
         );
@@ -340,7 +342,7 @@ class DusaSolutionImpl implements DusaSolution {
     return this.factsImpl().flatMap<BigFact>(({ pred, rows, hasValue }) => {
       return rows
         .map((row) => row.map((tm) => dataToBigTerm(this.prog.data, tm)))
-        .toSorted(compareTerms)
+        .sort(compareTerms)
         .map((args) =>
           hasValue ? { name: pred, args, value: args.pop()! } : { name: pred, args },
         );
