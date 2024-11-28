@@ -64,7 +64,7 @@ const dusa = new Dusa(`
 dusa.solution; // null
 ```
 
-[Explore this example on val.town](htthttps://www.val.town/v/robsimmons/solution_getter_no)
+[Explore this example on val.town](https://www.val.town/v/robsimmons/solution_getter_no)
 
 If there are multiple solutions, the `solution` getter will pick one solution,
 and will always return that one.
@@ -76,24 +76,38 @@ dusa.solution; // raises DusaError
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solution_getter_maybe)
 
-### Getting all solutions
+### Getting all solutions with `solve()`
 
-To enumerate the solutions to a program, you can use the Javascript iterator
-notation. The iterator works in an arbitrary order: this program will either
-print `[["one"]]` and then `[["two"]]` or else it will print `[["two"]]` and
-then `[["one"]]`.
+The `solve()` function returns a standard
+[JavaScript iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator)
+that will, upon successive calls to `next()`, return each solution for the
+Dusa program. The iterator works in an arbitrary order: this program will
+either print `"one"` and then `"two"` or else it will print `"two"` and then
+`"one"`.
 
 ```javascript
 const dusa = new Dusa(`name is { "one", "two" }.`);
+const iterator = dusa.solve();
+console.log(iterator.next().value?.get('name')); // "one" or "two"
+console.log(iterator.next().value?.get('name')); // "two" or "one"
+console.log(iterator.next().value?.get('name')); // undefined
+```
 
+[Explore this example on val.town](https://www.val.town/v/robsimmons/solutions_with_next)
+
+Dusa classes themselves are also `Iterable` — they implement the
+`[Symbol.iterator]` method and so can be used in `for..of` loops:
+
+```javascript
+const dusa = new Dusa(`name is { "one", "two" }.`);
 for (const solution of dusa) {
-  console.log([...solution.lookup('name')]);
+  console.log(solution.get('name'));
 }
 ```
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solutions_enumerate)
 
-Each time you invoke the iterator `dusa` getter is accessed, search is re-run,
+Each time you invoke the iterator `dusa` is accessed, search is re-run,
 potentially returning solutions in a different order.
 
 ## Modifying a Dusa instance
