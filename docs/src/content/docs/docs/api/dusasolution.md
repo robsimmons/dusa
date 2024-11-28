@@ -63,7 +63,7 @@ This will print the following in some order:
     Path from 2 to 4
     Path from 3 to 4
 
-Given the first argument `'path'` and the second argument `2n`, `lookup` will
+Given the first argument `'path'` and the second argument `2`, `lookup` will
 return an iterator over all the second arguments `B` such that there is a fact
 `path 2 B`.
 
@@ -74,7 +74,7 @@ const dusa = new Dusa(`
     edge 3 4.
     path X Y :- edge X Y.
     path X Z :- edge X Y, path Y Z.`);
-for (const [b] of dusa.solution.lookup('path', 2n)) {
+for (const [b] of dusa.solution.lookup('path', 2)) {
   console.log(`Path from 2 to ${b}`);
 }
 ```
