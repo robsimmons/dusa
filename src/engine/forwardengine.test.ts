@@ -2,10 +2,10 @@ import { test, expect } from 'vitest';
 import { createSearchState, learnImmediateConsequences, SearchState } from './forwardengine.js';
 import { HashCons } from '../datastructures/data.js';
 import { ingestBytecodeProgram, Program } from './program.js';
-import { Dusa } from '../client.js';
+import { compile } from '../client.js';
 
 function build(source: string) {
-  return ingestBytecodeProgram(Dusa.compile(source));
+  return ingestBytecodeProgram(compile(source));
 }
 
 function step(prog: Program, state: SearchState) {
