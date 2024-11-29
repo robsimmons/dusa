@@ -63,7 +63,7 @@ inputs that are more flexible than the outputs that Dusa will return (see the
 
 Dusa will accept numbers of type `number` and convert them to
 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
-values. This will raise a `RangeError` if you try to pass a non-integer 
+values. This will raise a `RangeError` if you try to pass a non-integer
 `number` to Dusa.
 
 An input constant like `a` can also be given as `{ name: 'a', args: [] }`,
