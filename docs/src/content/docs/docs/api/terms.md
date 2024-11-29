@@ -17,7 +17,11 @@ All Dusa terms have a correspondence with JavaScript types:
 - An uninterpreted function with arguments like `h c "fish"` in Dusa
   corresponds to an object `{ name: 'h', args: [{ name: 'c' }, 'fish'] }` in JavaScript.
 
-### type `Term`
+### type `Term` and `BigTerm`
+
+The `Term` type is more convenient to use in JavaScript; `BigTerm` represents
+integers with the `bigint` type and so will correctly represent very positive
+or very negative large integers without rounding.
 
 ```typescript
 export type Term =
@@ -44,8 +48,8 @@ export interface Fact {
 }
 export interface BigFact {
   name: string;
-  args: Term[];
-  value?: Term;
+  args: BigTerm[];
+  value?: BigTerm;
 }
 ```
 
@@ -59,8 +63,8 @@ inputs that are more flexible than the outputs that Dusa will return (see the
 
 Dusa will accept numbers of type `number` and convert them to
 [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
-values. This will raise a `RangeError` if you try to pass a non-integer `number`
-to Dusa.
+values. This will raise a `RangeError` if you try to pass a non-integer 
+`number` to Dusa.
 
 An input constant like `a` can also be given as `{ name: 'a', args: [] }`,
 even though that constant will always be output as `{ name: 'a' }`.

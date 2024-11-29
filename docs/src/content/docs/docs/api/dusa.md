@@ -35,7 +35,7 @@ provide access to [`DusaSolution` objects](/docs/api/dusasolution/).
 ### `sample()` method and `solution` getter
 
 Often all you need is to find a single solution (or to know that at least one
-solution exists). The `sample()` method just returns a single solution, but
+solution exists). The `sample()` method just returns a single solution, and
 will potentially return a different solution every time it is called. The
 `solution` getter will generate a sample the first time it is accessed and
 will then remember that sample; from then on accessing `dusa.solution` will
@@ -102,7 +102,7 @@ steps, returning `true` if `next()` can return without any extra computation.
 The `stats()` method reports how much work has been done by the iterator so
 far, and `all()` returns all remaining solutions as an array.
 
-```javascript
+```typescript
 advance(limit?: number): boolean;
 stats(): { deductions: number; rejected: number; choices: number; nonPos: number };
 all(): DusaSolution[];

@@ -22,7 +22,8 @@ arguments that the proposition has.
 ### `get()` method
 
 The `get()` method is intended to check the value assigned to a functional
-proposition.
+proposition. It returns the [term](/docs/api/terms/) associated with the
+attribute.
 
 ```typescript
 get(name: string, ...args: InputTerm): undefined | Term;

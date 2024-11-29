@@ -62,8 +62,8 @@ export default defineConfig({
           label: 'JavaScript API',
           items: [
             { label: 'class Dusa', link: '/docs/api/dusa/' },
-            { label: 'class DusaSolution', link: '/docs/api/dusasolution/' },
             { label: 'Terms', link: '/docs/api/terms/' },
+            { label: 'class DusaSolution', link: '/docs/api/dusasolution/' },
             { label: 'Helpers', link: '/docs/api/helpers/' },
             { label: 'Using Dusa in JS', link: '/docs/api/importing/' },
           ],
