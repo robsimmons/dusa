@@ -1,4 +1,4 @@
-name: Dusa tests (npm v20)
+name: Dusa tests (node v20)
 
 on:
   push:
