@@ -8,7 +8,7 @@ All Dusa terms have a correspondence with JavaScript types:
 
 - The trivial type `()` in Dusa corresponds to `null` in JavaScript.
 - The string type in Dusa corresponds to the string type in JavaScript.
-- The integer and natural number types in Dusa correspond to either the 
+- The integer and natural number types in Dusa correspond to either the
   Number type or the
   [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
   type in JavaScript. The JavaScript BigInt four is written as `4n`, not `4`.

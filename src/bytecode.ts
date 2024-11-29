@@ -215,4 +215,3 @@ export type Const = ConstN<bigint>;
 export type Conclusion = ConclusionN<bigint>;
 export type Rule = RuleN<bigint>;
 export type Program = ProgramN<bigint>;
-

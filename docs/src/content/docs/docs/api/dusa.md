@@ -37,8 +37,8 @@ provide access to [`DusaSolution` objects](/docs/api/dusasolution/).
 Often all you need is to find a single solution (or to know that at least one
 solution exists). The `sample()` method just returns a single solution, but
 will potentially return a different solution every time it is called. The
-`solution` getter will generate a sample the first time it is accessed and 
-will then remember that sample; from then on accessing `dusa.solution` will 
+`solution` getter will generate a sample the first time it is accessed and
+will then remember that sample; from then on accessing `dusa.solution` will
 always return the _same_ solution until new facts are asserted.
 
 ```javascript
@@ -71,7 +71,7 @@ and will always return that one.
 
 ```javascript
 const dusa = new Dusa(`name is { "one", "two" }.`);
-dusa.solution.get("name"); // either "one" or "two"
+dusa.solution.get('name'); // either "one" or "two"
 ```
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solution_getter_maybe)

@@ -2,7 +2,7 @@
 title: Using Dusa in your JavaScript programs
 ---
 
-As Julia Evans describes, in 2024 
+As Julia Evans describes, in 2024
 [there are basically three ways use JavaScript code in your project](https://jvns.ca/blog/2024/11/18/how-to-import-a-javascript-library/).
 
 1. A "classic" module that just defines a global variable
@@ -30,13 +30,13 @@ access the various [helpers](/docs/api/helpers/).
 ```javascript
 const dusa = new Dusa('fact is { mortal socrates, man socrates }.');
 function handleClick() {
-  const fact = Dusa.termToString(dusa.sample().get("fact"));
-  document.getElementById("facts").innerText = fact;
+  const fact = Dusa.termToString(dusa.sample().get('fact'));
+  document.getElementById('facts').innerText = fact;
 }
 ```
 
-* [Example 1: Glitch site](https://glitch.com/edit/#!/dusa-use-umd)
-* [Example 2: p5js sketch](https://editor.p5js.org/robsimmons/sketches/xcHwiBh2H)
+- [Example 1: Glitch site](https://glitch.com/edit/#!/dusa-use-umd)
+- [Example 2: p5js sketch](https://editor.p5js.org/robsimmons/sketches/xcHwiBh2H)
 
 ### ES modules
 
@@ -72,4 +72,3 @@ const { Dusa, termToString } = require('dusa');
 const dusa = new Dusa('fact is { mortal socrates, man socrates }.');
 console.log(termToString(dusa.solution.get('fact')));
 ```
-
