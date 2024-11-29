@@ -2,10 +2,10 @@ import { test, expect } from 'vitest';
 import { Database } from '../datastructures/database.js';
 import { execute } from './choiceengine.js';
 import { ingestBytecodeProgram, Program } from './program.js';
-import { Dusa } from '../client.js';
+import { compileBig } from '../compile.js';
 
 function build(source: string) {
-  return ingestBytecodeProgram(Dusa.compile(source));
+  return ingestBytecodeProgram(compileBig(source));
 }
 
 function simplify(prog: Program, db: Database, keys: [string, number][]) {

@@ -1,5 +1,4 @@
-import { ProgramN } from '../bytecode.js';
-import { Dusa, DusaIterator, BigFact as OutputFact } from '../client.js';
+import { Dusa, DusaIterator, BigFact as OutputFact, BytecodeProgram } from '../client.js';
 
 export type WorkerQuery = {
   type: 'list';
@@ -20,7 +19,7 @@ export type WorkerToAppMsg =
   | { type: 'done' };
 
 export type AppToWorkerMsg =
-  | { type: 'load'; program: ProgramN<string | number> }
+  | { type: 'load'; program: BytecodeProgram }
   | { type: 'stop' }
   | { type: 'start' };
 

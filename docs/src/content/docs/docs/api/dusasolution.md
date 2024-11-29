@@ -26,6 +26,7 @@ proposition.
 
 ```typescript
 get(name: string, ...args: InputTerm): undefined | Term;
+getBig(name: string, ...args: InputTerm): undefined | BigTerm;
 ```
 
 An error will be raised if the number of `args` is not equal to the number of
@@ -35,6 +36,11 @@ predicate `name` is a Datalog predicate that does not have an `is` value.
 ## Querying solutions
 
 ### `lookup()` method
+
+```typescript
+lookup(name: string, ...args: InputTerm): Generator<Term[]>;
+lookupBig(name: string, ...args: InputTerm): Generator<BigTerm[]>;
+```
 
 The `lookup()` method on solutions is a powerful query mechanism. If your
 program has a relational proposition `path _ _`, then given only the first
@@ -105,6 +111,11 @@ lookup(name: 'name', arg1: InputTerm): IterableIterator<[Term]>;
 ## Enumerating all facts
 
 ### `facts()`
+
+```typescript
+facts(): Fact[];
+factsBig(): BigFact[];
+```
 
 The `facts` method provides a list of all the
 [facts](/docs/api/terms/#type-fact) in a solution. The `lookup()` method

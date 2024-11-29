@@ -1,10 +1,10 @@
 {
   "name": "dusa",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "main": "lib/client.js",
   "unpkg": "./dusa.umd.js",
-  "jsdelivr": "./dus.umd.js",
+  "jsdelivr": "./dusa.umd.js",
   "types": "lib/client.d.ts",
   "exports": {
     "require": "./lib/client.cjs",
@@ -30,7 +30,7 @@
     "build": "tsc && vite build",
     "coverage": "vitest run --coverage",
     "dev": "vite",
-    "lib": "tsc --project tsconfig.package.json && rollup lib/client.js --file lib/client.cjs && rollup lib/global.js --file dusa.umd.js --format umd --name Dusa",
+    "lib": "tsc --project tsconfig.package.json && rollup lib/client.js --file lib/client.cjs --format cjs && rollup lib/global.js --file dusa.umd.js --format umd --name Dusa",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "prettier": "prettier --ignore-path .prettierignore --write *.ts *.json *.html *.md **/*.ts* **/*.json **/*.css **/*.html **/*.md",
     "prettier:check": "prettier --ignore-path .prettierignore --check .",

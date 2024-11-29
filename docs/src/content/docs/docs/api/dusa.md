@@ -2,9 +2,7 @@
 title: class Dusa
 ---
 
-The main entrypoint to the Dusa JavaScript API is the Dusa class. (The
-[dusa NPM package](https://www.npmjs.com/package/dusa) also includes Typescript
-definitions.)
+The main entrypoint to the Dusa JavaScript API is the Dusa class.
 
 ## Creating a Dusa instance
 
@@ -21,10 +19,10 @@ const dusa = new Dusa(`
     path X Z :- edge X Y, path Y Z.`);
 ```
 
-If the program has errors, an error in the `DusaError` class will be thrown.
+If the program has errors, an error in the `DusaCompileError` class will be thrown.
 
 ```javascript
-// raises DusaError, X is conclusion but not premise.
+// raises DusaCompileError, X is conclusion but not premise.
 const dusa = new Dusa(`edge a X.`);
 ```
 
@@ -34,12 +32,14 @@ Dusa programs can't be directly queried: they must first be solved. There are
 several different ways to direct Dusa to generate solutions, all of which
 provide access to [`DusaSolution` objects](/docs/api/dusasolution/).
 
-### `solution` getter
+### `sample()` method and `solution` getter
 
-Often all you need is to find a single solution (or to know that know
-solutions exist). The first time you try to access `dusa.solution` some
-computation will happen (and this could even fail to terminate). But then the
-result is cached; subsequent calls will not trigger additional computation.
+Often all you need is to find a single solution (or to know that at least one
+solution exists). The `sample()` method just returns a single solution, but
+will potentially return a different solution every time it is called. The
+`solution` getter will generate a sample the first time it is accessed and 
+will then remember that sample; from then on accessing `dusa.solution` will 
+always return the _same_ solution until new facts are asserted.
 
 ```javascript
 const dusa = new Dusa(`
@@ -71,14 +71,14 @@ and will always return that one.
 
 ```javascript
 const dusa = new Dusa(`name is { "one", "two" }.`);
-dusa.solution; // raises DusaError
+dusa.solution.get("name"); // either "one" or "two"
 ```
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solution_getter_maybe)
 
-### Getting all solutions with `solve()`
+### Getting a solution iterator with `solve()`
 
-The `solve()` function returns a standard
+The `solve()` function returns a extended
 [JavaScript iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator)
 that will, upon successive calls to `next()`, return each solution for the
 Dusa program. The iterator works in an arbitrary order: this program will
@@ -94,6 +94,21 @@ console.log(iterator.next().value?.get('name')); // undefined
 ```
 
 [Explore this example on val.town](https://www.val.town/v/robsimmons/solutions_with_next)
+
+The iterator returned by `solve` has a couple of extra methods. Trying to
+return the next solution is a process that could run forever; the `advance()`
+method takes an optional argument `limit` and then will run at most `limit`
+steps, returning `true` if `next()` can return without any extra computation.
+The `stats()` method reports how much work has been done by the iterator so
+far, and `all()` returns all remaining solutions as an array.
+
+```javascript
+advance(limit?: number): boolean;
+stats(): { deductions: number; rejected: number; choices: number; nonPos: number };
+all(): DusaSolution[];
+```
+
+### Using `for...of` loops
 
 Dusa classes themselves are also `Iterable` — they implement the
 `[Symbol.iterator]` method and so can be used in `for..of` loops:

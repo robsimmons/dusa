@@ -1,7 +1,7 @@
 import { DOCUMENT } from 'sketchzone';
 import React from 'react';
 import type { WorkerStats, AppToWorkerMsg, WorkerToAppMsg } from './worker.js';
-import { Dusa, DusaError, type Issue } from '../client.js';
+import { BytecodeProgram, compile, DusaCompileError, type Issue } from '../client.js';
 import type { BigFact, BigTerm } from '../termoutput.js';
 import {
   ChevronLeftIcon,
@@ -12,7 +12,6 @@ import {
   PlayIcon,
 } from '@radix-ui/react-icons';
 import { escapeString } from '../datastructures/data.js';
-import { ProgramN } from '../bytecode.js';
 
 interface Props {
   doc: DOCUMENT;
@@ -81,11 +80,11 @@ export default function Inspector({ doc, visible }: Props) {
   const [state, setState] = React.useState<'running' | 'paused' | 'done'>('running');
 
   React.useEffect(() => {
-    let bytecode: ProgramN<string | number>;
+    let bytecode: BytecodeProgram;
     try {
-      bytecode = Dusa.compile(doc);
+      bytecode = compile(doc);
     } catch (e) {
-      if (e instanceof DusaError) {
+      if (e instanceof DusaCompileError) {
         setIssues(e.issues);
         return;
       } else {

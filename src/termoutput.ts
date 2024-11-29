@@ -78,7 +78,7 @@ export function termToData(data: HashCons, t: InputTerm): Data {
   return data.hide({ type: 'int', value: BigInt(t) });
 }
 
-export function termToString(tm: BigTerm | Term, parens = false): string {
+export function termToString(tm: Term | BigTerm, parens = false): string {
   if (tm === null) return '()';
   if (typeof tm === 'boolean') return `bool#${tm}`;
   if (typeof tm === 'string') return `"${escapeString(tm)}"`;
