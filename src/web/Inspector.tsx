@@ -1,8 +1,14 @@
 import { DOCUMENT } from 'sketchzone';
 import React from 'react';
 import type { WorkerStats, AppToWorkerMsg, WorkerToAppMsg } from './worker.js';
-import { BytecodeProgram, compile, DusaCompileError, type Issue } from '../client.js';
-import type { BigFact, BigTerm } from '../termoutput.js';
+import {
+  BytecodeProgram,
+  compile,
+  DusaCompileError,
+  type Issue,
+  type BigFact,
+  type BigTerm,
+} from '../client.js';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
