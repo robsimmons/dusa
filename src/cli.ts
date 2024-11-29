@@ -1,7 +1,7 @@
 import {
   compareTerms,
   Dusa,
-  DusaError,
+  DusaCompileError,
   DusaRuntimeError,
   InputFact,
   InputTerm,
@@ -242,7 +242,7 @@ export function runDusaCli(
   try {
     dusa = new Dusa(file);
   } catch (e) {
-    if (e instanceof DusaError) {
+    if (e instanceof DusaCompileError) {
       err(
         `Error${e.issues?.length === 1 ? '' : 's'} loading Dusa program:\n${e.issues
           .map(({ msg, loc }) => `${loc?.start ? `Line ${loc.start.line}: ` : ''}${msg}`)

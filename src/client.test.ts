@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { compareTerms, termToString, Dusa, DusaError } from './client.js';
+import { compareTerms, termToString, Dusa, DusaCompileError } from './client.js';
 
 function solutions(dusa: Dusa, pred: string = 'res') {
   const sols: string[] = [];
@@ -18,7 +18,7 @@ function runForDusaError(program: string) {
   try {
     new Dusa(program);
   } catch (e) {
-    if (e instanceof DusaError) {
+    if (e instanceof DusaCompileError) {
       return e.issues.map(({ msg }) => msg);
     }
   }

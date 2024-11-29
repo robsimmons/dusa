@@ -8,18 +8,25 @@ All Dusa terms have a correspondence with JavaScript types:
 
 - The trivial type `()` in Dusa corresponds to `null` in JavaScript.
 - The string type in Dusa corresponds to the string type in JavaScript.
-- The integer and natural number types in Dusa correspond to the
+- The integer and natural number types in Dusa correspond to either the
+  Number type or the
   [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)
   type in JavaScript. The JavaScript BigInt four is written as `4n`, not `4`.
 - Constants like `a`, `tt`, or `bob` in Dusa correspond to objects
   `{ name: 'a' }`, `{ name: 'tt' }`, or `{ name: 'bob' }` in JavaScript.
-- An uninterpreted function with arguments like `h 9 "fish"` in Dusa
-  corresponds to an object `{ name: 'h', args: [9n, 'fish'] }` in JavaScript.
+- An uninterpreted function with arguments like `h c "fish"` in Dusa
+  corresponds to an object `{ name: 'h', args: [{ name: 'c' }, 'fish'] }` in JavaScript.
 
 ### type `Term`
 
 ```typescript
 export type Term =
+  | null // Trivial type ()
+  | number // Natural numbers and integers
+  | string // Strings
+  | { name: string } // Constants
+  | { name: string; args: [Term, ...Term[]] };
+export type BigTerm =
   | null // Trivial type ()
   | bigint // Natural numbers and integers
   | string // Strings
@@ -33,7 +40,12 @@ export type Term =
 export interface Fact {
   name: string;
   args: Term[];
-  value: Term;
+  value?: Term;
+}
+export interface BigFact {
+  name: string;
+  args: Term[];
+  value?: Term;
 }
 ```
 

@@ -1,10 +1,10 @@
-name: Dusa tests
+name: Dusa tests (node v18)
 
 on:
   push:
 
 jobs:
-  run-static-tests:
+  run-static-tests-node-18:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -13,7 +13,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 18.x
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
 

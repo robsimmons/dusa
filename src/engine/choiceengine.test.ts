@@ -5,10 +5,10 @@ import { AgendaMember, createSearchState } from './forwardengine.js';
 import { Database } from '../datastructures/database.js';
 import { List } from '../datastructures/conslist.js';
 import { Data } from '../datastructures/data.js';
-import { Dusa } from '../client.js';
+import { compileBig } from '../compile.js';
 
 function build(source: string) {
-  return ingestBytecodeProgram(Dusa.compile(source));
+  return ingestBytecodeProgram(compileBig(source));
 }
 
 function simplify(

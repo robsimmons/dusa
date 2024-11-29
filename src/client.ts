@@ -1,4 +1,5 @@
 import { ProgramN as BytecodeProgramN } from './bytecode.js';
+import { compile } from './compile.js';
 import { Data } from './datastructures/data.js';
 import { Database } from './datastructures/database.js';
 import {
@@ -12,11 +13,6 @@ import {
 } from './engine/choiceengine.js';
 import { assertConclusion, createSearchState, SearchState } from './engine/forwardengine.js';
 import { ingestBytecodeProgram, Program as InternalProgram } from './engine/program.js';
-import { check } from './language/check.js';
-import { compile } from './language/compile.js';
-import { parse } from './language/dusa-parser.js';
-import { Issue } from './parsing/parser.js';
-import { bytecodeToJSON } from './serialize.js';
 import {
   BigFact,
   BigTerm,
@@ -31,18 +27,11 @@ import {
 } from './termoutput.js';
 import { generatorMap } from './util/polyfill.js';
 
-export type { ProgramN as BytecodeProgramN } from './bytecode.js';
+export type BytecodeProgram = BytecodeProgramN<string | number>;
 export type { Issue } from './parsing/parser.js';
 export type { InputFact, InputTerm, Fact, BigFact, BigTerm, Term } from './termoutput.js';
 export { compareTerm, compareTerms, termToString } from './termoutput.js';
-
-export class DusaError extends Error {
-  issues: Issue[];
-  constructor(issues: Issue[]) {
-    super();
-    this.issues = issues;
-  }
-}
+export { DusaCompileError, check, compile, compileBig } from './compile.js';
 
 export class DusaRuntimeError extends Error {
   constructor(msg: string) {
@@ -113,7 +102,7 @@ export class Dusa {
   /**
    * Get a single arbitrary solution for the program, or null if we can be
    * sure that no solutions exist. This is equivalent to calling sample() once
-   * and remembering the DusaSolution that it returns.
+   * a nd remembering the DusaSolution that it returns.
    */
   get solution(): DusaSolution | null {
     if (this.cachedSolution === 'unknown') {
@@ -137,19 +126,10 @@ export class Dusa {
     return this.solve();
   }
 
-  constructor(source: string | BytecodeProgramN<bigint | string | number>) {
+  constructor(source: string | BytecodeProgramN<bigint | string | number> = '') {
     let bytecodeProgram: BytecodeProgramN<bigint | string | number>;
     if (typeof source === 'string') {
-      const parsed = parse(source);
-      if (parsed.errors !== null) {
-        throw new DusaError(parsed.errors);
-      }
-      const { errors, arities, builtins, lazy } = check(parsed.document);
-      if (errors.length !== 0) {
-        throw new DusaError(errors);
-      }
-
-      bytecodeProgram = compile(builtins, arities, lazy, parsed.document);
+      bytecodeProgram = compile(source);
     } else {
       bytecodeProgram = source;
     }
@@ -219,20 +199,6 @@ export class Dusa {
       this.state = null;
     }
   }
-
-  static compile(source: string): BytecodeProgramN<number | string> {
-    const parsed = parse(source);
-    if (parsed.errors !== null) {
-      throw new DusaError(parsed.errors);
-    }
-    const { errors, arities, builtins, lazy } = check(parsed.document);
-    if (errors.length !== 0) {
-      throw new DusaError(errors);
-    }
-
-    const bytecodeProgram = compile(builtins, arities, lazy, parsed.document);
-    return bytecodeToJSON(bytecodeProgram);
-  }
 }
 
 class DusaSolutionImpl implements DusaSolution {
@@ -292,7 +258,7 @@ class DusaSolutionImpl implements DusaSolution {
     );
   }
 
-  *lookupImpl(name: string, args: InputTerm[]): Generator<Data[]> {
+  private *lookupImpl(name: string, args: InputTerm[]): Generator<Data[]> {
     const arity = this.prog.arities[name];
     if (!arity) return;
     const depth = (arity.value ? arity.args + 1 : arity.args) - args.length;
@@ -319,7 +285,7 @@ class DusaSolutionImpl implements DusaSolution {
     }
   }
 
-  factsImpl() {
+  private factsImpl() {
     return [...Object.entries(this.prog.arities)]
       .sort((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0))
       .map(([pred, arity]) => {
