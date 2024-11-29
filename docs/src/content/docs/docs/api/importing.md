@@ -14,14 +14,16 @@ As Julia Evans describes, in 2024
 To use Dusa in your random web page, include the UMD module in a script tag in
 the head of your file, for example with unpkg like this:
 
+<!-- https://www.srihash.org/ for updating this when the package bumps -->
+
 ```html
-<script src="https://unpkg.com/dusa@0.1.6"></script>
+<script src="https://unpkg.com/dusa@0.1.6" integrity="sha384-dQ1a/faivdqPhpQcxYG+tCkmln6OAQAi5gccaliGtbeOcGFGgXlsLuSKl+h8Jp8r" crossorigin="anonymous"></script>
 ```
 
 or with jsdelivr like this:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/dusa@0.1.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/dusa@0.1.6" integrity="sha384-rz5oQihX+60VISoW9hKtiHrEU11ydb3dfTN93lQEAIx0XwNOEfR3z3jFaYieGfrp" crossorigin="anonymous"></script>
 ```
 
 This defines the `Dusa` name, which can be used to make new Dusa classes or
