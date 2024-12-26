@@ -1,3 +1,39 @@
+export const INTRO_MAPGEN_EXAMPLE = `
+# Live coding environment
+# You can write Dusa programs here and run them by pressing the "load program" button.
+# More information can be found by clicking the (?) button in the upper left, which will take you to dusa.rocks/docs
+
+# Consider a map with four rows and four columns
+dim a. dim b. dim c. dim d.
+region (coord X Y) :- dim X, dim Y.
+
+# It's possible to move horizontally or verticaly
+adj a b. adj b c. adj c d.
+adj D2 D1 :- adj D1 D2.
+adjacent (coord X Y) (coord X Y') :- dim X, adj Y Y'.
+adjacent (coord X Y) (coord X' Y) :- adj X X', dim Y.
+
+# Each region can be mountains, forest, or ocean
+terrain R is { mountain, forest, ocean } :-
+   region R.
+
+# Mountains can't be next to the ocean
+terrain R1 is { forest, ocean } :-
+    adjacent R1 R2,
+    terrain R2 is ocean.
+
+# You start at the upper-left and can travel through forest
+reach (coord a a).
+reach R2 :-
+    reach R1,
+    terrain R1 is forest, 
+    adjacent R1 R2.
+
+# You must be able to reach the lower-right, and ocean, and mountans
+#demand reach (coord d d).
+#demand reach R, terrain R is forest.
+#demand reach R, terrain R is ocean.`.trim();
+
 export const CHARACTER_CREATION_EXAMPLE = `
 # Character creation
 # and a bit of Tracery-style template story creation
