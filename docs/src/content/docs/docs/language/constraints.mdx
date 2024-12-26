@@ -106,8 +106,8 @@ assignment by an [open rule](/docs/language/rules), but forbid that default assi
 accepting the solution only if an alternative value is derived.
 
 ```
-present 1 is { no? }.
-present 2 is { no? }.
+present 1 is? no.
+present 2 is? no.
 present 1 is yes :- <premises_1>.
 present 2 is yes :- <premises_2>.
 #forbid present _ is no.
