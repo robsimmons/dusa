@@ -1,6 +1,9 @@
 ---
-title: Dusa Docs
-description: The Dusa logic programming language.
+title: The Dusa Programming Language
+description: The Dusa logic programming language, an implementation of finite-choice logic programming.
+head:
+  - tag: title
+    content: The Dusa Programming Language
 ---
 
 Dusa is a logic programming language designed by

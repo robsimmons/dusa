@@ -6,6 +6,7 @@ import {
   CHARACTER_CREATION_EXAMPLE,
   CKY_PARSING_EXAMPLE,
   GRAPH_GENERATION_EXAMPLE,
+  INTRO_MAPGEN_EXAMPLE,
   ROCK_PAPER_SCISSORS,
 } from './examples.js';
 import Inspector from './Inspector.js';
@@ -39,6 +40,7 @@ setup({
   },
   codemirrorExtensions: codemirrorExtensions,
   defaultEntries: [
+    INTRO_MAPGEN_EXAMPLE,
     CHARACTER_CREATION_EXAMPLE,
     CKY_PARSING_EXAMPLE,
     ROCK_PAPER_SCISSORS,
