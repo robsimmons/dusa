@@ -144,9 +144,9 @@ export class Dusa {
 
     let arity = this.prog.arities[fact.name];
     if (!arity) {
-      if (!fact.name.match(/^[a-z][A-Za-z0-9]*$/)) {
+      if (!fact.name.match(/^[a-z][A-Za-z0-9_]*$/)) {
         throw new DusaRuntimeError(
-          `Asserted predicates must start with a lowercase letter and include only alphanumeric characters, '${fact.name}' does not.`,
+          `Asserted predicates must start with a lowercase letter and include only alphanumeric characters and underscores, '${fact.name}' does not.`,
         );
       }
       arity = { args: nArgs, value: hasValue };
