@@ -51,8 +51,8 @@ test('Basic operation', () => {
 
 test('String escapes', () => {
   expect(
-    solutions(new Dusa('res "\\0\\b\\f\\n\\r\\t\\v\\\'\\"\\\\\\x12\\u{12}\\u{2601}".')),
-  ).toStrictEqual(['res "\\x00\\x08\\x0c\\n\\x0d\\x09\\x0b\'\\"\\\\\\x12\\x12\\u{2601}"']);
+    solutions(new Dusa('res "\\0\\b\\f\\n\\r\\t\\v\\\'\\"\\\\\\x12\\u{12}☁\\u{2601}".')),
+  ).toStrictEqual(['res "\\x00\\x08\\x0c\\n\\x0d\\x09\\x0b\'\\"\\\\\\x12\\x12☁☁"']);
 
   expect(runForDusaError('a is "\\u{d901}".\n')).toStrictEqual([
     'Cannot encode lone surrogate \\u{d901}',

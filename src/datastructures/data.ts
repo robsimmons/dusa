@@ -161,28 +161,27 @@ export function escapeString(input: string): string {
   const escaped = [];
   let i = 0;
   while (i < input.length) {
-    if (input.codePointAt(i)! > 0xffff) {
-      escaped.push(`\\u{${input.codePointAt(i)!.toString(16)}}`);
-      i += 2;
-    } else {
-      const ch = input.charAt(i);
-      if (ch.charCodeAt(0) > 0xff) {
-        escaped.push(`\\u{${input.charCodeAt(i).toString(16)}}`);
-      } else if (ch.match(/[ !#-[\]-~]/)) {
-        escaped.push(ch);
-      } else if (ch === '\\') {
+    const code = input.codePointAt(i)!;
+    const ch = String.fromCodePoint(code);
+    switch (ch) {
+      case '\\':
         escaped.push('\\\\');
-      } else if (ch === '"') {
+        break;
+      case '"':
         escaped.push('\\"');
-      } else if (ch === '\n') {
+        break;
+      case '\n':
         escaped.push('\\n');
-      } else if (ch.charCodeAt(0) >= 16) {
-        escaped.push(`\\x${input.charCodeAt(i).toString(16)}`);
-      } else {
-        escaped.push(`\\x0${input.charCodeAt(i).toString(16)}`);
-      }
-      i += 1;
+        break;
+      default:
+        if (code < 32 || (128 <= code && code < 160)) {
+          escaped.push(`\\x${input.charCodeAt(i).toString(16).padStart(2, '0')}`);
+        } else {
+          escaped.push(ch);
+        }
     }
+    i += 1;
+    if (code > 0xffff) i += 1;
   }
   return escaped.join('');
 }
