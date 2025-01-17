@@ -1,0 +1,3 @@
+#builtin INT_PLUS plus
+run 0 is { "🛑", "🏃" }.
+run (plus N 1) is { "🛑", "🏃" } :- run N is "🏃".
