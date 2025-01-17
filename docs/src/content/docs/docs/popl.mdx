@@ -1,0 +1,154 @@
+---
+title: Dusa @ POPL 2025
+description: Supplementary material to a talk on finite-choice logic programming and Dusa at the Principles of Programming Language conference in January 2025.
+---
+
+import Dusa from '../../../components/Dusa.astro';
+
+The [POPL 2025 talk on finite-choice logic programming and Dusa](https://popl25.sigplan.org/details/POPL-2025-popl-research-papers/13/Finite-Choice-Logic-Programming)
+links to this page. Here are some of the examples in the talk and how to run
+them.
+
+## Stop or continue
+
+The "stop or continue" program shown in the talk can almost be cut-and-pasted
+into Dusa: the only changes are that free variables need to be uppercased, and
+that Dusa does not have an infix addition.
+
+The simplest path is just to replace `N+1` with `s N`, and use Dusa's 
+Prolog-style structured terms instead of built-in numbers:
+
+<Dusa predicates={["run"]} code={`
+
+run 0 is { "🛑", "🏃" }.
+run (s N) is { "🛑", "🏃" } :- run N is "🏃".
+
+`}/>
+
+You can [explore this example on dusa.rocks](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSgrBJfkF-jmF-km5-eVZOaVpsbkxeQVleYpGChkFitUK8QofZg_e2KMkg6Y1d8co6RQqwdRoVGs4KeJW5WCla4CSJkfSAlMGKhVqRYA),
+but beware: you really want to hit "pause" relatively quickly before you start
+generating very large examples.
+
+Your other option is to use Dusa's built-in addition.
+
+<Dusa predicates={["run"]} builtins={["plus"]} code={`
+
+#builtin INT_PLUS plus
+run 0 is { "🛑", "🏃" }.
+run (plus N 1) is { "🛑", "🏃" } :- run N is "🏃".
+
+`}/>
+
+You can [explore this example on dusa.rocks](https://dusa.rocks/#jsonz=q1YqUbJSyi9IzVPSUUrJTy7NTc0DiSgrBJfkF-jmF-km5-eVZOaVpsbkxeQVleYpGChkFitUK8QofZg_e2KMkg6Y1d8co6RQqwdRoVGs4KeJW5WCla4CSJkfSAlMGKhVqRYA)
+as well: it is a little less eager to crash your browser.
+
+### Command-line execution 
+
+If you have [`npx` command line utility](https://docs.npmjs.com/cli/v11/commands/npx)
+installed, you can run either of these examples by putting them in a file
+called `run.dusa` and, on the command line, running
+
+```
+npx dusa run.dusa -n10
+```
+
+The `-n10` argument tells the `dusa` command-line utility to generate ten
+solutions.
+
+## Map generation
+
+The central generation program example from the talk is this one:
+
+<Dusa predicates={["reach", "next_to", "terrain", "region"]} code={`
+
+reach "🏠".
+reach R2 :-
+    reach R1,
+    next_to R1 R2,
+    terrain R2 is "🌳".
+terrain R is {"⛰️", "🌳", "🌊"} :-
+    region R.
+terrain R2 is {"🌳", "🌊"} :-
+    terrain R1 is "🌊",
+    next_to R1 R2.
+
+`}/>
+
+This code doesn't actually do much unless we populate the `region` and
+`next_to` relations. We could do that by adding a bunch of facts, but it's
+nicer to write a program to generate all the regions. These rules create
+26 regions, home and every space on a 5x5 grid:
+
+<Dusa predicates={["reach", "next_to", "terrain", "region", "dim"]} code={`
+
+dim 1. dim 2. dim 3. dim 4. dim 5.
+region "🏠".
+region (coord X Y) :- dim X, dim Y.
+
+`}/>
+
+To populate the next-to relation, we place home adjacent to the upper-left
+corner of the map, use an auxillary `delta` relation along with the built-in
+addition operation to place every other region adjacent to the region to
+its right and to the region below it. Finally, we force the relation to be
+transitive.
+
+<Dusa 
+predicates={["reach", "next_to", "terrain", "region", "dim", "delta"]} 
+builtins={["plus"]}
+code={`
+
+#builtin INT_PLUS plus
+delta 0 1.
+delta 1 0.
+next_to "🏠" (coord 1 1).
+next_to (coord X Y) (coord (plus X DX) (plus Y DY)) :-
+    delta DX DY,
+    dim X,
+    dim Y,
+    dim (plus X DX),
+    dim (plus Y DY).
+next_to X Y :- next_to Y X.
+
+`}/>
+
+The result is the example shown in the in-browser animation during the
+talk. [Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=dVBBSsQwFL3KJ7OZQi2TqptZdyOoyKjQQGCobRgLnaR0UhCGuYAIcwAXegTBjefxAnoEf9KkRtRs_sv7P--9_C3RZE5UKySJSaXKfi2kYSZwVrSwElJ0ha6VBC657ERR3gInn0_7Z04STyxSmB9wCXgcQePhKsWdXmqFBA45TouuK2ppXtUbK_bwasXGhuG3nLw_vny87TmJxyGH7jnZBY4rE28RCqRO4f9X4ygdQ2D_r9SJ-XhVr4EmYEo6lMOhHA3l2O7CBvmxHctMS6W6CnJgEfrb-Ty2hVnxyU1fNxrDnJxfLS9Ory-hbfoNmopGFzBDY48pzBD7eN7JG1CgUdAObR2eGmFksjxymEHGomhcy2CT4QRzuxjSfuOQD-R-sVY4SIMxzOf9lUGekN0X).
+
+### Additional constraints
+
+We can add additional constraints, for example requiring that the lower-right
+region be reachable. This uses a new kind of rule, a `#demand` constraint,
+that is described in the paper's appendix and documented [here](/docs/language/constraints/#demand-constraints).
+
+<Dusa 
+predicates={["reach", "next_to", "terrain", "region", "dim", "delta"]} 
+builtins={["plus"]}
+code={`
+
+#demand reach (coord 5 5).
+
+`}/>
+
+Another aesthetic preference might be to ensure that there's exactly one
+contiguous ocean in every example. This is easily handled by a variant of the
+canonical-representative-selection algorithm from Section 3.2 in the paper.
+
+<Dusa
+predicates={["reach", "next_to", "terrain", "region", "dim", "delta", "representative"]} 
+builtins={["plus"]}
+code={`
+
+representative X is? X :-
+    terrain X is "🌊".
+representative Y is Z :-
+    next_to X Y,
+    representative X is Z,
+    terrain Y is "🌊".
+
+#demand representative _ is _.
+#forbid representative _ is X, representative _ is Y, X != Y.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=dVLNSsNAEH6VcXtpIIam2ktBvPQiqEhVyJaFkDZrDbSbkKQilL6ACH0AD_oIghefxxfQR3D2L25_7KEz-Wbm-77dnSWpSZ_kBRfEJ2k-Wcy5kEgLLpICplzwMqmzXAATTJQ8mdwDIz-v6zdGAgsMu9A_ZALwZ4DQ15-CP9ZxnSOATQareVkmmZBTWaXInj8UWVOQ-JKRr5f37881I37TZLInRlaO4lTaG7oEXcPw_1TTGjYmsL7PdSAPnmZzCAOQoavDkQ7HOvTUXSgjG7ejkPYkz8sUIqAe6qv-yFeBKvLWeJHNajRzdnkTX53fXkMxW1Qoymd1Ah0UtnkIHcytPatkBUIIPafsypq8LYkRGUSeySkMqOc116JlBthBzV1ot3-5izt0O6gidtygDXl4-0kh0mdP-TwRqdkbY7MHPS_Q-1aUvMKFxBV84MiRVaf4v_2IkfuGwc4YleVRM-U48u0K7cjAaGtb6ZaGa31jOpaNMXa07vJynO2v4_vvg6mP4gcnai_I6hc).

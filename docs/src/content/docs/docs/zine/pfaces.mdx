@@ -1,0 +1,108 @@
+---
+title: Possibility Faces Zine Discussion
+description: A companion to the "Possibility Faces" zine.
+---
+
+import { Image } from 'astro:assets';
+import Dusa from '../../../../components/Dusa.astro';
+import solution from './pfaces-solution.jpg';
+
+A companion page to [Dusa Zine #2](https://ko-fi.com/s/9865ba41a7)
+
+### Bonus activity solution
+
+The program from the bonus activity can be written like this in Dusa:
+
+<Dusa predicates={['eyes', 'shape', "hair"]} code={`
+
+eyes is { googly, glasses }.
+
+shape is { diamond, triangle, hexagon }.
+
+hair is { earHair, spiky } :- 
+    shape is triangle.
+
+hair is { beard, spiky } :-
+    eyes is glasses.
+
+hair is { beard, earHair } :- 
+    eyes is googly, 
+    shape is hexagon.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=bY_BDoJADER_pVmvqweP3DQe_AbDpbLN0ghdQsG4Ify7KAsJxmOnbzrTwXQmM6EhMda4UPQ1yUfZwaVXhBsLwRHOQXqFU9Hxk7uYSy4USYEVBvAh-Cpa8BWqTuJ4yEVLbGheO8Y6iLPQtYziK7JQ0gt9kC9ZIrczSNhep8GCNvyIMEK2h_XOYt447pPFbfilVeryj04xP3z6Yc1LFQ9mfAM)
+
+These faces correspond to the ten solutions to that program:
+
+<Image src={solution} alt="Ten faces: three diamonds, three triangles, and four hexagons." />
+
+### Other programs in the zine
+
+The first program (DEDUCTION) is written like this in Dusa:
+
+<Dusa predicates={['eyes', 'shape', "hair", "mouth"]} code={`
+
+eyes is googly.
+
+mouth is smiley :-
+    shape is circle.
+
+mouth is frowny :-
+    shape is square.
+
+hair is spiky :- 
+    shape is circle,
+    mouth is smiley.
+
+# Additional choice rule
+shape is { circle, square, cloud }.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=bY_BCsIwDEB_JdTr9OBxN2FfIb2UNm7BLqntioyxf3fdVFCW4-PxkkxqULWSgKwq5cTmHrmQAzQ5GbgSI5xBqwZdtgMJawUhShtNr1kzjpiAErQirR9PBfWSh66w1JPHEeqjZlgmdSZg4Zai9fjr3qI8ecdNj2zi5naG4ooC3YsJu9lqo39HrIEDXJyj8oPxYDshixCzR83fxvSpvBdXYL1kB_MSUPML)
+
+The second program (CHOICES) is written like this in Dusa:
+
+<Dusa predicates={['eyes', 'shape', "hair", "mouth", "nose"]} code={`
+
+eyes is googly.
+
+mouth is frowny :-
+    shape is square.
+
+nose is { vertical, triangle } :-
+    shape is square.
+
+mouth is { smiley, grimace } :-
+    shape is circle.
+
+nose is { horizontal, triangle } :-
+    shape is circle.
+
+shape is { circle, square, cloud }.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=hc5BCgIxDAXQq4S6rS5cutVTSDelxk6gTca0VcZh7q4jIiKiWT7-52c01WyM9MjGmoOElpFnWcCuFQ97YoQ1OLPthAIWZ6BXieqzY8c4YAEqEEViGlYzZWm1m-2ocuEBNkvHcL_S-R5nL6fmFR9ZlvKgEc6olYJPFqqS55gQpp_V18wIJVPCwUJUyj58LQbSkD43O1G6Ctd_q2_ll41Ptc-fLIQk7QDTPWamGw)
+
+The last program is written like this in Dusa:
+
+<Dusa predicates={['eyes', 'shape', "hair", "mouth", "nose"]} code={`
+
+shape is { triangle, diamond }.
+
+eyes is { googly, shut }.
+
+hair is { spiky, earHair }.
+
+hair is { earHair, goatee } :-
+    shape is triangle.
+
+eyes is { glasses, googly } :-
+    shape is diamond,
+    hair is earHair.
+
+`}/>
+
+[Explore this example on dusa.rocks](https://dusa.rocks/#jsonz=bY6xDoMwDER_xXLXtENH5g79hiqLC1aIGhwUhwEh_r1BhA6oHu_O927BjA3GkQUNdrGdBpZNucBjUoKXF4Y7WHQhvilAG0W9ZpZ2tghjii7RYMWK9jQyeIUFcvIkLrCBztMQpYP1tkV4Zt0TLkYXZgPaT7maPfm0mzr6T_GY0nPTznbVTSmhzAwrNFcrUO434RhwpgZSZTUV_--zDja7fEArstTh-gU)
