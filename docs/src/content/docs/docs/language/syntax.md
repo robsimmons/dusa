@@ -39,11 +39,10 @@ treated like whitespace.
     <arguments>       ::= <atomic-term> | <atomic-term> <arguments>
     <atomic-term>     ::= <wildcard> | <variable>
                        |  <string-literal> | <int-literal>
-                       |  <identifier> | <builtin-identifier>
+                       |  <identifier>
                        |  "(" <term> ")"
     <term>            ::= <atomic-term>
                        |  <identifier> <arguments>
-                       |  <builtin-identifier> <arguments>
     <builtin>         ::= "BOOLEAN_TRUE" | "BOOLEAN_FALSE"
                        |  "NAT_ZERO" | "NAT_SUCC"
                        |  "INT_PLUS" | "INT_MINUS" | "INT_TIMES"
