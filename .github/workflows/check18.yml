@@ -2,6 +2,7 @@ name: Dusa tests (node v18)
 
 on:
   push:
+  pull_request:
 
 jobs:
   run-static-tests-node-18:
