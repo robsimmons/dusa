@@ -39,7 +39,7 @@ treated like whitespace.
     <arguments>       ::= <atomic-term> | <atomic-term> <arguments>
     <atomic-term>     ::= <wildcard> | <variable>
                        |  <string-literal> | <int-literal>
-                       |  <identifier> | <builtin>
+                       |  <identifier>
                        |  "(" <term> ")"
     <term>            ::= <atomic-term>
                        |  <identifier> <arguments>
