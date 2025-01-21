@@ -2,6 +2,7 @@ name: Dusa tests
 
 on:
   push:
+  pull_request:
 
 jobs:
   run-static-tests:
