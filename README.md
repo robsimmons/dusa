@@ -32,6 +32,13 @@ if given no other arguments will return a single solution in JSON format.
 npx dusa examples/mutual-exclusion.dusa
 ```
 
+> **Potential gotcha:** if you literally download this repository and try to
+> run this command, you'll get an error ERR_MODULE_NOT_FOUND, because `npx` is
+> trying to run your local version of dusa instead of downloading it from the
+> NPM registry. You can solve this either by deleting `package.json` (so `npx`
+> doesn't get confused) or by running `npm i && npm run lib` (which builds the
+> module that previously wasn't found).
+
 The `-n` flag controls the number of solutions returned. This command will
 return 2 solutions:
 
