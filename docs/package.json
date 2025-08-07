@@ -15,7 +15,7 @@
     "@fontsource/fira-mono": "^5.1.0",
     "@fontsource/fira-sans": "^5.1.0",
     "@fontsource/fira-sans-condensed": "^5.1.0",
-    "astro": "^5.7.10",
+    "astro": "^5.12.8",
     "typescript": "^5.7.2"
   }
 }
