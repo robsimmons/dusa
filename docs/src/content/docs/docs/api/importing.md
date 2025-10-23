@@ -7,7 +7,7 @@ As Julia Evans describes, in 2024
 
 1. A "classic" module that just defines a global variable
 2. An ES module
-3. Use a build system
+3. Use a build system like `npm`
 
 ### Classic modules
 
