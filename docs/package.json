@@ -11,11 +11,11 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/starlight": "^0.30.3",
+    "@astrojs/starlight": "^0.40.0",
     "@fontsource/fira-mono": "^5.1.0",
     "@fontsource/fira-sans": "^5.1.0",
     "@fontsource/fira-sans-condensed": "^5.1.0",
-    "astro": "^5.16.3",
+    "astro": "^6.4.8",
     "typescript": "^5.7.2"
   }
 }
