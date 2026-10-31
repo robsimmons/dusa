@@ -38,7 +38,7 @@ The only indices introduced initially are the _seeds_, variable-free regular Dat
 
     $a-0.
 
-Seeds are used to handle variable-free rules. Rules with out premises, like this:
+Seeds are used to handle variable-free rules. Rules without premises, like this:
 
     p is { red, green }.
     q is { blue, purple }.
@@ -48,7 +48,7 @@ will become rules with one premise, a seed:
     p is { red, green } :- $p-0.
     q is { blue, purple } :- $q-0.
 
-Binarized programs always maintain the property that intermediate predicates are at the _head_ are either a seed or are at the head of exactly one rule. Intermediate predicates must also either tied to a #forbid or #demand constraint or else at the premise of one or more rules..
+Binarized programs always maintain the property that intermediate predicates at the _head_ of a rule are either a seed or are at the head of exactly one rule. Intermediate predicates must either be tied to a #forbid or #demand constraint or else be at the premise of one or more rules.
 
 Binarized programs treat _fact premises_ differently. The premise `p X Y is Z` in a source program can be referenced as a fact premise like `p X Y Z`, like `p X Y`, like `p X`, or just like `p`. This represents `p X Y is Z`, or `p X Y is _`, or `p X _ is _`, or `p _ _ is _`, and references the fact that we expect to index relations in a trie-like fashion so that all those lookups are very fast.
 
